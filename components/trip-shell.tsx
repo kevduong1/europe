@@ -5,6 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { days, getDestination, trip } from "@/data/trip";
+import { clamp } from "@/lib/geo";
+import {
+  DAY_ANCHOR_MAX_PX,
+  DAY_ANCHOR_VH,
+  DAY_FADE_START_MAX_PX,
+  DAY_FADE_START_VH,
+} from "@/lib/journey/pacing";
 import { EssentialsSection } from "./essentials-section";
 import { Hero } from "./hero";
 import { Itinerary } from "./itinerary";
@@ -46,6 +53,26 @@ function targetForPath(pathname: string) {
   return null;
 }
 
+/** Smooth 0..1 ease, used for the day handoff so it decelerates instead of snapping. */
+function smoothstep(edge0: number, edge1: number, x: number) {
+  const t = clamp((x - edge0) / (edge1 - edge0));
+  return t * t * (3 - 2 * t);
+}
+
+type DaySectionFrame = {
+  section: HTMLElement;
+  progress: string;
+  live: string;
+  exit: string;
+  railH: string;
+};
+
+type DaysFrame = {
+  sections: DaySectionFrame[];
+  activeDay: number;
+  itineraryMode: boolean;
+};
+
 export function TripShell() {
   const pathname = usePathname();
   const mapRef = useRef<JourneyMapHandle | null>(null);
@@ -55,6 +82,10 @@ export function TripShell() {
   const heroRef = useRef<HTMLElement | null>(null);
   const sectionsRef = useRef<HTMLElement[]>([]);
   const lastLabel = useRef("");
+  const lastHeaderHeight = useRef<number | null>(null);
+  const dayStyleCache = useRef<WeakMap<HTMLElement, DaySectionFrame>>(
+    new WeakMap(),
+  );
   const ticking = useRef(false);
   const previousPath = useRef<string | null>(null);
   const activeDayRef = useRef<number | null>(null);
@@ -69,15 +100,21 @@ export function TripShell() {
     [],
   );
 
+  /**
+   * Header height only changes on resize or brand/day cross-fade — both are
+   * covered by the ResizeObserver below, so this never runs on the scroll
+   * path. Cached so a same-value resize doesn't touch the DOM.
+   */
   const syncChrome = useCallback(() => {
     const header = headerRef.current;
-    if (header) {
-      document.documentElement.style.setProperty(
-        "--trip-header-height",
-        `${Math.round(header.getBoundingClientRect().height)}px`,
-      );
-    }
-
+    if (!header) return;
+    const height = Math.round(header.getBoundingClientRect().height);
+    if (lastHeaderHeight.current === height) return;
+    lastHeaderHeight.current = height;
+    document.documentElement.style.setProperty(
+      "--trip-header-height",
+      `${height}px`,
+    );
   }, []);
 
   /** The hero and day sections are static, so they are queried once per layout. */
@@ -88,76 +125,128 @@ export function TripShell() {
     ];
   }, []);
 
-  const syncMap = useCallback(() => {
+  /** Pure reads: one rect per section, no writes. Feeds paintDays. */
+  const measureDays = useCallback(
+    (headerHeight: number, viewportHeight: number): DaysFrame | null => {
+      const sections = sectionsRef.current;
+      if (sections.length === 0) return null;
+
+      // Same anchor line the rail/dot, the exit fade, and the active-day
+      // pointer all read from — one line, three consumers.
+      const dayAnchor =
+        headerHeight + Math.min(viewportHeight * DAY_ANCHOR_VH, DAY_ANCHOR_MAX_PX);
+      const fadeStart =
+        headerHeight +
+        Math.min(viewportHeight * DAY_FADE_START_VH, DAY_FADE_START_MAX_PX);
+      const fadeEnd = dayAnchor;
+
+      const rects = sections.map((section) => section.getBoundingClientRect());
+      let activeDay = Number(sections[0].dataset.day) || days[0].id;
+
+      const frames = sections.map((section, index) => {
+        const rect = rects[index];
+        const nextTop = rects[index + 1]?.top;
+        // Edge-to-edge span, tiling into the next day with no gap or inset —
+        // this is what the rail is drawn against, so the dot lands exactly
+        // on the anchor line instead of drifting.
+        const span = Math.max((nextTop ?? rect.bottom) - rect.top, 1);
+        const progress = clamp((dayAnchor - rect.top) / span);
+
+        // Ramp in as the anchor enters this day, back down as it nears the
+        // next one — only the day you're actually reading shows its dot.
+        const live =
+          smoothstep(0, 0.06, progress) * (1 - smoothstep(0.9, 1, progress));
+
+        const exitRaw =
+          nextTop === undefined
+            ? 0
+            : clamp((fadeStart - nextTop) / Math.max(fadeStart - fadeEnd, 1));
+        const exit = smoothstep(0, 1, exitRaw);
+
+        if (rect.top <= dayAnchor) {
+          activeDay = Number(section.dataset.day) || activeDay;
+        }
+
+        return {
+          section,
+          progress: progress.toFixed(4),
+          live: live.toFixed(4),
+          exit: exit.toFixed(4),
+          railH: `${Math.round(span)}px`,
+        };
+      });
+
+      const firstRect = rects[0];
+      const lastRect = rects[rects.length - 1];
+      const itineraryMode =
+        firstRect.top <= headerHeight + 8 && lastRect.bottom > headerHeight + 8;
+
+      return { sections: frames, activeDay, itineraryMode };
+    },
+    [],
+  );
+
+  /** Writes only. Skips a section entirely when nothing it owns has changed. */
+  const paintDays = useCallback((frame: DaysFrame) => {
+    const cache = dayStyleCache.current;
+    for (const next of frame.sections) {
+      const prev = cache.get(next.section);
+      if (prev === undefined) cache.set(next.section, next);
+      const style = next.section.style;
+      if (!prev || prev.progress !== next.progress) {
+        style.setProperty("--day-progress", next.progress);
+      }
+      if (!prev || prev.live !== next.live) {
+        style.setProperty("--day-live", next.live);
+      }
+      if (!prev || prev.exit !== next.exit) {
+        style.setProperty("--day-exit", next.exit);
+      }
+      if (!prev || prev.railH !== next.railH) {
+        style.setProperty("--day-rail-h", next.railH);
+      }
+      cache.set(next.section, next);
+    }
+  }, []);
+
+  /** Measure everything, then paint everything — one layout per frame instead of several. */
+  const syncAll = useCallback(() => {
     if (sectionsRef.current.length === 0) collectSections();
+    const viewportHeight = getStableViewportHeight();
+    const headerHeight = headerRef.current?.getBoundingClientRect().height ?? 0;
+
+    // --- measure ---
+    const dayFrame = measureDays(headerHeight, viewportHeight);
     const view = readJourneyView(
       heroRef.current,
       sectionsRef.current,
-      getStableViewportHeight(),
+      viewportHeight,
     );
+
+    // --- paint ---
+    if (dayFrame) {
+      paintDays(dayFrame);
+      if (activeDayRef.current !== dayFrame.activeDay) {
+        activeDayRef.current = dayFrame.activeDay;
+        setActiveDayId(dayFrame.activeDay);
+      }
+      if (itineraryModeRef.current !== dayFrame.itineraryMode) {
+        itineraryModeRef.current = dayFrame.itineraryMode;
+        setItineraryMode(dayFrame.itineraryMode);
+      }
+    }
     mapRef.current?.setView(view);
     if (labelRef.current && view.label !== lastLabel.current) {
       lastLabel.current = view.label;
       labelRef.current.textContent = view.label;
     }
-  }, [collectSections, getStableViewportHeight]);
-
-  const syncDayChrome = useCallback(() => {
-    if (sectionsRef.current.length === 0) collectSections();
-    const sections = sectionsRef.current;
-    if (sections.length === 0) return;
-
-    const headerHeight = headerRef.current?.getBoundingClientRect().height ?? 0;
-    const viewportHeight = getStableViewportHeight();
-    const dayAnchor = headerHeight + Math.min(viewportHeight * 0.3, 240);
-    const fadeStart = headerHeight + Math.min(viewportHeight * 0.56, 440);
-    const fadeEnd = dayAnchor;
-    const rects = sections.map((section) => section.getBoundingClientRect());
-    let nextActiveDay = Number(sections[0].dataset.day) || days[0].id;
-
-    sections.forEach((section, index) => {
-      const rect = rects[index];
-      const progress = Math.min(
-        1,
-        Math.max(0, (dayAnchor - rect.top) / Math.max(rect.height, 1)),
-      );
-      const nextTop = rects[index + 1]?.top;
-      const exit =
-        nextTop === undefined
-          ? 0
-          : Math.min(
-              1,
-              Math.max(0, (fadeStart - nextTop) / Math.max(fadeStart - fadeEnd, 1)),
-            );
-
-      section.style.setProperty("--day-progress", progress.toFixed(4));
-      section.style.setProperty("--day-exit", exit.toFixed(4));
-
-      if (rect.top <= dayAnchor) {
-        nextActiveDay = Number(section.dataset.day) || nextActiveDay;
-      }
-    });
-
-    const firstRect = rects[0];
-    const lastRect = rects[rects.length - 1];
-    const nextItineraryMode =
-      firstRect.top <= headerHeight + 8 && lastRect.bottom > headerHeight + 8;
-
-    if (activeDayRef.current !== nextActiveDay) {
-      activeDayRef.current = nextActiveDay;
-      setActiveDayId(nextActiveDay);
-    }
-    if (itineraryModeRef.current !== nextItineraryMode) {
-      itineraryModeRef.current = nextItineraryMode;
-      setItineraryMode(nextItineraryMode);
-    }
-  }, [collectSections, getStableViewportHeight]);
+  }, [collectSections, getStableViewportHeight, measureDays, paintDays]);
 
   useLayoutEffect(() => {
     collectSections();
     syncChrome();
-    syncDayChrome();
-  }, [collectSections, syncChrome, syncDayChrome]);
+    syncAll();
+  }, [collectSections, syncChrome, syncAll]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -165,9 +254,7 @@ export function TripShell() {
       ticking.current = true;
       requestAnimationFrame(() => {
         try {
-          syncChrome();
-          syncDayChrome();
-          syncMap();
+          syncAll();
         } finally {
           ticking.current = false;
         }
@@ -201,7 +288,7 @@ export function TripShell() {
       viewportObserver?.disconnect();
       window.removeEventListener("scroll", onScroll);
     };
-  }, [collectSections, syncChrome, syncDayChrome, syncMap]);
+  }, [collectSections, syncChrome, syncAll]);
 
   useEffect(() => {
     const previous = previousPath.current;
@@ -211,8 +298,7 @@ export function TripShell() {
     const afterScroll = () => {
       requestAnimationFrame(() => {
         syncChrome();
-        syncDayChrome();
-        syncMap();
+        syncAll();
       });
     };
 
@@ -226,7 +312,7 @@ export function TripShell() {
       window.scrollTo({ top: 0, behavior: "auto" });
       afterScroll();
     }
-  }, [pathname, syncChrome, syncDayChrome, syncMap]);
+  }, [pathname, syncChrome, syncAll]);
 
   const activeDay = days.find((day) => day.id === activeDayId) ?? days[0];
 
@@ -258,7 +344,7 @@ export function TripShell() {
           onReady={() => {
             setMapReady(true);
             syncChrome();
-            syncMap();
+            syncAll();
           }}
         />
       </div>

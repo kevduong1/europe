@@ -1,17 +1,9 @@
 import { clamp } from "@/lib/geo";
 import { viewForBeat, viewForDay } from "./beats";
 import { OVERVIEW } from "./cameras";
+import { ANCHOR, FREEZE, HANDOFF } from "./pacing";
 import { holdThen, mix } from "./transitions";
 import type { JourneyView } from "./types";
-
-/** The hero keeps the overview until its base clears this share of the screen. */
-const FREEZE = 0.52;
-
-/** Where on screen "now" is read from — a bit above centre. */
-const ANCHOR = 0.4;
-
-/** How late in a day's last beat the next day starts bleeding in. */
-const HANDOFF = 0.72;
 
 /** Progress of `current` under the anchor line, 0..1, ending where `next` begins. */
 function sectionProgress(

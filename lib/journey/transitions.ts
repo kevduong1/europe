@@ -1,7 +1,11 @@
 import { along, lerp, lerpBearing, lerpLngLat, smoothstep, type LngLat } from "@/lib/geo";
 import type { JourneyView } from "./types";
 
-/** How far into a beat the camera sits still before easing toward the next one. */
+/**
+ * How far into a beat-less day section the camera sits still before blending
+ * toward the next day's opening view. 0.74 reads as "linger, then hand off
+ * late" rather than a slow crossfade the whole way through.
+ */
 export const HOLD = 0.74;
 
 /**
@@ -43,9 +47,20 @@ export function holdThen(current: JourneyView, next: JourneyView, t: number) {
   return mix(current, next, (t - HOLD) / (1 - HOLD));
 }
 
-/** Fraction of a travel beat spent departing, riding, and arriving. */
+/**
+ * Fraction of a travel beat spent departing, riding, and arriving.
+ * DEPART: how quickly the camera pulls back from the origin city hold into
+ * the travel framing — kept short so the pull-back reads as decisive, not
+ * dawdling, on both a 1-stop hop and a multi-leg day.
+ * ARRIVE: where the ride hands off to the destination hold. Was 0.86 (14%
+ * of the beat to arrive), which felt rushed once `railBolzanoVenice` — a
+ * 200vh, multi-city leg — landed: 14% of a long beat is still a lot of
+ * screen space, but the corridor camera holds steady the whole ride, so all
+ * of that space read as one abrupt cut into Venice at the very end. Moved
+ * to 0.82 to give the arrival hold room to actually settle.
+ */
 const DEPART = 0.1;
-const ARRIVE = 0.86;
+const ARRIVE = 0.82;
 
 /**
  * Rides a real polyline: pull back from `from`, track the line while the trail

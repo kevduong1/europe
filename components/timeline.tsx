@@ -1,31 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { Day, TimelineItem } from "@/data/types";
+import { BEAT_SPACE, DEFAULT_BEAT_SPACE } from "@/lib/journey/pacing";
 import { cn } from "@/lib/utils";
 import { HutGlyph, RouteGlyph } from "./icons";
-
-const DEFAULT_BEAT_SPACE = 56;
-
-const BEAT_SPACE: Record<string, number> = {
-  "depart-mci": 72,
-  "flight-out": 220,
-  "arrive-muc": 88,
-  "airport-train": 150,
-  "check-in-wombat": 72,
-  "open-munich": 80,
-  eisbachwelle: 92,
-  "leave-wombat": 78,
-  "walk-hbf": 88,
-  "train-munich-innsbruck": 240,
-  "check-in-montagu": 84,
-  "train-innsbruck-bolzano": 190,
-  "bus-bolzano-ortisei": 120,
-  "onto-the-trail": 140,
-  "hike-resciesa-firenze": 160,
-  "hike-firenze-puez": 160,
-  "exit-tbd": 110,
-  "open-venice": 80,
-  "flight-home": 180,
-};
 
 function BeatMark({
   item,
@@ -140,7 +117,7 @@ function BeatRow({
       }
     >
       <div className="beat-head">
-        <div className="flex gap-4">
+        <div className="beat-head-reveal flex gap-4">
           <div className="relative w-6 shrink-0" aria-hidden="true">
             {mark}
           </div>

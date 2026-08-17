@@ -1,4 +1,4 @@
-import { densify, greatCircle, type LngLat } from "@/lib/geo";
+import { along, densify, greatCircle, joinLines, lineLengthKm, type LngLat } from "@/lib/geo";
 import type { OvernightStop, StopCluster } from "./types";
 
 export const MCI: LngLat = [-94.7139, 39.2976];
@@ -103,34 +103,6 @@ export const trailFirenzePuez: LngLat[] = densify(
   0.28,
 );
 
-/** Honest unresolved descent — fades out toward Vallunga / Selva. */
-const unresolvedExit: LngLat[] = densify(
-  [
-    [11.8161, 46.59],
-    [11.82, 46.584],
-    [11.824, 46.576],
-    [11.828, 46.568],
-    [11.832, 46.558],
-    [11.835, 46.548],
-  ],
-  0.4,
-);
-
-/** Honest dashed connector until the Day 8 exit is chosen. */
-const towardVenice: LngLat[] = densify(
-  [
-    [11.8161, 46.59],
-    [11.835, 46.548],
-    [11.9, 46.42],
-    [12.02, 46.18],
-    [12.14, 45.88],
-    [12.24, 45.58],
-    [12.28, 45.46],
-    [12.327, 45.437],
-  ],
-  10,
-);
-
 export const MUNICH_HBF: LngLat = [11.5583, 48.1402];
 export const INNSBRUCK_HBF: LngLat = [11.401, 47.2634];
 export const BOLZANO: LngLat = [11.357, 46.498];
@@ -138,10 +110,59 @@ export const ORTISEI: LngLat = [11.6717, 46.5761];
 export const RESCIESA: LngLat = [11.6825, 46.5986];
 export const FIRENZE: LngLat = [11.7672, 46.6117];
 export const PUEZ: LngLat = [11.8161, 46.59];
-export const VENICE: LngLat = [12.327, 45.437];
+/** Venezia Santa Lucia — the trail's real endpoint, not the lagoon centroid. */
+export const VENICE: LngLat = [12.3208, 45.4413];
 export const EISBACHWELLE: LngLat = [11.5877, 48.1435];
 export const WOMBAT: LngLat = [11.555, 48.1405];
 export const MONTAGU: LngLat = [11.394, 47.267];
+
+/**
+ * Descent off the Puez plateau into Val Gardena. Still genuinely undecided —
+ * this is the leg the map and itinerary mark as open — so it stays a plain
+ * `const`, not part of the resolved named-stop set above.
+ */
+export const trailPuezValGardena: LngLat[] = densify(
+  [
+    PUEZ,
+    [11.808, 46.582],
+    [11.798, 46.573],
+    [11.788, 46.566],
+    [11.7597, 46.5548], // Selva di Val Gardena
+    [11.7166, 46.5643], // Santa Cristina Valgardena
+    ORTISEI,
+  ],
+  0.3,
+);
+
+/** Val Gardena down to Bolzano by bus, retracing the corridor westward. */
+export const busOrtiseiBolzano: LngLat[] = densify(
+  [
+    ORTISEI,
+    [11.63, 46.585],
+    [11.5307, 46.5928], // Ponte Gardena / Waidbruck
+    [11.49, 46.55],
+    [11.4406, 46.4972], // Prato all'Isarco
+    [11.4, 46.49],
+    BOLZANO,
+  ],
+  1.2,
+);
+
+/** Bolzano → Venice by rail, the real routing via Verona. Long leg, coarser step. */
+export const railBolzanoVenice: LngLat[] = densify(
+  [
+    BOLZANO,
+    [11.2967, 46.3486], // Ora / Auer
+    [11.1207, 46.0724], // Trento
+    [11.0433, 45.8894], // Rovereto
+    [10.9821, 45.4287], // Verona Porta Nuova
+    [11.5387, 45.5447], // Vicenza
+    [11.8802, 45.4166], // Padova
+    [12.2384, 45.4824], // Venezia Mestre
+    VENICE, // Venezia Santa Lucia
+  ],
+  4,
+);
 
 export const railMucHbf: LngLat[] = densify(
   [MUC, [11.72, 48.29], [11.66, 48.22], [11.6, 48.17], MUNICH_HBF],
@@ -156,16 +177,41 @@ export const walkWombatHbf: LngLat[] = densify(
 export const flightOut = greatCircle(MCI, MUC, 96);
 export const flightHome = greatCircle(VCE, MCI, 96);
 
-/** Continuous Europe line used for the orange trail, including the open exit. */
-export const orangeTrail: LngLat[] = [
-  ...railMunichInnsbruck,
-  ...railInnsbruckBolzano.slice(1),
-  ...busBolzanoOrtisei.slice(1),
-  ...trailOrtiseiResciesa.slice(1),
-  ...trailResciesaFirenze.slice(1),
-  ...trailFirenzePuez.slice(1),
-  ...towardVenice.slice(1),
-];
+/**
+ * The named legs that make up the orange trail, in travel order. Bolzano and
+ * Ortisei each sit on two legs (once heading in, once heading back out), so
+ * position along the trail has to come from these boundaries rather than a
+ * nearest-point search — see `legT` below.
+ */
+const TRAIL_LEGS = [
+  { id: "munichInnsbruck", line: railMunichInnsbruck },
+  { id: "innsbruckBolzano", line: railInnsbruckBolzano },
+  { id: "bolzanoOrtisei", line: busBolzanoOrtisei },
+  { id: "ortiseiResciesa", line: trailOrtiseiResciesa },
+  { id: "resciesaFirenze", line: trailResciesaFirenze },
+  { id: "firenzePuez", line: trailFirenzePuez },
+  { id: "puezValGardena", line: trailPuezValGardena },
+  { id: "ortiseiBolzano", line: busOrtiseiBolzano },
+  { id: "bolzanoVenice", line: railBolzanoVenice },
+] as const;
+
+type TrailLegId = (typeof TRAIL_LEGS)[number]["id"];
+
+/** Continuous Europe line used for the orange trail, now reaching all the way to Venice. */
+export const orangeTrail: LngLat[] = joinLines(TRAIL_LEGS.map((leg) => leg.line));
+
+/** Exact 0..1 boundary of each leg along `orangeTrail`, from real leg lengths. */
+export const legT: Record<TrailLegId, { start: number; end: number }> = (() => {
+  const totalKm = TRAIL_LEGS.reduce((sum, leg) => sum + lineLengthKm(leg.line), 0);
+  const out = {} as Record<TrailLegId, { start: number; end: number }>;
+  let sinceStartKm = 0;
+  for (const leg of TRAIL_LEGS) {
+    const start = sinceStartKm / totalKm;
+    sinceStartKm += lineLengthKm(leg.line);
+    out[leg.id] = { start, end: sinceStartKm / totalKm };
+  }
+  return out;
+})();
 
 export const overnightStops: OvernightStop[] = [
   {
@@ -218,7 +264,7 @@ export const overnightStops: OvernightStop[] = [
     lngLat: BOLZANO,
     label: "Bolzano",
     kind: "station",
-    days: [5],
+    days: [5, 8],
     clusterId: "dolomites",
   },
   {
@@ -267,7 +313,7 @@ export const overnightStops: OvernightStop[] = [
     kind: "tbd",
     destinationSlug: "venice",
     detailSlug: "venice-lodging",
-    days: [9],
+    days: [8, 9],
     clusterId: "venice",
   },
   {
@@ -308,11 +354,12 @@ export const stopClusters: StopCluster[] = [
   {
     id: "venice",
     label: "Venice",
-    lngLat: [12.327, 45.437],
+    lngLat: VENICE,
     stopIds: ["venice-tbd", "vce"],
-    expandOnDays: [9, 10],
+    expandOnDays: [8, 9, 10],
     anchor: "left",
   },
 ];
 
-export const unresolvedPoint: LngLat = unresolvedExit[unresolvedExit.length - 1];
+/** The "?" marker on Day 8: sits on the still-undecided descent, not an endpoint. */
+export const unresolvedPoint: LngLat = along(trailPuezValGardena, 0.5);
