@@ -7,7 +7,10 @@ export function DaySection({ day }: { day: Day }) {
     <section
       id={`day-${day.id}`}
       data-day={day.id}
-      className="relative flex min-h-[100dvh] scroll-mt-4 flex-col justify-end"
+      className={cn(
+        "relative flex min-h-[100dvh] scroll-mt-24 flex-col justify-end",
+        day.id === 10 && "min-h-[180dvh]",
+      )}
     >
       <div className="overlay-panel mx-auto w-full max-w-[640px] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28">
         <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail)]">

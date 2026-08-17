@@ -21,8 +21,9 @@ export const days: Day[] = [
     isHikeDay: false,
     act: 1,
     mapFrame: {
-      bounds: [-98, 32, 18, 56],
-      showFlight: true,
+      bounds: [11.48, 48.08, 11.86, 48.38],
+      pitch: 28,
+      bearing: 8,
     },
     timeline: [
       {
@@ -65,6 +66,8 @@ export const days: Day[] = [
     act: 1,
     mapFrame: {
       bounds: [11.48, 48.08, 11.72, 48.24],
+      pitch: 32,
+      bearing: 12,
     },
     timeline: [
       {
@@ -117,6 +120,8 @@ export const days: Day[] = [
     act: 1,
     mapFrame: {
       bounds: [11.48, 48.08, 11.72, 48.24],
+      pitch: 36,
+      bearing: 8,
     },
     timeline: [
       {
@@ -156,6 +161,8 @@ export const days: Day[] = [
     act: 1,
     mapFrame: {
       bounds: [11.28, 47.18, 12.28, 48.22],
+      pitch: 52,
+      bearing: 6,
     },
     timeline: [
       {
@@ -200,6 +207,8 @@ export const days: Day[] = [
     act: 2,
     mapFrame: {
       bounds: [11.28, 46.48, 11.78, 47.32],
+      pitch: 54,
+      bearing: 18,
     },
     timeline: [
       {
@@ -255,6 +264,8 @@ export const days: Day[] = [
     act: 2,
     mapFrame: {
       bounds: [11.66, 46.572, 11.8, 46.64],
+      pitch: 64,
+      bearing: 28,
     },
     timeline: [
       {
@@ -288,6 +299,8 @@ export const days: Day[] = [
     act: 2,
     mapFrame: {
       bounds: [11.74, 46.562, 11.86, 46.63],
+      pitch: 62,
+      bearing: 42,
     },
     timeline: [
       {
@@ -321,6 +334,8 @@ export const days: Day[] = [
     act: 2,
     mapFrame: {
       bounds: [11.74, 46.5, 11.92, 46.64],
+      pitch: 52,
+      bearing: 16,
     },
     timeline: [
       {
@@ -359,6 +374,8 @@ export const days: Day[] = [
     act: 3,
     mapFrame: {
       bounds: [12.26, 45.4, 12.42, 45.48],
+      pitch: 42,
+      bearing: -12,
     },
     timeline: [
       {
@@ -389,8 +406,9 @@ export const days: Day[] = [
     isHikeDay: false,
     act: 3,
     mapFrame: {
-      bounds: [-98, 32, 18, 56],
-      showFlight: true,
+      bounds: [12.22, 45.38, 12.44, 45.54],
+      pitch: 28,
+      bearing: 0,
     },
     timeline: [
       {
@@ -662,6 +680,8 @@ export function getDetailForDay(dayId: number, slug: string) {
 
 export const journeyFrame: Day["mapFrame"] = {
   bounds: [10.95, 45.28, 12.55, 48.35],
+  pitch: 38,
+  bearing: 8,
 };
 
 export const teaserDestinations = ["munich", "puez-odle", "venice"] as const;

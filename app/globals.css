@@ -98,8 +98,8 @@ a {
 .overlay-panel {
   background: linear-gradient(
     to top,
-    color-mix(in srgb, var(--paper) 38%, transparent) 0%,
-    color-mix(in srgb, var(--paper) 8%, transparent) 45%,
+    color-mix(in srgb, var(--paper) 74%, transparent) 0%,
+    color-mix(in srgb, var(--paper) 28%, transparent) 42%,
     transparent 100%
   );
 }
@@ -111,9 +111,35 @@ a {
     0 0 28px var(--paper);
 }
 
+.trip-header {
+  pointer-events: none;
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 30;
+}
+
+.trip-header-inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--trail) 72%, transparent);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  padding: max(10px, env(safe-area-inset-top)) 20px 12px;
+  backdrop-filter: blur(16px);
+}
+
+.maplibregl-ctrl-bottom-right {
+  right: 8px;
+  bottom: max(8px, env(safe-area-inset-bottom));
+}
+
 .maplibregl-ctrl-attrib {
-  font-size: 10px;
-  background: color-mix(in srgb, var(--paper) 80%, transparent) !important;
+  font-size: 9px;
+  max-width: min(52vw, 280px);
+  background: color-mix(in srgb, var(--paper) 72%, transparent) !important;
   color: var(--dolomite);
 }
 
@@ -133,11 +159,19 @@ a {
   height: 100% !important;
 }
 
+.map-pin,
+.map-cluster,
+.map-unresolved,
+.map-here,
+.map-plane {
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+
 .map-pin {
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  pointer-events: none;
   transform: translate(-5px, 4px);
 }
 
@@ -147,7 +181,7 @@ a {
   margin-top: 2px;
   border-radius: 50%;
   background: var(--trail);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--paper) 80%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--paper) 82%, transparent);
   flex-shrink: 0;
 }
 
@@ -166,13 +200,17 @@ a {
   gap: 1px;
 }
 
-.map-pin-label {
+.map-pin-label,
+.map-cluster-label {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink);
   white-space: nowrap;
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  padding: 1px 6px 2px;
+  border-radius: 2px;
 }
 
 .map-pin-coords {
@@ -182,10 +220,45 @@ a {
   letter-spacing: 0.02em;
   color: var(--dolomite);
   white-space: nowrap;
+  background: color-mix(in srgb, var(--paper) 86%, transparent);
+  padding: 0 6px 1px;
+  border-radius: 0 0 2px 2px;
 }
 
 .map-zoomed .map-pin-coords {
   display: block;
+}
+
+.map-pin-visited .map-pin-copy {
+  display: none;
+}
+
+.map-pin-visited .map-pin-dot {
+  width: 7px;
+  height: 7px;
+  opacity: 0.85;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--paper) 70%, transparent);
+}
+
+.map-cluster {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-cluster-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--trail);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--paper) 78%, transparent);
 }
 
 .map-label {
@@ -211,10 +284,10 @@ a {
 
 .map-unresolved {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 16px;
   color: var(--signal);
   line-height: 1;
-  pointer-events: none;
+  text-shadow: 0 0 10px var(--paper);
 }
 
 .map-here {
@@ -223,7 +296,11 @@ a {
   border-radius: 50%;
   background: var(--trail);
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--trail) 28%, transparent);
-  pointer-events: none;
+}
+
+.map-plane {
+  color: var(--paper);
+  filter: drop-shadow(0 1px 2px rgba(15, 18, 16, 0.55));
 }
 
 .sr-only {

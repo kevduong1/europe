@@ -1,5 +1,5 @@
 import { densify, greatCircle, nearestT, type LngLat } from "@/lib/geo";
-import type { OvernightStop, PlaceLabel, RouteSegment } from "./types";
+import type { OvernightStop, PlaceLabel, RouteSegment, StopCluster } from "./types";
 
 export const MCI: LngLat = [-94.7139, 39.2976];
 export const MUC: LngLat = [11.7861, 48.3538];
@@ -287,6 +287,7 @@ export const overnightStops: OvernightStop[] = [
     label: "Munich Airport",
     kind: "airport",
     days: [2],
+    clusterId: "munich",
   },
   {
     id: "wombat",
@@ -296,6 +297,7 @@ export const overnightStops: OvernightStop[] = [
     destinationSlug: "munich",
     detailSlug: "wombat-hostel",
     days: [2, 3],
+    clusterId: "munich",
   },
   {
     id: "eisbachwelle",
@@ -305,6 +307,7 @@ export const overnightStops: OvernightStop[] = [
     destinationSlug: "munich",
     detailSlug: "eisbachwelle",
     days: [3],
+    clusterId: "munich",
   },
   {
     id: "montagu",
@@ -314,6 +317,7 @@ export const overnightStops: OvernightStop[] = [
     destinationSlug: "innsbruck",
     detailSlug: "montagu-hostel",
     days: [4],
+    clusterId: "innsbruck",
   },
   {
     id: "bolzano",
@@ -321,6 +325,7 @@ export const overnightStops: OvernightStop[] = [
     label: "Bolzano",
     kind: "station",
     days: [5],
+    clusterId: "dolomites",
   },
   {
     id: "ortisei",
@@ -329,6 +334,7 @@ export const overnightStops: OvernightStop[] = [
     kind: "town",
     destinationSlug: "ortisei",
     days: [5],
+    clusterId: "dolomites",
   },
   {
     id: "resciesa",
@@ -338,6 +344,7 @@ export const overnightStops: OvernightStop[] = [
     destinationSlug: "puez-odle",
     detailSlug: "rifugio-resciesa",
     days: [5],
+    clusterId: "dolomites",
   },
   {
     id: "firenze",
@@ -347,6 +354,7 @@ export const overnightStops: OvernightStop[] = [
     destinationSlug: "puez-odle",
     detailSlug: "rifugio-firenze",
     days: [6],
+    clusterId: "dolomites",
   },
   {
     id: "puez",
@@ -356,6 +364,7 @@ export const overnightStops: OvernightStop[] = [
     destinationSlug: "puez-odle",
     detailSlug: "rifugio-puez",
     days: [7],
+    clusterId: "dolomites",
   },
   {
     id: "venice-tbd",
@@ -365,6 +374,7 @@ export const overnightStops: OvernightStop[] = [
     destinationSlug: "venice",
     detailSlug: "venice-lodging",
     days: [9],
+    clusterId: "venice",
   },
   {
     id: "vce",
@@ -372,6 +382,42 @@ export const overnightStops: OvernightStop[] = [
     label: "Venice Airport",
     kind: "airport",
     days: [10],
+    clusterId: "venice",
+  },
+];
+
+export const stopClusters: StopCluster[] = [
+  {
+    id: "munich",
+    label: "Munich",
+    lngLat: [11.575, 48.137],
+    stopIds: ["muc", "wombat", "eisbachwelle"],
+    expandOnDays: [2, 3],
+    anchor: "right",
+  },
+  {
+    id: "innsbruck",
+    label: "Innsbruck",
+    lngLat: [11.404, 47.269],
+    stopIds: ["montagu"],
+    expandOnDays: [4],
+    anchor: "left",
+  },
+  {
+    id: "dolomites",
+    label: "Puez-Odle",
+    lngLat: [11.74, 46.608],
+    stopIds: ["bolzano", "ortisei", "resciesa", "firenze", "puez"],
+    expandOnDays: [5, 6, 7, 8],
+    anchor: "top",
+  },
+  {
+    id: "venice",
+    label: "Venice",
+    lngLat: [12.327, 45.437],
+    stopIds: ["venice-tbd", "vce"],
+    expandOnDays: [9, 10],
+    anchor: "left",
   },
 ];
 

@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { getDestination } from "@/data/trip";
+import { getDestination, trip } from "@/data/trip";
 import { EssentialsSection } from "./essentials-section";
 import { Hero } from "./hero";
 import { Itinerary } from "./itinerary";
@@ -37,10 +37,16 @@ export function TripShell() {
 
   function syncMap() {
     const hero = document.getElementById("hero");
+    const crossing = document.getElementById("crossing");
     const sections = [
       ...document.querySelectorAll<HTMLElement>("[data-day]"),
     ];
-    const view = readJourneyView(hero, sections, window.innerHeight);
+    const view = readJourneyView(
+      hero,
+      crossing,
+      sections,
+      window.innerHeight,
+    );
     mapRef.current?.setView(view);
     if (labelRef.current && view.label !== lastLabel.current) {
       lastLabel.current = view.label;
@@ -95,17 +101,32 @@ export function TripShell() {
         <JourneyMap ref={mapRef} onReady={syncMap} />
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-20 h-24 bg-gradient-to-b from-[color-mix(in_srgb,var(--paper)_55%,transparent)] to-transparent" />
-
-      <p
-        ref={labelRef}
-        className="overlay-type pointer-events-none fixed left-4 right-4 z-30 pt-[max(12px,env(safe-area-inset-top))] text-center font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--ink)]"
-      >
-        The route
-      </p>
+      <header className="trip-header">
+        <div className="trip-header-inner">
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--trail)]">
+              {trip.eyebrow}
+            </p>
+            <p className="font-display mt-0.5 text-[22px] leading-none [font-variation-settings:'WONK'_0.7,'opsz'_22] sm:text-[24px]">
+              {trip.title}
+            </p>
+          </div>
+          <p
+            ref={labelRef}
+            className="max-w-[46%] text-right font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink)] sm:text-[11px]"
+          >
+            The route
+          </p>
+        </div>
+      </header>
 
       <main className="relative z-10">
         <Hero />
+        <section
+          id="crossing"
+          className="relative h-[190vh]"
+          aria-hidden="true"
+        />
         <Itinerary />
         <EssentialsSection />
         <footer className="overlay-panel relative z-10 px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-10 text-center">

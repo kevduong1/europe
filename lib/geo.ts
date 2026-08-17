@@ -171,8 +171,29 @@ export function formatLngLat([lng, lat]: LngLat) {
   return `${Math.abs(lat).toFixed(4)}°${ns}  ${Math.abs(lng).toFixed(4)}°${ew}`;
 }
 
+export function clamp(value: number, min = 0, max = 1) {
+  return Math.min(max, Math.max(min, value));
+}
+
 export function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
+}
+
+export function lerpBearing(a: number, b: number, t: number) {
+  const diff = ((b - a + 540) % 360) - 180;
+  return (a + diff * t + 360) % 360;
+}
+
+/** Initial bearing from A to B, degrees clockwise from north. */
+export function bearingBetween(a: LngLat, b: LngLat): number {
+  const lat1 = toRad(a[1]);
+  const lat2 = toRad(b[1]);
+  const dLng = toRad(b[0] - a[0]);
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x =
+    Math.cos(lat1) * Math.sin(lat2) -
+    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
 
 export function lerpBounds(

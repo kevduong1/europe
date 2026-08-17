@@ -120,6 +120,16 @@ export type OvernightStop = {
   detailSlug?: string;
   days: number[];
   always?: boolean;
+  clusterId?: string;
+};
+
+export type StopCluster = {
+  id: string;
+  label: string;
+  lngLat: LngLat;
+  stopIds: string[];
+  expandOnDays: number[];
+  anchor?: "left" | "right" | "top" | "bottom";
 };
 
 export type PlaceLabel = {
