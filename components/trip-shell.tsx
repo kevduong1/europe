@@ -37,16 +37,10 @@ export function TripShell() {
 
   function syncMap() {
     const hero = document.getElementById("hero");
-    const crossing = document.getElementById("crossing");
     const sections = [
       ...document.querySelectorAll<HTMLElement>("[data-day]"),
     ];
-    const view = readJourneyView(
-      hero,
-      crossing,
-      sections,
-      window.innerHeight,
-    );
+    const view = readJourneyView(hero, sections, window.innerHeight);
     mapRef.current?.setView(view);
     if (labelRef.current && view.label !== lastLabel.current) {
       lastLabel.current = view.label;
@@ -122,11 +116,6 @@ export function TripShell() {
 
       <main className="relative z-10">
         <Hero />
-        <section
-          id="crossing"
-          className="relative h-[210vh]"
-          aria-hidden="true"
-        />
         <Itinerary />
         <EssentialsSection />
         <footer className="overlay-panel relative z-10 px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-10 text-center">

@@ -9,6 +9,7 @@ export function DaySection({ day }: { day: Day }) {
       data-day={day.id}
       className={cn(
         "relative flex min-h-[100dvh] scroll-mt-24 flex-col justify-end",
+        day.id === 1 && "min-h-[260dvh]",
         day.id === 10 && "min-h-[180dvh]",
       )}
     >

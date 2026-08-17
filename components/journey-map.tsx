@@ -22,12 +22,13 @@ import {
   unresolvedPoint,
 } from "@/data/route";
 import type { MapFrame, OvernightStop, StopCluster } from "@/data/types";
-import { adaptBasemapStyle, fallbackStyle, STYLE_URL } from "@/lib/basemap-style";
+import { loadPaperStyle } from "@/lib/basemap-style";
 import {
   along,
   bearingBetween,
   centerOfBounds,
   formatLngLat,
+  pointsAlong,
   sliceLine,
   type LngLat,
 } from "@/lib/geo";
@@ -146,6 +147,18 @@ function planeElement() {
   return el;
 }
 
+function crumbCollection(line: LngLat[], t: number, spacingKm: number) {
+  return {
+    type: "FeatureCollection" as const,
+    features: pointsAlong(line, t, spacingKm).map((coordinates, index) => ({
+      type: "Feature" as const,
+      id: index,
+      properties: {},
+      geometry: { type: "Point" as const, coordinates },
+    })),
+  };
+}
+
 function withRouteLayers(base: StyleSpecification): StyleSpecification {
   const style = structuredClone(base);
   style.sources = {
@@ -158,25 +171,28 @@ function withRouteLayers(base: StyleSpecification): StyleSpecification {
       type: "geojson",
       data: lineFeature("trail-active", sliceLine(orangeTrail, 0, 0.002)),
     },
+    crumbs: {
+      type: "geojson",
+      data: crumbCollection(orangeTrail, 0, 8),
+    },
     flights: {
       type: "geojson",
       data: lineFeature("flight-active", sliceLine(flightOut, 0, 0.002)),
     },
   };
+  const lineWidth: ["interpolate", ["linear"], ["zoom"], ...number[]] = [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    2,
+    3,
+    6,
+    4.5,
+    12,
+    6,
+  ];
   style.layers = [
     ...style.layers,
-    {
-      id: "trail-ghost-glow",
-      type: "line",
-      source: "trail-ghost",
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": "#fff6ee",
-        "line-width": 10,
-        "line-opacity": 0.22,
-        "line-blur": 2,
-      },
-    },
     {
       id: "trail-ghost",
       type: "line",
@@ -184,20 +200,8 @@ function withRouteLayers(base: StyleSpecification): StyleSpecification {
       layout: { "line-cap": "round", "line-join": "round" },
       paint: {
         "line-color": TRAIL,
-        "line-width": 2.4,
-        "line-opacity": 0.38,
-      },
-    },
-    {
-      id: "trail-active-glow",
-      type: "line",
-      source: "trail-active",
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": TRAIL,
-        "line-width": 14,
+        "line-width": 2,
         "line-opacity": 0.28,
-        "line-blur": 3.5,
       },
     },
     {
@@ -206,9 +210,9 @@ function withRouteLayers(base: StyleSpecification): StyleSpecification {
       source: "trail-active",
       layout: { "line-cap": "round", "line-join": "round" },
       paint: {
-        "line-color": "#fff6ee",
-        "line-width": 7.5,
-        "line-opacity": 0.92,
+        "line-color": "#1f2421",
+        "line-width": 7,
+        "line-opacity": 0,
       },
     },
     {
@@ -218,20 +222,30 @@ function withRouteLayers(base: StyleSpecification): StyleSpecification {
       layout: { "line-cap": "round", "line-join": "round" },
       paint: {
         "line-color": TRAIL,
-        "line-width": 3.6,
-        "line-opacity": 1,
+        "line-width": lineWidth,
+        "line-opacity": 0,
       },
     },
     {
-      id: "route-flight-glow",
-      type: "line",
-      source: "flights",
-      layout: { "line-cap": "round", "line-join": "round" },
+      id: "trail-crumbs",
+      type: "circle",
+      source: "crumbs",
       paint: {
-        "line-color": "#fff6ee",
-        "line-width": 6,
-        "line-opacity": 0,
-        "line-blur": 1.4,
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          3,
+          2.4,
+          8,
+          3.6,
+          13,
+          4.4,
+        ],
+        "circle-color": TRAIL,
+        "circle-stroke-width": 1.4,
+        "circle-stroke-color": "#faf9f6",
+        "circle-opacity": 0,
       },
     },
     {
@@ -241,8 +255,8 @@ function withRouteLayers(base: StyleSpecification): StyleSpecification {
       layout: { "line-cap": "round", "line-join": "round" },
       paint: {
         "line-color": TRAIL,
-        "line-width": 2.2,
-        "line-dasharray": [2.4, 1.8],
+        "line-width": 2.4,
+        "line-dasharray": [2.6, 1.8],
         "line-opacity": 0,
       },
     },
@@ -281,34 +295,41 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
     function applyTrail(view: JourneyView) {
       const map = mapRef.current;
       if (!map) return;
-      const showGhost = view.phase === "overview" || view.phase === "day";
-      const showActive = view.phase === "day" || (view.phase === "overview" && view.trailT > 0.02);
-      setLineOpacity("trail-ghost-glow", showGhost ? 0.2 : 0);
-      setLineOpacity("trail-ghost", showGhost ? 0.34 : 0);
-      setLineOpacity("trail-active-glow", showActive ? 0.28 : 0);
-      setLineOpacity("trail-active-casing", showActive ? 0.92 : 0);
-      setLineOpacity("trail-active", showActive ? 1 : 0);
+      const traveled = Math.min(1, Math.max(0, view.trailT));
+      const showTraveled = traveled > 0.004;
+      const showPlan = view.phase === "overview" || view.phase === "day";
+      const showCrumbs = showTraveled && view.phase !== "flight";
+      setLineOpacity("trail-ghost", showPlan ? (showTraveled ? 0.18 : 0.32) : 0);
+      setLineOpacity("trail-active-casing", showTraveled ? 0.28 : 0);
+      setLineOpacity("trail-active", showTraveled ? 1 : 0);
+      if (map.getLayer("trail-crumbs")) {
+        map.setPaintProperty(
+          "trail-crumbs",
+          "circle-opacity",
+          showCrumbs ? 1 : 0,
+        );
+      }
 
-      const t = Math.min(1, Math.max(0.002, view.phase === "overview" && view.trailT < 0.02 ? 0.002 : view.trailT));
-      if (Math.abs(t - lastTrailT.current) < 0.0015) return;
+      const t = showTraveled ? Math.max(0.006, traveled) : 0.006;
+      if (Math.abs(t - lastTrailT.current) < 0.001 && lastTrailT.current >= 0) return;
       lastTrailT.current = t;
+      const line = sliceLine(orangeTrail, 0, t);
       const source = map.getSource("trail-active") as GeoJSONSource | undefined;
       source?.setData({
         type: "Feature",
         properties: {},
-        geometry: {
-          type: "LineString",
-          coordinates: sliceLine(orangeTrail, 0, t),
-        },
+        geometry: { type: "LineString", coordinates: line },
       });
+      const crumbs = map.getSource("crumbs") as GeoJSONSource | undefined;
+      crumbs?.setData(crumbCollection(orangeTrail, t, 7));
     }
 
     function applyFlight(view: JourneyView) {
       const map = mapRef.current;
       if (!map?.getLayer("route-flight")) return;
-      const show = view.showFlight && view.flightT > 0.003;
+      const show = Boolean(view.showFlight && view.flightT > 0.003);
       const line = view.flightLeg === "home" ? flightHome : flightOut;
-      const t = show ? Math.max(0.004, view.flightT) : 0.004;
+      const t = show ? Math.max(0.006, view.flightT) : 0.006;
       const key = `${view.flightLeg ?? "none"}:${t.toFixed(3)}:${show}`;
       if (key === lastFlightKey.current) return;
       lastFlightKey.current = key;
@@ -322,7 +343,6 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         },
       });
       setLineOpacity("route-flight", show ? 0.95 : 0);
-      setLineOpacity("route-flight-glow", show ? 0.55 : 0);
     }
 
     function applyMarkers(view: JourneyView) {
@@ -384,7 +404,8 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         }
       }
 
-      const onTrail = view.phase === "day";
+      const onTrail =
+        view.phase === "day" || (view.phase === "overview" && view.trailT > 0.02);
       const onPlane = view.phase === "flight";
       if (hereRef.current) {
         hereRef.current.getElement().style.opacity = onTrail ? "1" : "0";
@@ -458,7 +479,9 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         const mount = containerRef.current;
         if (cancelled || !mount) return;
 
-        const style = withRouteLayers(structuredClone(fallbackStyle));
+        const base = await loadPaperStyle();
+        if (cancelled) return;
+        const style = withRouteLayers(base);
         map = new MapLibreMap({
           container: mount,
           style,
@@ -481,11 +504,16 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         );
         mapRef.current = map;
         map.resize();
-        observer = new ResizeObserver(() => map?.resize());
+        observer = new ResizeObserver(() => {
+          if (!mapRef.current) return;
+          map?.resize();
+        });
         observer.observe(mount);
 
+        let finished = false;
         const finishReady = () => {
-          if (!map || cancelled) return;
+          if (!map || cancelled || finished) return;
+          finished = true;
           map.resize();
           if (markersRef.current.length === 0) {
             for (const cluster of stopClusters) {
@@ -555,25 +583,8 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           onReadyRef.current?.();
         };
 
-        map.once("style.load", finishReady);
-        if (map.isStyleLoaded()) finishReady();
-
-        try {
-          const response = await fetch(STYLE_URL);
-          if (!response.ok || cancelled || !map) return;
-          const nextStyle = withRouteLayers(
-            adaptBasemapStyle(await response.json()),
-          );
-          map.setStyle(nextStyle);
-          map.once("style.load", () => {
-            lastTrailT.current = -1;
-            lastFlightKey.current = "";
-            map?.resize();
-            applyViewRef.current(pendingRef.current ?? OVERVIEW);
-          });
-        } catch {
-          // Keep the paper fallback and orange trail.
-        }
+        map.once("load", finishReady);
+        if (map.loaded()) finishReady();
       }
 
       void init();

@@ -3,7 +3,6 @@ import type { StyleSpecification } from "maplibre-gl";
 const PAPER = "#FAF9F6";
 const INK = "#1F2421";
 const DOLOMITE = "#8A8F98";
-const MEADOW = "#4E6E58";
 const LAGOON = "#3E5C76";
 
 const HIDDEN_LAYERS = new Set([
@@ -19,9 +18,6 @@ const HIDDEN_LAYERS = new Set([
   "label_other",
   "label_village",
   "label_state",
-  "label_country_3",
-  "label_country_2",
-  "label_country_1",
   "label_town",
   "label_city",
   "label_city_capital",
@@ -114,7 +110,17 @@ export function adaptBasemapStyle(input: StyleSpecification): StyleSpecification
         break;
       case "boundary_2":
         paint(layer)["line-color"] = DOLOMITE;
-        paint(layer)["line-opacity"] = 0.25;
+        paint(layer)["line-opacity"] = 0.4;
+        break;
+      case "label_country_1":
+      case "label_country_2":
+      case "label_country_3":
+        if (layer.type === "symbol") {
+          paint(layer)["text-color"] = INK;
+          paint(layer)["text-halo-color"] = PAPER;
+          paint(layer)["text-halo-width"] = 1.4;
+          paint(layer)["text-opacity"] = 0.55;
+        }
         break;
       case "highway_major_casing":
       case "highway_major_inner":
@@ -154,9 +160,17 @@ export function adaptBasemapStyle(input: StyleSpecification): StyleSpecification
     }
   }
 
-  void INK;
-  void MEADOW;
   return style;
 }
 
 export const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
+
+export async function loadPaperStyle(): Promise<StyleSpecification> {
+  try {
+    const response = await fetch(STYLE_URL);
+    if (!response.ok) return structuredClone(fallbackStyle);
+    return adaptBasemapStyle(await response.json());
+  } catch {
+    return structuredClone(fallbackStyle);
+  }
+}

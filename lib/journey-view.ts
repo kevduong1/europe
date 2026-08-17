@@ -15,6 +15,7 @@ import {
 } from "@/data/route";
 import { days, journeyFrame } from "@/data/trip";
 import {
+  along,
   clamp,
   lerp,
   lerpBearing,
@@ -112,12 +113,23 @@ export const OVERVIEW: JourneyView = pose({
 
 const ATLANTIC_CENTER: LngLat = [-41.5, 47.2];
 const ATLANTIC_ZOOM = 3.05;
+const USA_CENTER: LngLat = [-97.2, 39.6];
+const USA_ZOOM = 3.4;
 
-function worldDepartView(): JourneyView {
+function followPlane(t: number, zoom: number): LngLat {
+  const u = clamp(t);
+  const here = along(flightOut, u);
+  const ahead = along(flightOut, Math.min(1, u + 0.045));
+  const point = lerpLngLat(here, ahead, 0.35);
+  const latPad = 5.2 * 2 ** (USA_ZOOM - zoom);
+  return [point[0], point[1] - latPad];
+}
+
+function usaDepartView(): JourneyView {
   return pose({
     phase: "flight",
-    center: ATLANTIC_CENTER,
-    zoom: ATLANTIC_ZOOM,
+    center: USA_CENTER,
+    zoom: USA_ZOOM,
     pitch: 0,
     bearing: 0,
     showFlight: true,
@@ -135,13 +147,14 @@ function worldDepartView(): JourneyView {
 function flightOutView(t: number): JourneyView {
   const u = clamp(t);
   const zoom =
-    u < 0.84
-      ? ATLANTIC_ZOOM
-      : lerp(ATLANTIC_ZOOM, 6.8, smoothstep((u - 0.84) / 0.16));
+    u < 0.12
+      ? USA_ZOOM
+      : u < 0.74
+        ? lerp(USA_ZOOM, 3.05, smoothstep((u - 0.12) / 0.62))
+        : lerp(3.05, 7.15, smoothstep((u - 0.74) / 0.26));
+  const tracked = followPlane(u, zoom);
   const center =
-    u < 0.84
-      ? ATLANTIC_CENTER
-      : lerpLngLat(ATLANTIC_CENTER, MUC, smoothstep((u - 0.84) / 0.16));
+    u < 0.88 ? tracked : lerpLngLat(tracked, MUC, smoothstep((u - 0.88) / 0.12));
   return pose({
     phase: "flight",
     center,
@@ -323,7 +336,6 @@ function sectionProgress(
 
 export function readJourneyView(
   hero: HTMLElement | null,
-  crossing: HTMLElement | null,
   sections: HTMLElement[],
   viewportHeight: number,
 ): JourneyView {
@@ -334,16 +346,6 @@ export function readJourneyView(
   const heroRect = hero.getBoundingClientRect();
   if (heroRect.bottom > viewportHeight * FREEZE) {
     return OVERVIEW;
-  }
-
-  if (crossing instanceof HTMLElement) {
-    const rect = crossing.getBoundingClientRect();
-    if (rect.bottom > viewportHeight * 0.4) {
-      const span = Math.max(1, rect.height - viewportHeight * 0.32);
-      const t = clamp((viewportHeight * FREEZE - rect.top) / span);
-      if (t < 0.16) return worldDepartView();
-      return flightOutView((t - 0.16) / 0.84);
-    }
   }
 
   if (sections.length === 0) return OVERVIEW;
@@ -358,6 +360,15 @@ export function readJourneyView(
   const next = sections[index + 1];
   const dayId = Number(current.dataset.day);
   const t = sectionProgress(current, next, anchor);
+
+  if (dayId === 1) {
+    if (t < 0.14) return usaDepartView();
+    const flight = flightOutView(clamp((t - 0.14) / 0.68));
+    if (next && t > 0.82) {
+      return mix(flightOutView(1), viewForDay(Number(next.dataset.day)), (t - 0.82) / 0.18);
+    }
+    return flight;
+  }
 
   if (dayId === 5) {
     const start = viewForDay(5);
