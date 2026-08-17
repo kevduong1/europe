@@ -4,7 +4,7 @@ export const trip = {
   title: "Europe 2026",
   eyebrow: "Sept 5 – 14, 2026",
   editorial:
-    "Ten days that change character as they go: cities and rail, then three nights of huts across the Puez-Odle, then down to the lagoon. The middle is the point of the trip.",
+    "Ten days that change character as they go: cities and rail, then two hut nights and a summit over the Dolomites, a spa in Val di Fassa, then down to the lagoon. The middle is the point of the trip.",
 };
 
 export const days: Day[] = [
@@ -109,6 +109,20 @@ export const days: Day[] = [
         optionalAnnotation: "if it's running",
         note: "Check if the wave is active — a recent cleanup effort may have temporarily eliminated it.",
         detailSlug: "eisbachwelle",
+      },
+      {
+        kind: "event",
+        id: "english-garden",
+        title: "Walk up the Englischer Garten",
+        note: "Eisbachwelle up to the Kleinhesseloher See, past the Monopteros and the Chinese Tower.",
+        detailSlug: "english-garden",
+      },
+      {
+        kind: "event",
+        id: "hofbrauhaus",
+        title: "Hofbräuhaus am Platzl",
+        note: "The famous beer hall, back in the old town.",
+        detailSlug: "hofbrauhaus",
       },
     ],
     lodging: {
@@ -232,7 +246,7 @@ export const days: Day[] = [
         id: "hike-resciesa-firenze",
         mode: "trail",
         label: "Resciesa → Rifugio Firenze",
-        meta: "Toward Puez-Odle",
+        meta: "Deeper into the Dolomites",
         detailSlug: "rifugio-firenze",
       },
     ],
@@ -438,20 +452,20 @@ export const destinations: Destination[] = [
     lngLat: [11.6717, 46.5761],
   },
   {
-    slug: "puez-odle",
-    name: "Puez-Odle",
+    slug: "dolomites",
+    name: "Dolomites",
     dates: "Sept 9–12",
     dayIds: [5, 6, 7, 8],
-    lodging: "Rifugio Resciesa, Rifugio Firenze, Rifugio Puez",
+    lodging: "Rifugio Resciesa, Rifugio Firenze, then Val di Fassa (lodging TBD)",
     transportIn: "From Ortisei onto the ridge.",
-    transportOut:
-      "Descend to Val Gardena (line still to be chosen), then bus to Bolzano and train to Venice.",
+    transportOut: "Bus over Passo Costalunga to Bolzano, then train to Venice.",
     photo: "/photos/dolomites.jpg",
     photoAlt:
       "The Odle peaks from Seceda, limestone spires above the Val Gardena ridge.",
-    summary: "Three hut nights across the group. This is the middle of the trip.",
-    stops: ["Rifugio Resciesa", "Rifugio Firenze", "Rifugio Puez"],
-    lngLat: [11.74, 46.608],
+    summary:
+      "Two hut nights, a summit morning on Seceda, then down to a spa in Val di Fassa before the train out.",
+    stops: ["Rifugio Resciesa", "Rifugio Firenze", "Seceda"],
+    lngLat: [11.7, 46.595],
   },
   {
     slug: "venice",
@@ -482,7 +496,7 @@ export const essentials: Essential[] = [
   {
     id: "packing-huts",
     title: "Packing for the huts",
-    body: "Pack light for the traverse. Bags stay minimal for three days, from Ortisei to the exit.",
+    body: "Pack light for the two hut nights, Resciesa and Firenze. Normal luggage again from Val di Fassa onward.",
   },
   {
     id: "documents",
@@ -492,7 +506,7 @@ export const essentials: Essential[] = [
   {
     id: "bookings",
     title: "Still to book",
-    body: "The Wombat Hostel and Montagu Hostel, 1–2 months out. Venice lodging, first night the 12th. The descent line off the Puez plateau.",
+    body: "The Wombat Hostel and Montagu Hostel, 1–2 months out. Val di Fassa lodging, night of the 11th. Venice lodging, night of the 12th.",
   },
 ];
 
@@ -534,6 +548,20 @@ export const details: DetailRecord[] = [
     body: "The river wave in the Englischer Garten. Optional, and only if it's running.",
     extra:
       "Check if the wave is active — a recent cleanup effort may have temporarily eliminated it.",
+  },
+  {
+    slug: "english-garden",
+    dayId: 3,
+    title: "Englischer Garten",
+    kind: "note",
+    body: "From Eisbachwelle up to the Kleinhesseloher See, past the Monopteros and the Chinesischer Turm.",
+  },
+  {
+    slug: "hofbrauhaus",
+    dayId: 3,
+    title: "Hofbräuhaus am Platzl",
+    kind: "note",
+    body: "The famous beer hall in the old town. No booking needed for a walk-in.",
   },
   {
     slug: "train-munich-innsbruck",
@@ -579,19 +607,47 @@ export const details: DetailRecord[] = [
     body: "Second hut night, after hiking across the Odle group from Resciesa.",
   },
   {
-    slug: "rifugio-puez",
+    slug: "seceda-summit",
     dayId: 7,
-    title: "Rifugio Puez",
-    kind: "stay",
-    body: "Third hut night, on the Puez plateau.",
+    title: "Seceda",
+    kind: "hike",
+    body: "Up from Rifugio Firenze through Val Cisles to the summit ridge, ~2,519 m, looking straight at the Odle group.",
   },
   {
-    slug: "exit-route",
-    dayId: 8,
-    title: "Rifugio Puez to Val Gardena",
+    slug: "down-to-ortisei",
+    dayId: 7,
+    title: "Seceda to Ortisei",
     kind: "hike",
-    body: "Off the Puez plateau and down into Val Gardena, through Vallunga to Selva and along the valley to Ortisei. The descent line fades here on purpose — the exact path off the plateau isn't chosen yet.",
-    todo: "Pin down the descent line off the plateau",
+    body: "The Seceda cable car runs down to Ortisei — a fast, scenic descent instead of retracing the climb on foot.",
+  },
+  {
+    slug: "to-val-di-fassa",
+    dayId: 7,
+    title: "Ortisei to Val di Fassa",
+    kind: "bus",
+    body: "Over Passo Sella and down through Canazei into Val di Fassa, ending at QC Terme Dolomiti in Pozza di Fassa.",
+  },
+  {
+    slug: "qc-terme-dolomiti",
+    dayId: 7,
+    title: "QC Terme Dolomiti",
+    kind: "note",
+    body: "A spa afternoon in Pozza di Fassa — indoor and outdoor pools with Dolomite views. A different kind of hut day.",
+  },
+  {
+    slug: "val-di-fassa-night",
+    dayId: 7,
+    title: "Val di Fassa, first night",
+    kind: "stay",
+    body: "Where exactly in the valley is still open — Pozza, Canazei, and Vigo di Fassa are all in range of the spa.",
+    todo: "Book a place to stay in Val di Fassa",
+  },
+  {
+    slug: "bus-fassa-bolzano",
+    dayId: 8,
+    title: "Val di Fassa to Bolzano",
+    kind: "bus",
+    body: "Over Passo Costalunga (Karerpass) and down through Nova Levante into Bolzano — the way out of the mountains.",
   },
   {
     slug: "venice-first-night",
@@ -600,13 +656,6 @@ export const details: DetailRecord[] = [
     kind: "stay",
     body: "The train from Bolzano gets in with the evening ahead. Lodging for the night of the 12th is still open.",
     todo: "Book Venice lodging",
-  },
-  {
-    slug: "bus-ortisei-bolzano",
-    dayId: 8,
-    title: "Val Gardena to Bolzano",
-    kind: "bus",
-    body: "SAD bus back down Val Gardena and the Isarco valley into Bolzano — the same corridor as the ride up on day 5, in reverse.",
   },
   {
     slug: "train-bolzano-venice",
