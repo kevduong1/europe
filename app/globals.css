@@ -95,15 +95,6 @@ a {
   height: 100%;
 }
 
-.overlay-panel {
-  background: linear-gradient(
-    to top,
-    color-mix(in srgb, var(--paper) 74%, transparent) 0%,
-    color-mix(in srgb, var(--paper) 28%, transparent) 42%,
-    transparent 100%
-  );
-}
-
 .overlay-type {
   text-shadow:
     0 1px 0 color-mix(in srgb, var(--paper) 88%, transparent),
@@ -238,6 +229,11 @@ a {
   height: 7px;
   opacity: 0.85;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--paper) 70%, transparent);
+}
+
+.map-pin-active .map-pin-dot {
+  transform: scale(1.28);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--trail) 32%, transparent);
 }
 
 .map-cluster {

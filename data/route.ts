@@ -5,7 +5,7 @@ export const MCI: LngLat = [-94.7139, 39.2976];
 export const MUC: LngLat = [11.7861, 48.3538];
 export const VCE: LngLat = [12.3519, 45.5053];
 
-const railMunichInnsbruck: LngLat[] = densify(
+export const railMunichInnsbruck: LngLat[] = densify(
   [
     [11.5583, 48.1402],
     [11.68, 48.08],
@@ -23,7 +23,7 @@ const railMunichInnsbruck: LngLat[] = densify(
   3,
 );
 
-const railInnsbruckBolzano: LngLat[] = densify(
+export const railInnsbruckBolzano: LngLat[] = densify(
   [
     [11.401, 47.2634],
     [11.4, 47.2],
@@ -40,7 +40,7 @@ const railInnsbruckBolzano: LngLat[] = densify(
   2.5,
 );
 
-const busBolzanoOrtisei: LngLat[] = densify(
+export const busBolzanoOrtisei: LngLat[] = densify(
   [
     [11.357, 46.498],
     [11.42, 46.52],
@@ -52,7 +52,7 @@ const busBolzanoOrtisei: LngLat[] = densify(
 );
 
 /** Cable / climb from Ortisei onto the Resciesa ridge. */
-const trailOrtiseiResciesa: LngLat[] = densify(
+export const trailOrtiseiResciesa: LngLat[] = densify(
   [
     [11.6717, 46.5761],
     [11.674, 46.582],
@@ -67,7 +67,7 @@ const trailOrtiseiResciesa: LngLat[] = densify(
  * Approximate Resciesa → Firenze via the Seceda ridge and the Adolf-Munkel
  * path under the Odle spires. Plausible ridgeline geometry, not a GPX trace.
  */
-const trailResciesaFirenze: LngLat[] = densify(
+export const trailResciesaFirenze: LngLat[] = densify(
   [
     [11.6825, 46.5986],
     [11.692, 46.5994],
@@ -88,7 +88,7 @@ const trailResciesaFirenze: LngLat[] = densify(
 );
 
 /** Firenze → Puez over Forcella Poma onto the Puez plateau. */
-const trailFirenzePuez: LngLat[] = densify(
+export const trailFirenzePuez: LngLat[] = densify(
   [
     [11.7672, 46.6117],
     [11.772, 46.608],
@@ -152,6 +152,16 @@ export const VENICE: LngLat = [12.327, 45.437];
 export const EISBACHWELLE: LngLat = [11.5877, 48.1435];
 export const WOMBAT: LngLat = [11.555, 48.1405];
 export const MONTAGU: LngLat = [11.394, 47.267];
+
+export const railMucHbf: LngLat[] = densify(
+  [MUC, [11.72, 48.29], [11.66, 48.22], [11.6, 48.17], MUNICH_HBF],
+  1.4,
+);
+
+export const walkWombatHbf: LngLat[] = densify(
+  [WOMBAT, [11.5568, 48.14035], MUNICH_HBF],
+  0.04,
+);
 
 export const flightOut = greatCircle(MCI, MUC, 96);
 export const flightHome = greatCircle(VCE, MCI, 96);

@@ -351,14 +351,14 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
 
     function applyMarkers(view: JourneyView) {
       const map = mapRef.current;
-      const markerKey = `${view.phase}|${view.dayId}|${view.expandedClusterIds.join(",")}|${view.visitedClusterIds.join(",")}|${view.flightLeg}|${view.flightT < 0.28}|${view.flightT > 0.72}`;
+      const markerKey = `${view.phase}|${view.dayId}|${view.expandedClusterIds.join(",")}|${view.visitedClusterIds.join(",")}|${view.flightLeg}|${view.focusStopId}|${view.flightT < 0.28}|${view.flightT > 0.72}`;
       if (markerKey !== lastMarkerKey.current) {
         lastMarkerKey.current = markerKey;
         map
           ?.getContainer()
           .classList.toggle(
             "map-zoomed",
-            view.phase === "day" && view.dayId != null && view.dayId > 1 && view.dayId < 10,
+            Boolean(view.focusStopId) || view.zoom >= 12.55,
           );
 
         for (const marker of clusterMarkersRef.current) {
@@ -404,19 +404,21 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           }
 
           el.classList.toggle("map-pin-visited", visitedLook);
+          el.classList.toggle("map-pin-active", view.focusStopId === stopId);
           el.style.opacity = visible ? "1" : "0";
         }
       }
 
-      const onTrail =
-        view.phase === "day" || (view.phase === "overview" && view.trailT > 0.02);
+      const herePos =
+        view.here ??
+        (view.phase === "day" || (view.phase === "overview" && view.trailT > 0.02)
+          ? along(orangeTrail, Math.max(0.002, view.trailT))
+          : null);
       const onPlane = view.phase === "flight";
       if (hereRef.current) {
-        hereRef.current.getElement().style.opacity = onTrail ? "1" : "0";
-        if (onTrail) {
-          hereRef.current.setLngLat(
-            along(orangeTrail, Math.max(0.002, view.trailT)),
-          );
+        hereRef.current.getElement().style.opacity = herePos && !onPlane ? "1" : "0";
+        if (herePos && !onPlane) {
+          hereRef.current.setLngLat(herePos);
         }
       }
       if (planeRef.current) {

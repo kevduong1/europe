@@ -1,23 +1,37 @@
 import {
+  BOLZANO,
+  busBolzanoOrtisei,
   EISBACHWELLE,
+  FIRENZE,
   flightHome,
+  INNSBRUCK_HBF,
   MONTAGU,
   MUC,
+  MUNICH_HBF,
+  orangeTrail,
   ORTISEI,
   PUEZ,
+  railInnsbruckBolzano,
+  railMucHbf,
+  railMunichInnsbruck,
   RESCIESA,
   stopClusters,
-  trailTForDay,
+  trailFirenzePuez,
+  trailOrtiseiResciesa,
+  trailResciesaFirenze,
   VCE,
   VENICE,
+  walkWombatHbf,
   WOMBAT,
 } from "@/data/route";
 import { days, journeyFrame } from "@/data/trip";
 import {
+  along,
   clamp,
   lerp,
   lerpBearing,
   lerpLngLat,
+  nearestT,
   smoothstep,
   type LngLat,
 } from "@/lib/geo";
@@ -43,10 +57,82 @@ export type JourneyView = {
   label: string;
   expandedClusterIds: string[];
   visitedClusterIds: string[];
+  here: LngLat | null;
+  focusStopId: string | null;
 };
 
 const FREEZE = 0.52;
 const HOLD = 0.74;
+
+const T = {
+  hbf: nearestT(orangeTrail, MUNICH_HBF),
+  innsbruck: nearestT(orangeTrail, INNSBRUCK_HBF),
+  montagu: nearestT(orangeTrail, MONTAGU),
+  bolzano: nearestT(orangeTrail, BOLZANO),
+  ortisei: nearestT(orangeTrail, ORTISEI),
+  resciesa: nearestT(orangeTrail, RESCIESA),
+  firenze: nearestT(orangeTrail, FIRENZE),
+  puez: nearestT(orangeTrail, PUEZ),
+  venice: nearestT(orangeTrail, VENICE),
+};
+
+type CityCam = {
+  center: LngLat;
+  zoom: number;
+  pitch: number;
+  bearing: number;
+};
+
+const CITY = {
+  munich: {
+    center: [11.575, 48.145] as LngLat,
+    zoom: 11.38,
+    pitch: 0,
+    bearing: 0,
+  },
+  munichAirport: {
+    center: [11.66, 48.24] as LngLat,
+    zoom: 10.52,
+    pitch: 0,
+    bearing: 0,
+  },
+  innsbruck: {
+    center: [11.404, 47.268] as LngLat,
+    zoom: 12.02,
+    pitch: 0,
+    bearing: 0,
+  },
+  venice: {
+    center: [12.335, 45.438] as LngLat,
+    zoom: 12.22,
+    pitch: 0,
+    bearing: 0,
+  },
+  dolomites: {
+    center: [11.74, 46.592] as LngLat,
+    zoom: 12.02,
+    pitch: 38,
+    bearing: 16,
+  },
+  munichInnsbruck: {
+    center: [11.82, 47.7] as LngLat,
+    zoom: 7.82,
+    pitch: 0,
+    bearing: 6,
+  },
+  innsbruckBolzano: {
+    center: [11.48, 46.88] as LngLat,
+    zoom: 8.12,
+    pitch: 0,
+    bearing: 8,
+  },
+  bolzanoOrtisei: {
+    center: [11.52, 46.54] as LngLat,
+    zoom: 10.35,
+    pitch: 8,
+    bearing: 12,
+  },
+};
 
 function clusterState(dayId: number | null) {
   if (dayId == null) {
@@ -81,15 +167,66 @@ function pose(
     >,
 ): JourneyView {
   const clusters = clusterState(partial.dayId ?? null);
+  const {
+    expandedClusterIds,
+    visitedClusterIds,
+    here,
+    focusStopId,
+    ...rest
+  } = partial;
   return {
     bounds: journeyFrame.bounds,
     jump: false,
     voxelOpacity: 0,
     climbM: 1200,
-    expandedClusterIds: clusters.expandedClusterIds,
-    visitedClusterIds: clusters.visitedClusterIds,
-    ...partial,
+    ...rest,
+    expandedClusterIds: expandedClusterIds ?? clusters.expandedClusterIds,
+    visitedClusterIds: visitedClusterIds ?? clusters.visitedClusterIds,
+    here: here ?? null,
+    focusStopId: focusStopId ?? null,
   };
+}
+
+function cityHold(
+  cam: CityCam,
+  opts: {
+    dayId: number;
+    label: string;
+    trailT: number;
+    here?: LngLat | null;
+    focusStopId?: string | null;
+    focus?: LngLat;
+    amount?: number;
+    expandedClusterIds?: string[];
+    visitedClusterIds?: string[];
+    voxel?: number;
+    climb?: number;
+  },
+): JourneyView {
+  const amount = clamp(opts.amount ?? 0);
+  const center =
+    opts.focus && amount > 0
+      ? lerpLngLat(cam.center, opts.focus, amount * 0.32)
+      : cam.center;
+  return pose({
+    phase: "day",
+    center,
+    zoom: cam.zoom + amount * 0.48,
+    pitch: cam.pitch,
+    bearing: cam.bearing,
+    showFlight: false,
+    flightT: 0,
+    flightLeg: null,
+    trailT: opts.trailT,
+    voxelOpacity: opts.voxel ?? 0,
+    climbM: opts.climb ?? 1200,
+    dayId: opts.dayId,
+    label: opts.label,
+    here: opts.here ?? null,
+    focusStopId: opts.focusStopId ?? null,
+    expandedClusterIds: opts.expandedClusterIds,
+    visitedClusterIds: opts.visitedClusterIds,
+  });
 }
 
 export const OVERVIEW: JourneyView = pose({
@@ -200,95 +337,575 @@ function flightHomeView(t: number): JourneyView {
   });
 }
 
-function viewForDay(dayId: number): JourneyView {
-  const day = days[dayId - 1];
-  if (!day) return OVERVIEW;
-  const cameras: Record<
-    number,
-    {
-      center: LngLat;
-      zoom: number;
-      pitch: number;
-      bearing: number;
-      voxel?: number;
-      climb?: number;
-    }
-  > = {
-    1: { center: MUC, zoom: 11.3, pitch: 0, bearing: 0 },
-    2: { center: WOMBAT, zoom: 13.55, pitch: 0, bearing: 0 },
-    3: { center: EISBACHWELLE, zoom: 14.05, pitch: 0, bearing: 0 },
-    4: { center: MONTAGU, zoom: 13.35, pitch: 0, bearing: 0 },
-    5: {
-      center: ORTISEI,
-      zoom: 12.85,
-      pitch: 0,
-      bearing: 8,
-      voxel: 0.55,
-      climb: 1250,
-    },
-    6: {
-      center: [11.742, 46.604],
-      zoom: 12.95,
-      pitch: 54,
-      bearing: 26,
-      voxel: 1,
-      climb: 2100,
-    },
-    7: {
-      center: PUEZ,
-      zoom: 13.15,
-      pitch: 58,
-      bearing: 38,
-      voxel: 1,
-      climb: 2480,
-    },
-    8: {
-      center: [11.825, 46.562],
-      zoom: 12.55,
-      pitch: 44,
-      bearing: 16,
-      voxel: 0.85,
-      climb: 1800,
-    },
-    9: { center: VENICE, zoom: 13.7, pitch: 0, bearing: 0 },
-    10: { center: VCE, zoom: 12.6, pitch: 0, bearing: 0 },
-  };
-  const cam = cameras[dayId] ?? cameras[2];
-  return pose({
-    phase: "day",
-    center: cam.center,
-    zoom: cam.zoom,
-    pitch: cam.pitch,
-    bearing: cam.bearing,
-    showFlight: false,
-    flightT: dayId === 1 ? 1 : 0,
-    flightLeg: dayId === 1 ? "out" : null,
-    trailT: trailTForDay(dayId),
-    voxelOpacity: cam.voxel ?? 0,
-    climbM: cam.climb ?? 1200,
-    jump: false,
+function munichStay(
+  dayId: number,
+  label: string,
+  extra?: { here?: LngLat; focusStopId?: string; amount?: number; focus?: LngLat },
+): JourneyView {
+  return cityHold(CITY.munich, {
     dayId,
-    label: `Day ${day.id} · ${day.stripLabel}`,
+    label,
+    trailT: 0,
+    here: extra?.here ?? WOMBAT,
+    focusStopId: extra?.focusStopId ?? "wombat",
+    focus: extra?.focus ?? extra?.here,
+    amount: extra?.amount ?? 0,
+    expandedClusterIds: ["munich"],
+    visitedClusterIds: [],
   });
 }
 
-function climbView(): JourneyView {
-  return pose({
-    phase: "day",
-    center: RESCIESA,
-    zoom: 13.05,
-    pitch: 48,
-    bearing: 18,
-    showFlight: false,
-    flightT: 0,
-    flightLeg: null,
-    trailT: trailTForDay(5),
-    voxelOpacity: 1,
-    climbM: 2200,
-    jump: false,
-    dayId: 5,
-    label: "Day 5 · Ortisei",
-  });
+function rideLine(
+  from: JourneyView,
+  travel: JourneyView,
+  arrive: JourneyView,
+  line: LngLat[],
+  trailFrom: number,
+  trailTo: number,
+  t: number,
+): JourneyView {
+  if (t < 0.1) return mix(from, travel, t / 0.1);
+  if (t < 0.86) {
+    const u = smoothstep((t - 0.1) / 0.76);
+    return {
+      ...travel,
+      here: along(line, u),
+      trailT: lerp(trailFrom, trailTo, u),
+      jump: false,
+    };
+  }
+  return mix(
+    {
+      ...travel,
+      here: along(line, 1),
+      trailT: trailTo,
+    },
+    arrive,
+    (t - 0.86) / 0.14,
+  );
+}
+
+function viewForDay(dayId: number): JourneyView {
+  const day = days[dayId - 1];
+  if (!day) return OVERVIEW;
+  const label = `Day ${day.id} · ${day.stripLabel}`;
+  switch (dayId) {
+    case 1:
+      return pose({
+        phase: "day",
+        center: MUC,
+        zoom: 10.8,
+        pitch: 0,
+        bearing: 0,
+        showFlight: false,
+        flightT: 1,
+        flightLeg: "out",
+        trailT: 0,
+        dayId: 1,
+        label,
+        here: MUC,
+        focusStopId: "muc",
+        expandedClusterIds: ["munich"],
+        visitedClusterIds: [],
+      });
+    case 2:
+      return cityHold(CITY.munichAirport, {
+        dayId: 2,
+        label,
+        trailT: 0,
+        here: MUC,
+        focusStopId: "muc",
+        expandedClusterIds: ["munich"],
+        visitedClusterIds: [],
+      });
+    case 3:
+    case 4:
+      return munichStay(dayId, label);
+    case 5:
+      return cityHold(CITY.innsbruck, {
+        dayId: 5,
+        label,
+        trailT: T.montagu,
+        here: MONTAGU,
+        focusStopId: "montagu",
+        expandedClusterIds: ["innsbruck"],
+        visitedClusterIds: ["munich"],
+      });
+    case 6:
+      return cityHold(CITY.dolomites, {
+        dayId: 6,
+        label,
+        trailT: T.resciesa,
+        here: RESCIESA,
+        focusStopId: "resciesa",
+        focus: RESCIESA,
+        amount: 0.22,
+        voxel: 0.7,
+        climb: 1800,
+        expandedClusterIds: ["dolomites"],
+        visitedClusterIds: ["munich", "innsbruck"],
+      });
+    case 7:
+      return cityHold(CITY.dolomites, {
+        dayId: 7,
+        label,
+        trailT: T.firenze,
+        here: FIRENZE,
+        focusStopId: "firenze",
+        focus: FIRENZE,
+        amount: 0.28,
+        voxel: 1,
+        climb: 2100,
+        expandedClusterIds: ["dolomites"],
+        visitedClusterIds: ["munich", "innsbruck"],
+      });
+    case 8:
+      return cityHold(CITY.dolomites, {
+        dayId: 8,
+        label,
+        trailT: T.puez,
+        here: PUEZ,
+        focusStopId: "puez",
+        focus: PUEZ,
+        amount: 0.2,
+        voxel: 0.7,
+        climb: 1700,
+        expandedClusterIds: ["dolomites"],
+        visitedClusterIds: ["munich", "innsbruck"],
+      });
+    case 9:
+      return cityHold(CITY.venice, {
+        dayId: 9,
+        label,
+        trailT: T.venice,
+        here: VENICE,
+        focusStopId: "venice-tbd",
+        expandedClusterIds: ["venice"],
+        visitedClusterIds: ["munich", "innsbruck", "dolomites"],
+      });
+    case 10:
+      return cityHold(CITY.venice, {
+        dayId: 10,
+        label,
+        trailT: 1,
+        here: VCE,
+        focusStopId: "vce",
+        focus: VCE,
+        amount: 0.22,
+        expandedClusterIds: ["venice"],
+        visitedClusterIds: ["munich", "innsbruck", "dolomites"],
+      });
+    default:
+      return OVERVIEW;
+  }
+}
+
+function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
+  switch (beatId) {
+    case "arrive-muc":
+      return cityHold(CITY.munichAirport, {
+        dayId: 2,
+        label: "Arrive Munich",
+        trailT: 0,
+        here: MUC,
+        focusStopId: "muc",
+        expandedClusterIds: ["munich"],
+        visitedClusterIds: [],
+      });
+    case "airport-train": {
+      const from = cityHold(CITY.munichAirport, {
+        dayId: 2,
+        label: "Airport train → Hbf",
+        trailT: 0,
+        here: MUC,
+        focusStopId: "muc",
+        expandedClusterIds: ["munich"],
+        visitedClusterIds: [],
+      });
+      const to = munichStay(2, "München Hbf", {
+        here: MUNICH_HBF,
+        focusStopId: "wombat",
+        amount: 0.18,
+      });
+      const u = smoothstep(clamp((t - 0.08) / 0.8));
+      return {
+        ...mix(from, to, u),
+        here: along(railMucHbf, u),
+        label: "Airport train → Hbf",
+      };
+    }
+    case "check-in-wombat":
+    case "wombat-hostel":
+      return munichStay(dayId, "The Wombat Hostel", {
+        here: WOMBAT,
+        focusStopId: "wombat",
+        amount: 0.28,
+      });
+    case "open-munich":
+      return munichStay(3, "Day 3 · Munich");
+    case "eisbachwelle":
+      return munichStay(3, "Eisbachwelle", {
+        here: EISBACHWELLE,
+        focusStopId: "eisbachwelle",
+        focus: EISBACHWELLE,
+        amount: 0.4,
+      });
+    case "leave-wombat":
+      return munichStay(4, "Leave Wombat", {
+        here: WOMBAT,
+        focusStopId: "wombat",
+        amount: 0.32,
+      });
+    case "walk-hbf": {
+      const u = clamp((t - 0.12) / 0.7);
+      const here = along(walkWombatHbf, u);
+      return munichStay(4, "Walk to Hbf", {
+        here,
+        focusStopId: "wombat",
+        focus: here,
+        amount: 0.38,
+      });
+    }
+    case "train-munich-innsbruck":
+      return rideLine(
+        munichStay(4, "München Hbf", {
+          here: MUNICH_HBF,
+          focusStopId: "wombat",
+          amount: 0.16,
+        }),
+        pose({
+          phase: "day",
+          center: CITY.munichInnsbruck.center,
+          zoom: CITY.munichInnsbruck.zoom,
+          pitch: CITY.munichInnsbruck.pitch,
+          bearing: CITY.munichInnsbruck.bearing,
+          showFlight: false,
+          flightT: 0,
+          flightLeg: null,
+          trailT: T.hbf,
+          dayId: 4,
+          label: "Munich → Innsbruck",
+          here: MUNICH_HBF,
+          expandedClusterIds: [],
+          visitedClusterIds: ["munich"],
+        }),
+        cityHold(CITY.innsbruck, {
+          dayId: 4,
+          label: "Innsbruck",
+          trailT: T.innsbruck,
+          here: INNSBRUCK_HBF,
+          expandedClusterIds: ["innsbruck"],
+          visitedClusterIds: ["munich"],
+        }),
+        railMunichInnsbruck,
+        T.hbf,
+        T.innsbruck,
+        t,
+      );
+    case "check-in-montagu":
+    case "montagu-hostel":
+      return cityHold(CITY.innsbruck, {
+        dayId: 4,
+        label: "Montagu Hostel",
+        trailT: T.montagu,
+        here: MONTAGU,
+        focusStopId: "montagu",
+        focus: MONTAGU,
+        amount: 0.32,
+        expandedClusterIds: ["innsbruck"],
+        visitedClusterIds: ["munich"],
+      });
+    case "train-innsbruck-bolzano":
+      return rideLine(
+        cityHold(CITY.innsbruck, {
+          dayId: 5,
+          label: "Innsbruck → Bolzano",
+          trailT: T.montagu,
+          here: INNSBRUCK_HBF,
+          focusStopId: "montagu",
+          expandedClusterIds: ["innsbruck"],
+          visitedClusterIds: ["munich"],
+        }),
+        pose({
+          phase: "day",
+          center: CITY.innsbruckBolzano.center,
+          zoom: CITY.innsbruckBolzano.zoom,
+          pitch: CITY.innsbruckBolzano.pitch,
+          bearing: CITY.innsbruckBolzano.bearing,
+          showFlight: false,
+          flightT: 0,
+          flightLeg: null,
+          trailT: T.innsbruck,
+          dayId: 5,
+          label: "Innsbruck → Bolzano",
+          here: INNSBRUCK_HBF,
+          expandedClusterIds: [],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        cityHold(CITY.bolzanoOrtisei, {
+          dayId: 5,
+          label: "Bolzano",
+          trailT: T.bolzano,
+          here: BOLZANO,
+          focusStopId: "bolzano",
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        railInnsbruckBolzano,
+        T.innsbruck,
+        T.bolzano,
+        t,
+      );
+    case "bus-bolzano-ortisei":
+      return rideLine(
+        cityHold(CITY.bolzanoOrtisei, {
+          dayId: 5,
+          label: "Bolzano → Ortisei",
+          trailT: T.bolzano,
+          here: BOLZANO,
+          focusStopId: "bolzano",
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        cityHold(CITY.bolzanoOrtisei, {
+          dayId: 5,
+          label: "Bolzano → Ortisei",
+          trailT: T.ortisei,
+          here: ORTISEI,
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        cityHold(CITY.dolomites, {
+          dayId: 5,
+          label: "Ortisei",
+          trailT: T.ortisei,
+          here: ORTISEI,
+          focusStopId: "ortisei",
+          focus: ORTISEI,
+          amount: 0.18,
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        busBolzanoOrtisei,
+        T.bolzano,
+        T.ortisei,
+        t,
+      );
+    case "onto-the-trail":
+      return rideLine(
+        cityHold(CITY.dolomites, {
+          dayId: 5,
+          label: "Ortisei → Resciesa",
+          trailT: T.ortisei,
+          here: ORTISEI,
+          focusStopId: "ortisei",
+          voxel: 0.45,
+          climb: 1400,
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        cityHold(CITY.dolomites, {
+          dayId: 5,
+          label: "Ortisei → Resciesa",
+          trailT: T.resciesa,
+          here: RESCIESA,
+          focus: RESCIESA,
+          amount: 0.24,
+          voxel: 1,
+          climb: 2200,
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        cityHold(CITY.dolomites, {
+          dayId: 5,
+          label: "Rifugio Resciesa",
+          trailT: T.resciesa,
+          here: RESCIESA,
+          focusStopId: "resciesa",
+          focus: RESCIESA,
+          amount: 0.3,
+          voxel: 1,
+          climb: 2200,
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        trailOrtiseiResciesa,
+        T.ortisei,
+        T.resciesa,
+        t,
+      );
+    case "rifugio-resciesa":
+      return cityHold(CITY.dolomites, {
+        dayId: 5,
+        label: "Rifugio Resciesa",
+        trailT: T.resciesa,
+        here: RESCIESA,
+        focusStopId: "resciesa",
+        focus: RESCIESA,
+        amount: 0.3,
+        voxel: 1,
+        climb: 2200,
+        expandedClusterIds: ["dolomites"],
+        visitedClusterIds: ["munich", "innsbruck"],
+      });
+    case "hike-resciesa-firenze":
+      return rideLine(
+        cityHold(CITY.dolomites, {
+          dayId: 6,
+          label: "Resciesa → Firenze",
+          trailT: T.resciesa,
+          here: RESCIESA,
+          focusStopId: "resciesa",
+          voxel: 0.8,
+          climb: 1900,
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        cityHold(CITY.dolomites, {
+          dayId: 6,
+          label: "Resciesa → Firenze",
+          trailT: T.firenze,
+          here: FIRENZE,
+          focus: FIRENZE,
+          amount: 0.22,
+          voxel: 1,
+          climb: 2300,
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        cityHold(CITY.dolomites, {
+          dayId: 6,
+          label: "Rifugio Firenze",
+          trailT: T.firenze,
+          here: FIRENZE,
+          focusStopId: "firenze",
+          focus: FIRENZE,
+          amount: 0.28,
+          voxel: 1,
+          climb: 2300,
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        trailResciesaFirenze,
+        T.resciesa,
+        T.firenze,
+        t,
+      );
+    case "rifugio-firenze":
+      return cityHold(CITY.dolomites, {
+        dayId: 6,
+        label: "Rifugio Firenze",
+        trailT: T.firenze,
+        here: FIRENZE,
+        focusStopId: "firenze",
+        focus: FIRENZE,
+        amount: 0.28,
+        voxel: 1,
+        climb: 2300,
+        expandedClusterIds: ["dolomites"],
+        visitedClusterIds: ["munich", "innsbruck"],
+      });
+    case "hike-firenze-puez":
+      return rideLine(
+        cityHold(CITY.dolomites, {
+          dayId: 7,
+          label: "Firenze → Puez",
+          trailT: T.firenze,
+          here: FIRENZE,
+          focusStopId: "firenze",
+          voxel: 1,
+          climb: 2100,
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        cityHold(CITY.dolomites, {
+          dayId: 7,
+          label: "Firenze → Puez",
+          trailT: T.puez,
+          here: PUEZ,
+          focus: PUEZ,
+          amount: 0.24,
+          voxel: 1,
+          climb: 2480,
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        cityHold(CITY.dolomites, {
+          dayId: 7,
+          label: "Rifugio Puez",
+          trailT: T.puez,
+          here: PUEZ,
+          focusStopId: "puez",
+          focus: PUEZ,
+          amount: 0.3,
+          voxel: 1,
+          climb: 2480,
+          expandedClusterIds: ["dolomites"],
+          visitedClusterIds: ["munich", "innsbruck"],
+        }),
+        trailFirenzePuez,
+        T.firenze,
+        T.puez,
+        t,
+      );
+    case "rifugio-puez":
+      return cityHold(CITY.dolomites, {
+        dayId: 7,
+        label: "Rifugio Puez",
+        trailT: T.puez,
+        here: PUEZ,
+        focusStopId: "puez",
+        focus: PUEZ,
+        amount: 0.3,
+        voxel: 1,
+        climb: 2480,
+        expandedClusterIds: ["dolomites"],
+        visitedClusterIds: ["munich", "innsbruck"],
+      });
+    case "exit-tbd":
+    case "exit-night":
+      return cityHold(CITY.dolomites, {
+        dayId: 8,
+        label: "Exit still open",
+        trailT: T.puez,
+        here: PUEZ,
+        focusStopId: "puez",
+        amount: 0.12,
+        voxel: 0.55,
+        climb: 1600,
+        expandedClusterIds: ["dolomites"],
+        visitedClusterIds: ["munich", "innsbruck"],
+      });
+    case "open-venice":
+    case "venice-lodging":
+      return cityHold(CITY.venice, {
+        dayId: 9,
+        label: "Day 9 · Venice",
+        trailT: T.venice,
+        here: VENICE,
+        focusStopId: "venice-tbd",
+        expandedClusterIds: ["venice"],
+        visitedClusterIds: ["munich", "innsbruck", "dolomites"],
+      });
+    case "flight-home": {
+      if (t < 0.16) {
+        return cityHold(CITY.venice, {
+          dayId: 10,
+          label: "Venice Airport",
+          trailT: 1,
+          here: VCE,
+          focusStopId: "vce",
+          focus: VCE,
+          amount: 0.24,
+          expandedClusterIds: ["venice"],
+          visitedClusterIds: ["munich", "innsbruck", "dolomites"],
+        });
+      }
+      return flightHomeView((t - 0.16) / 0.84);
+    }
+    default:
+      return viewForDay(dayId);
+  }
 }
 
 function mix(a: JourneyView, b: JourneyView, t: number): JourneyView {
@@ -312,6 +929,13 @@ function mix(a: JourneyView, b: JourneyView, t: number): JourneyView {
     label: pick.label,
     expandedClusterIds: pick.expandedClusterIds,
     visitedClusterIds: pick.visitedClusterIds,
+    here:
+      a.here && b.here
+        ? lerpLngLat(a.here, b.here, u)
+        : u < 0.5
+          ? a.here
+          : b.here,
+    focusStopId: pick.focusStopId,
   };
 }
 
@@ -333,20 +957,54 @@ function sectionProgress(
   return span <= 0 ? 0 : clamp((anchor - start) / span);
 }
 
-/** Day 1 flight starts the instant the hero freeze lifts, not after the section top hits the reading anchor. */
+/** Day 1 card sits first over Kansas City; the Atlantic crossing plays through the spacer below it. */
 function day1Progress(
   day1: HTMLElement,
   next: HTMLElement | undefined,
   viewportHeight: number,
 ) {
-  const origin = day1.getBoundingClientRect().top;
+  const spacer = day1.querySelector<HTMLElement>("[data-flight-leg]");
+  const originEl = spacer ?? day1;
+  const origin = originEl.getBoundingClientRect().top;
   const destination = next
     ? next.getBoundingClientRect().top
-    : day1.getBoundingClientRect().bottom;
+    : originEl.getBoundingClientRect().bottom;
   const height = Math.max(1, destination - origin);
-  const start = viewportHeight * FREEZE;
-  const span = start - (viewportHeight * 0.4 - height);
-  return clamp((start - origin) / Math.max(1, span));
+  const start = spacer ? 0 : viewportHeight * FREEZE;
+  const end = viewportHeight * 0.4 - height;
+  return clamp((start - origin) / Math.max(1, start - end));
+}
+
+function readDayBeats(
+  current: HTMLElement,
+  next: HTMLElement | undefined,
+  viewportHeight: number,
+): JourneyView {
+  const dayId = Number(current.dataset.day);
+  const anchor = viewportHeight * 0.4;
+  const beats = [...current.querySelectorAll<HTMLElement>("[data-beat]")];
+  if (beats.length === 0) {
+    const t = sectionProgress(current, next, anchor);
+    return next
+      ? holdThen(viewForDay(dayId), viewForDay(Number(next.dataset.day)), t)
+      : viewForDay(dayId);
+  }
+
+  let index = -1;
+  for (let i = 0; i < beats.length; i += 1) {
+    if (beats[i].getBoundingClientRect().top <= anchor) index = i;
+    else break;
+  }
+  if (index < 0) return viewForDay(dayId);
+
+  const beat = beats[index];
+  const following = beats[index + 1];
+  const t = sectionProgress(beat, following ?? next, anchor);
+  const view = viewForBeat(dayId, beat.dataset.beat ?? "", t);
+  if (!following && next && t > 0.78) {
+    return mix(view, viewForDay(Number(next.dataset.day)), (t - 0.78) / 0.22);
+  }
+  return view;
 }
 
 export function readJourneyView(
@@ -374,7 +1032,6 @@ export function readJourneyView(
   const current = sections[index];
   const next = sections[index + 1];
   const dayId = Number(current.dataset.day);
-  const t = sectionProgress(current, next, anchor);
 
   if (dayId === 1) {
     const flightT = day1Progress(current, next, viewportHeight);
@@ -390,34 +1047,12 @@ export function readJourneyView(
     return crossing;
   }
 
-  if (dayId === 5) {
-    const start = viewForDay(5);
-    const climb = climbView();
-    if (t < 0.38) return start;
-    if (t < 0.78) return mix(start, climb, (t - 0.38) / 0.4);
-    return next
-      ? mix(climb, viewForDay(Number(next.dataset.day)), (t - 0.78) / 0.22)
-      : climb;
-  }
-
   if (dayId === 10) {
-    if (!next) {
-      const bottom = current.getBoundingClientRect().bottom;
-      if (bottom < viewportHeight * 0.32) {
-        return { ...OVERVIEW, trailT: 1, label: "The route", jump: false };
-      }
-    }
-    if (t < 0.28) return viewForDay(10);
-    return flightHomeView((t - 0.28) / 0.72);
-  }
-
-  if (!next) {
     const bottom = current.getBoundingClientRect().bottom;
-    if (bottom < viewportHeight * 0.32) {
+    if (!next && bottom < viewportHeight * 0.32) {
       return { ...OVERVIEW, trailT: 1, label: "The route", jump: false };
     }
-    return viewForDay(dayId);
   }
 
-  return holdThen(viewForDay(dayId), viewForDay(Number(next.dataset.day)), t);
+  return readDayBeats(current, next, viewportHeight);
 }

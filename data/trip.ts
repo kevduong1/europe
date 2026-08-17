@@ -166,6 +166,20 @@ export const days: Day[] = [
     },
     timeline: [
       {
+        kind: "event",
+        id: "leave-wombat",
+        title: "Leave The Wombat Hostel",
+        note: "Bags packed · the station is a short walk.",
+        detailSlug: "wombat-hostel",
+      },
+      {
+        kind: "transport",
+        id: "walk-hbf",
+        mode: "trail",
+        label: "Walk to München Hbf",
+        meta: "A few minutes from the door",
+      },
+      {
         kind: "transport",
         id: "train-munich-innsbruck",
         mode: "rail",

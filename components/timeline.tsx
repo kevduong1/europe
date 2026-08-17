@@ -3,6 +3,26 @@ import { cn } from "@/lib/utils";
 import { Coords } from "./coords";
 import { HutGlyph, RouteGlyph } from "./icons";
 
+const BEAT_SPACE: Record<string, string> = {
+  "arrive-muc": "min-h-[88dvh]",
+  "airport-train": "min-h-[150dvh]",
+  "check-in-wombat": "min-h-[72dvh]",
+  "open-munich": "min-h-[80dvh]",
+  eisbachwelle: "min-h-[92dvh]",
+  "leave-wombat": "min-h-[78dvh]",
+  "walk-hbf": "min-h-[88dvh]",
+  "train-munich-innsbruck": "min-h-[240dvh]",
+  "check-in-montagu": "min-h-[84dvh]",
+  "train-innsbruck-bolzano": "min-h-[190dvh]",
+  "bus-bolzano-ortisei": "min-h-[120dvh]",
+  "onto-the-trail": "min-h-[140dvh]",
+  "hike-resciesa-firenze": "min-h-[160dvh]",
+  "hike-firenze-puez": "min-h-[160dvh]",
+  "exit-tbd": "min-h-[110dvh]",
+  "open-venice": "min-h-[80dvh]",
+  "flight-home": "min-h-[180dvh]",
+};
+
 export function Timeline({ day }: { day: Day }) {
   return (
     <ol className="relative">
@@ -18,7 +38,14 @@ export function Timeline({ day }: { day: Day }) {
                 : "rail";
 
         return (
-          <li key={item.id} className="relative flex gap-4 pb-7 last:pb-2">
+          <li
+            key={item.id}
+            data-beat={item.id}
+            className={cn(
+              "relative flex gap-4 pb-7 last:pb-2",
+              BEAT_SPACE[item.id],
+            )}
+          >
             <div className="relative w-6 shrink-0" aria-hidden="true">
               <div
                 className={cn(
@@ -83,7 +110,10 @@ export function Timeline({ day }: { day: Day }) {
         );
       })}
 
-      <li className="relative flex gap-4 pb-1">
+      <li
+        data-beat={day.lodging.slug}
+        className={cn("relative flex gap-4 pb-1", BEAT_SPACE[day.lodging.slug])}
+      >
         <div className="relative w-6 shrink-0" aria-hidden="true">
           <div className="absolute left-[11px] top-0 h-3 w-[2px] bg-[var(--trail)]" />
           <span className="absolute left-[5px] top-[10px] text-[var(--meadow)]">
