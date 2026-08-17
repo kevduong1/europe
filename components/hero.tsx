@@ -1,0 +1,44 @@
+import { days, trip } from "@/data/trip";
+import { RouteGlyph } from "./icons";
+
+export function Hero() {
+  return (
+    <section
+      id="hero"
+      className="relative flex min-h-[100dvh] flex-col justify-end"
+    >
+      <div className="bg-gradient-to-t from-[var(--paper)] via-[color-mix(in_srgb,var(--paper)_82%,transparent)] to-transparent px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-40">
+        <p className="font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail)]">
+          {trip.eyebrow}
+        </p>
+        <h1 className="font-display mt-3 max-w-[20ch] text-[42px] leading-[1.05] [font-variation-settings:'WONK'_1,'SOFT'_20,'opsz'_42] sm:text-[52px]">
+          {trip.title}
+        </h1>
+        <p className="mt-4 flex flex-wrap items-center gap-x-1 text-[14px] text-[var(--ink)]">
+          <span>Munich</span>
+          <RouteGlyph mode="rail" />
+          <span>Innsbruck</span>
+          <RouteGlyph mode="trail" />
+          <span>the Dolomites</span>
+          <RouteGlyph mode="water" />
+          <span>Venice</span>
+        </p>
+        <p className="mt-6 max-w-[36em] text-[16px] leading-relaxed text-[color-mix(in_srgb,var(--ink)_82%,var(--paper))]">
+          {trip.editorial}
+        </p>
+        <a
+          href="#itinerary"
+          className="mt-8 inline-flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--trail)]"
+        >
+          Scroll the itinerary
+          <span aria-hidden="true" className="text-[16px]">
+            ↓
+          </span>
+        </a>
+        <p className="mt-3 font-mono text-[11px] tracking-[0.06em] text-[var(--dolomite)]">
+          {days.length} days · the map follows as you go
+        </p>
+      </div>
+    </section>
+  );
+}

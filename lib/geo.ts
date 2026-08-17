@@ -165,6 +165,29 @@ export function centerOfBounds(
   return [(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2];
 }
 
+export function formatLngLat([lng, lat]: LngLat) {
+  const ns = lat >= 0 ? "N" : "S";
+  const ew = lng >= 0 ? "E" : "W";
+  return `${Math.abs(lat).toFixed(4)}°${ns}  ${Math.abs(lng).toFixed(4)}°${ew}`;
+}
+
+export function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
+
+export function lerpBounds(
+  a: [number, number, number, number],
+  b: [number, number, number, number],
+  t: number,
+): [number, number, number, number] {
+  return [
+    lerp(a[0], b[0], t),
+    lerp(a[1], b[1], t),
+    lerp(a[2], b[2], t),
+    lerp(a[3], b[3], t),
+  ];
+}
+
 export function boundsOf(points: LngLat[]): [number, number, number, number] {
   let w = Infinity;
   let s = Infinity;

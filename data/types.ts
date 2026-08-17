@@ -45,6 +45,7 @@ export type Lodging = {
   kind: LodgingKind;
   todo?: string;
   address?: string;
+  lngLat?: LngLat;
 };
 
 export type PracticalItem = {
@@ -89,6 +90,7 @@ export type Destination = {
   photoAlt: string;
   summary: string;
   stops?: string[];
+  lngLat: LngLat;
 };
 
 export type Essential = {
@@ -107,14 +109,17 @@ export type DetailRecord = {
   todo?: string;
 };
 
+export type SpotKind = "city" | "hut" | "tbd" | "airport" | "town" | "station";
+
 export type OvernightStop = {
   id: string;
   lngLat: LngLat;
   label: string;
-  kind: "city" | "hut" | "tbd";
+  kind: SpotKind;
   destinationSlug?: string;
   detailSlug?: string;
   days: number[];
+  always?: boolean;
 };
 
 export type PlaceLabel = {

@@ -46,6 +46,7 @@ export const days: Day[] = [
       name: "The plane",
       context: "Overnight in the air. The first night is the crossing.",
       kind: "plane",
+      lngLat: [-94.7139, 39.2976],
     },
     practical: [
       { text: "Long overnight. Arrive Munich the next morning around 10:00." },
@@ -96,6 +97,7 @@ export const days: Day[] = [
       context: "~€30/night pp, near the Hauptbahnhof.",
       kind: "hostel",
       todo: "Book 1–2 months out",
+      lngLat: [11.555, 48.1405],
     },
     practical: [
       { text: "Book The Wombat Hostel 1–2 months out.", todo: true },
@@ -137,6 +139,7 @@ export const days: Day[] = [
       name: "The Wombat Hostel",
       context: "Second night in Munich.",
       kind: "hostel",
+      lngLat: [11.555, 48.1405],
     },
     practical: [],
   },
@@ -177,6 +180,7 @@ export const days: Day[] = [
       context: "~€30/night pp. Book 1–2 months out.",
       kind: "hostel",
       todo: "Book 1–2 months out",
+      lngLat: [11.394, 47.267],
     },
     practical: [
       { text: "Eurail day." },
@@ -228,6 +232,7 @@ export const days: Day[] = [
       name: "Rifugio Resciesa",
       context: "First hut night, above Ortisei.",
       kind: "hut",
+      lngLat: [11.6825, 46.5986],
     },
     practical: [
       { text: "Eurail day, then bus into Val Gardena." },
@@ -266,6 +271,7 @@ export const days: Day[] = [
       name: "Rifugio Firenze",
       context: "Second hut night, under the Odle.",
       kind: "hut",
+      lngLat: [11.7672, 46.6117],
     },
     practical: [],
   },
@@ -298,6 +304,7 @@ export const days: Day[] = [
       name: "Rifugio Puez",
       context: "Third hut night, on the Puez plateau.",
       kind: "hut",
+      lngLat: [11.8161, 46.59],
     },
     practical: [],
   },
@@ -331,6 +338,7 @@ export const days: Day[] = [
       context: "Where we sleep after leaving the mountains is still open.",
       kind: "tbd",
       todo: "Figure out departure station and the night of the 12th.",
+      lngLat: [11.835, 46.548],
     },
     practical: [
       { text: "Figure out departure station.", todo: true },
@@ -365,6 +373,7 @@ export const days: Day[] = [
       context: "The night slot is still a TODO.",
       kind: "tbd",
       todo: "Book Venice lodging",
+      lngLat: [12.327, 45.437],
     },
     practical: [{ text: "Book Venice lodging.", todo: true }],
   },
@@ -398,6 +407,7 @@ export const days: Day[] = [
       name: "Homeward",
       context: "The trip ends in the air, the same way it began.",
       kind: "plane",
+      lngLat: [12.3519, 45.5053],
     },
     practical: [
       { text: "Fly Venice → MCI. Confirmation details still to be added." },
@@ -418,6 +428,7 @@ export const destinations: Destination[] = [
     photoAlt:
       "Surfers on the Eisbachwelle in Munich, the standing wave in the Englischer Garten.",
     summary: "The first city. Two nights after a long flight, then the train south.",
+    lngLat: [11.575, 48.137],
   },
   {
     slug: "innsbruck",
@@ -430,6 +441,7 @@ export const destinations: Destination[] = [
     photo: "/photos/innsbruck.jpg",
     photoAlt: "Innsbruck along the Inn, mountains standing over the old town.",
     summary: "One night in the valley before the bus into the Dolomites.",
+    lngLat: [11.404, 47.269],
   },
   {
     slug: "ortisei",
@@ -442,6 +454,7 @@ export const destinations: Destination[] = [
     photo: "/photos/ortisei.jpg",
     photoAlt: "Ortisei in Val Gardena, the village at the foot of the ridge.",
     summary: "The last town before the huts. Rail ends here; the trail begins.",
+    lngLat: [11.6717, 46.5761],
   },
   {
     slug: "puez-odle",
@@ -456,6 +469,7 @@ export const destinations: Destination[] = [
       "The Odle peaks from Seceda, limestone spires above the Val Gardena ridge.",
     summary: "Three hut nights across the group. This is the middle of the trip.",
     stops: ["Rifugio Resciesa", "Rifugio Firenze", "Rifugio Puez"],
+    lngLat: [11.74, 46.608],
   },
   {
     slug: "venice",
@@ -468,6 +482,7 @@ export const destinations: Destination[] = [
     photo: "/photos/venice.jpg",
     photoAlt: "A Venice canal at water level, looking toward a bridge.",
     summary: "The last city. An open day, then home.",
+    lngLat: [12.327, 45.437],
   },
 ];
 

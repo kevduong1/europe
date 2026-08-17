@@ -1,4 +1,4 @@
-import { densify, greatCircle, type LngLat } from "@/lib/geo";
+import { densify, greatCircle, nearestT, type LngLat } from "@/lib/geo";
 import type { OvernightStop, PlaceLabel, RouteSegment } from "./types";
 
 export const MCI: LngLat = [-94.7139, 39.2976];
@@ -116,6 +116,21 @@ const unresolvedExit: LngLat[] = densify(
   0.4,
 );
 
+/** Honest dashed connector until the Day 8 exit is chosen. */
+const towardVenice: LngLat[] = densify(
+  [
+    [11.8161, 46.59],
+    [11.835, 46.548],
+    [11.9, 46.42],
+    [12.02, 46.18],
+    [12.14, 45.88],
+    [12.24, 45.58],
+    [12.28, 45.46],
+    [12.327, 45.437],
+  ],
+  10,
+);
+
 const waterToVenice: LngLat[] = densify(
   [
     [12.238, 45.482],
@@ -125,6 +140,18 @@ const waterToVenice: LngLat[] = densify(
   ],
   1,
 );
+
+export const MUNICH_HBF: LngLat = [11.5583, 48.1402];
+export const INNSBRUCK_HBF: LngLat = [11.401, 47.2634];
+export const BOLZANO: LngLat = [11.357, 46.498];
+export const ORTISEI: LngLat = [11.6717, 46.5761];
+export const RESCIESA: LngLat = [11.6825, 46.5986];
+export const FIRENZE: LngLat = [11.7672, 46.6117];
+export const PUEZ: LngLat = [11.8161, 46.59];
+export const VENICE: LngLat = [12.327, 45.437];
+export const EISBACHWELLE: LngLat = [11.5877, 48.1435];
+export const WOMBAT: LngLat = [11.555, 48.1405];
+export const MONTAGU: LngLat = [11.394, 47.267];
 
 export const flightOut = greatCircle(MCI, MUC, 96);
 export const flightHome = greatCircle(VCE, MCI, 96);
@@ -184,6 +211,13 @@ export const routeSegments: RouteSegment[] = [
     label: "route to be decided",
   },
   {
+    id: "toward-venice",
+    mode: "unresolved",
+    days: [8, 9],
+    coordinates: towardVenice,
+    label: "route to be decided",
+  },
+  {
     id: "water-venice",
     mode: "water",
     days: [9, 10],
@@ -208,10 +242,55 @@ export const groundLine: LngLat[] = [
   ...unresolvedExit.slice(1),
 ];
 
+/** Continuous Europe line used for the orange trail, including the open exit. */
+export const orangeTrail: LngLat[] = [
+  ...railMunichInnsbruck,
+  ...railInnsbruckBolzano.slice(1),
+  ...busBolzanoOrtisei.slice(1),
+  ...trailOrtiseiResciesa.slice(1),
+  ...trailResciesaFirenze.slice(1),
+  ...trailFirenzePuez.slice(1),
+  ...towardVenice.slice(1),
+];
+
+const trailFocus: Record<number, LngLat> = {
+  1: MUNICH_HBF,
+  2: WOMBAT,
+  3: WOMBAT,
+  4: MONTAGU,
+  5: RESCIESA,
+  6: FIRENZE,
+  7: PUEZ,
+  8: unresolvedExit[unresolvedExit.length - 1],
+  9: VENICE,
+  10: VENICE,
+};
+
+export function trailTForDay(dayId: number | null) {
+  if (dayId == null || dayId <= 1) return 0;
+  const point = trailFocus[dayId];
+  if (!point) return 0;
+  return nearestT(orangeTrail, point);
+}
+
 export const overnightStops: OvernightStop[] = [
   {
+    id: "mci",
+    lngLat: MCI,
+    label: "Kansas City",
+    kind: "airport",
+    days: [1, 10],
+  },
+  {
+    id: "muc",
+    lngLat: MUC,
+    label: "Munich Airport",
+    kind: "airport",
+    days: [2],
+  },
+  {
     id: "wombat",
-    lngLat: [11.555, 48.1405],
+    lngLat: WOMBAT,
     label: "Wombat Hostel",
     kind: "city",
     destinationSlug: "munich",
@@ -219,8 +298,17 @@ export const overnightStops: OvernightStop[] = [
     days: [2, 3],
   },
   {
+    id: "eisbachwelle",
+    lngLat: EISBACHWELLE,
+    label: "Eisbachwelle",
+    kind: "town",
+    destinationSlug: "munich",
+    detailSlug: "eisbachwelle",
+    days: [3],
+  },
+  {
     id: "montagu",
-    lngLat: [11.394, 47.267],
+    lngLat: MONTAGU,
     label: "Montagu Hostel",
     kind: "city",
     destinationSlug: "innsbruck",
@@ -228,8 +316,23 @@ export const overnightStops: OvernightStop[] = [
     days: [4],
   },
   {
+    id: "bolzano",
+    lngLat: BOLZANO,
+    label: "Bolzano",
+    kind: "station",
+    days: [5],
+  },
+  {
+    id: "ortisei",
+    lngLat: ORTISEI,
+    label: "Ortisei",
+    kind: "town",
+    destinationSlug: "ortisei",
+    days: [5],
+  },
+  {
     id: "resciesa",
-    lngLat: [11.6825, 46.5986],
+    lngLat: RESCIESA,
     label: "Rifugio Resciesa",
     kind: "hut",
     destinationSlug: "puez-odle",
@@ -238,7 +341,7 @@ export const overnightStops: OvernightStop[] = [
   },
   {
     id: "firenze",
-    lngLat: [11.7672, 46.6117],
+    lngLat: FIRENZE,
     label: "Rifugio Firenze",
     kind: "hut",
     destinationSlug: "puez-odle",
@@ -247,7 +350,7 @@ export const overnightStops: OvernightStop[] = [
   },
   {
     id: "puez",
-    lngLat: [11.8161, 46.59],
+    lngLat: PUEZ,
     label: "Rifugio Puez",
     kind: "hut",
     destinationSlug: "puez-odle",
@@ -256,12 +359,19 @@ export const overnightStops: OvernightStop[] = [
   },
   {
     id: "venice-tbd",
-    lngLat: [12.327, 45.437],
+    lngLat: VENICE,
     label: "Venice",
     kind: "tbd",
     destinationSlug: "venice",
     detailSlug: "venice-lodging",
     days: [9],
+  },
+  {
+    id: "vce",
+    lngLat: VCE,
+    label: "Venice Airport",
+    kind: "airport",
+    days: [10],
   },
 ];
 

@@ -37,6 +37,11 @@ export const metadata: Metadata = {
     "Sept 5–14, 2026. A continuous journey from Munich to Innsbruck, across the Puez-Odle, then down to Venice.",
   applicationName: "Europe 2026",
   manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Europe 2026",
+  },
   openGraph: {
     title: "Europe 2026",
     description:
@@ -49,6 +54,7 @@ export const viewport: Viewport = {
   themeColor: "#FAF9F6",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -57,7 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${fraunces.variable} ${sourceSans.variable} ${plexMono.variable} h-full`}
     >
-      <body className="min-h-full bg-[var(--paper)] font-sans text-[var(--ink)] antialiased">
+      <body className="min-h-full font-sans text-[var(--ink)] antialiased">
         <TripShell />
         {children}
       </body>
