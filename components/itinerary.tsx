@@ -10,11 +10,8 @@ export function Itinerary() {
         <DaySection key={day.id} day={day} />
       ))}
 
-      <section
-        id="places"
-        className="relative flex min-h-[100dvh] flex-col justify-end"
-      >
-        <div className="overlay-panel mx-auto w-full max-w-[640px] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28">
+      <section id="places" className="relative flex flex-col">
+        <div className="overlay-panel mx-auto w-full max-w-[640px] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-2">
           <div className="card-head pl-10">
             <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail)]">
               Coordinates

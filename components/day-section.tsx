@@ -5,7 +5,6 @@ import type { Day } from "@/data/types";
 import { Timeline } from "./timeline";
 
 export function DaySection({ day }: { day: Day }) {
-  const isOutboundFlight = day.id === 1;
   const sectionRef = useRef<HTMLElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
 
@@ -31,9 +30,11 @@ export function DaySection({ day }: { day: Day }) {
       data-day={day.id}
       className="relative flex scroll-mt-[var(--trip-header-height)] flex-col"
     >
-      <div className="h-[calc(100dvh-18rem)] min-h-[36dvh] shrink-0" aria-hidden="true" />
+      {day.id === 1 ? (
+        <div className="h-8 shrink-0" aria-hidden="true" />
+      ) : null}
 
-      <div className="mx-auto w-full max-w-[640px] px-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <div className="mx-auto w-full max-w-[640px] px-6 pb-6">
         <div ref={headRef} className="day-head pl-10">
           <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail)]">
             Day {day.id} · {day.weekday}, {day.monthDay}
@@ -49,14 +50,6 @@ export function DaySection({ day }: { day: Day }) {
         <div className="mt-8">
           <Timeline day={day} />
         </div>
-
-        {isOutboundFlight ? (
-          <div
-            data-flight-leg="out"
-            className="min-h-[180dvh]"
-            aria-hidden="true"
-          />
-        ) : null}
       </div>
     </section>
   );

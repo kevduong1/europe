@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 import { HutGlyph, RouteGlyph } from "./icons";
 
 const BEAT_SPACE: Record<string, string> = {
+  "depart-mci": "min-h-[72dvh]",
+  "flight-out": "min-h-[220dvh]",
   "arrive-muc": "min-h-[88dvh]",
   "airport-train": "min-h-[150dvh]",
   "check-in-wombat": "min-h-[72dvh]",

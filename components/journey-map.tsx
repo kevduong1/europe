@@ -414,7 +414,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         (view.phase === "day" || (view.phase === "overview" && view.trailT > 0.02)
           ? along(orangeTrail, Math.max(0.002, view.trailT))
           : null);
-      const onPlane = view.phase === "flight";
+      const onPlane = Boolean(view.showFlight);
       if (hereRef.current) {
         hereRef.current.getElement().style.opacity = herePos && !onPlane ? "1" : "0";
         if (herePos && !onPlane) {

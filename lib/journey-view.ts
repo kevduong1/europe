@@ -287,9 +287,11 @@ function flightOutView(t: number): JourneyView {
     center = ATLANTIC_CENTER;
   } else {
     const k = smoothstep((u - 0.76) / 0.24);
-    zoom = lerp(OCEAN_ZOOM, 6.2, k);
-    center = lerpLngLat(ATLANTIC_CENTER, MUC, k);
+    zoom = lerp(OCEAN_ZOOM, CITY.munichAirport.zoom, k);
+    center = lerpLngLat(ATLANTIC_CENTER, CITY.munichAirport.center, k);
   }
+  const flightT =
+    u < 0.76 ? Math.max(0.006, u) : lerp(0.76, 0.97, smoothstep((u - 0.76) / 0.24));
   return pose({
     phase: "flight",
     center,
@@ -297,7 +299,7 @@ function flightOutView(t: number): JourneyView {
     pitch: 0,
     bearing: 0,
     showFlight: true,
-    flightT: Math.max(0.006, u),
+    flightT,
     flightLeg: "out",
     trailT: 0,
     jump: false,
@@ -312,11 +314,11 @@ function flightHomeView(t: number): JourneyView {
   const u = clamp(t);
   const zoom =
     u < 0.16
-      ? lerp(6.4, ATLANTIC_ZOOM, smoothstep(u / 0.16))
+      ? lerp(CITY.venice.zoom, ATLANTIC_ZOOM, smoothstep(u / 0.16))
       : ATLANTIC_ZOOM;
   const center =
     u < 0.16
-      ? lerpLngLat(VCE, ATLANTIC_CENTER, smoothstep(u / 0.16))
+      ? lerpLngLat(CITY.venice.center, ATLANTIC_CENTER, smoothstep(u / 0.16))
       : ATLANTIC_CENTER;
   return pose({
     phase: "flight",
@@ -334,6 +336,29 @@ function flightHomeView(t: number): JourneyView {
     label: "Venice → Kansas City",
     expandedClusterIds: [],
     visitedClusterIds: ["munich", "innsbruck", "dolomites", "venice"],
+  });
+}
+
+function mucArrival(t: number): JourneyView {
+  const u = clamp(t);
+  const onGround = u >= 0.48;
+  const touchdown = smoothstep(Math.min(1, u / 0.48));
+  return pose({
+    phase: onGround ? "day" : "flight",
+    center: CITY.munichAirport.center,
+    zoom: CITY.munichAirport.zoom + u * 0.38,
+    pitch: 0,
+    bearing: 0,
+    showFlight: !onGround,
+    flightT: lerp(0.97, 1, touchdown),
+    flightLeg: "out",
+    trailT: 0,
+    dayId: 2,
+    label: "Arrive Munich",
+    here: MUC,
+    focusStopId: "muc",
+    expandedClusterIds: ["munich"],
+    visitedClusterIds: [],
   });
 }
 
@@ -391,33 +416,9 @@ function viewForDay(dayId: number): JourneyView {
   const label = `Day ${day.id} · ${day.stripLabel}`;
   switch (dayId) {
     case 1:
-      return pose({
-        phase: "day",
-        center: MUC,
-        zoom: 10.8,
-        pitch: 0,
-        bearing: 0,
-        showFlight: false,
-        flightT: 1,
-        flightLeg: "out",
-        trailT: 0,
-        dayId: 1,
-        label,
-        here: MUC,
-        focusStopId: "muc",
-        expandedClusterIds: ["munich"],
-        visitedClusterIds: [],
-      });
+      return usaDepartView();
     case 2:
-      return cityHold(CITY.munichAirport, {
-        dayId: 2,
-        label,
-        trailT: 0,
-        here: MUC,
-        focusStopId: "muc",
-        expandedClusterIds: ["munich"],
-        visitedClusterIds: [],
-      });
+      return mucArrival(0);
     case 3:
     case 4:
       return munichStay(dayId, label);
@@ -502,39 +503,39 @@ function viewForDay(dayId: number): JourneyView {
 
 function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
   switch (beatId) {
+    case "depart-mci":
+      return usaDepartView();
+    case "flight-out":
+      return flightOutView(t);
     case "arrive-muc":
-      return cityHold(CITY.munichAirport, {
-        dayId: 2,
-        label: "Arrive Munich",
-        trailT: 0,
-        here: MUC,
-        focusStopId: "muc",
-        expandedClusterIds: ["munich"],
-        visitedClusterIds: [],
-      });
+      return mucArrival(t);
     case "airport-train": {
-      const from = cityHold(CITY.munichAirport, {
-        dayId: 2,
-        label: "Airport train → Hbf",
-        trailT: 0,
-        here: MUC,
-        focusStopId: "muc",
-        expandedClusterIds: ["munich"],
-        visitedClusterIds: [],
-      });
+      const u = smoothstep(clamp(t));
+      const from = mucArrival(1);
       const to = munichStay(2, "München Hbf", {
         here: MUNICH_HBF,
         focusStopId: "wombat",
         amount: 0.18,
       });
-      const u = smoothstep(clamp((t - 0.08) / 0.8));
       return {
         ...mix(from, to, u),
         here: along(railMucHbf, u),
+        phase: "day",
+        showFlight: false,
+        flightLeg: null,
         label: "Airport train → Hbf",
       };
     }
-    case "check-in-wombat":
+    case "check-in-wombat": {
+      const u = smoothstep(clamp(t));
+      const here = along(walkWombatHbf, 1 - u);
+      return munichStay(2, "The Wombat Hostel", {
+        here,
+        focusStopId: "wombat",
+        focus: here,
+        amount: lerp(0.16, 0.34, u),
+      });
+    }
     case "wombat-hostel":
       return munichStay(dayId, "The Wombat Hostel", {
         here: WOMBAT,
@@ -887,22 +888,8 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
         expandedClusterIds: ["venice"],
         visitedClusterIds: ["munich", "innsbruck", "dolomites"],
       });
-    case "flight-home": {
-      if (t < 0.16) {
-        return cityHold(CITY.venice, {
-          dayId: 10,
-          label: "Venice Airport",
-          trailT: 1,
-          here: VCE,
-          focusStopId: "vce",
-          focus: VCE,
-          amount: 0.24,
-          expandedClusterIds: ["venice"],
-          visitedClusterIds: ["munich", "innsbruck", "dolomites"],
-        });
-      }
-      return flightHomeView((t - 0.16) / 0.84);
-    }
+    case "flight-home":
+      return flightHomeView(t);
     default:
       return viewForDay(dayId);
   }
@@ -911,16 +898,20 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
 function mix(a: JourneyView, b: JourneyView, t: number): JourneyView {
   const u = smoothstep(t);
   const pick = u < 0.5 ? a : b;
+  const flightMix = lerp(a.showFlight ? 1 : 0, b.showFlight ? 1 : 0, u);
+  const showFlight = flightMix > 0.28;
   return {
-    phase: pick.phase,
+    phase: showFlight ? "flight" : pick.phase,
     bounds: pick.bounds,
     center: lerpLngLat(a.center, b.center, u),
     zoom: lerp(a.zoom, b.zoom, u),
     pitch: lerp(a.pitch, b.pitch, u),
     bearing: lerpBearing(a.bearing, b.bearing, u),
-    showFlight: pick.showFlight,
+    showFlight,
     flightT: lerp(a.flightT, b.flightT, u),
-    flightLeg: pick.flightLeg,
+    flightLeg: showFlight
+      ? (a.flightLeg ?? b.flightLeg)
+      : pick.flightLeg,
     trailT: lerp(a.trailT, b.trailT, u),
     voxelOpacity: lerp(a.voxelOpacity, b.voxelOpacity, u),
     climbM: lerp(a.climbM, b.climbM, u),
@@ -957,24 +948,6 @@ function sectionProgress(
   return span <= 0 ? 0 : clamp((anchor - start) / span);
 }
 
-/** Day 1 card sits first over Kansas City; the Atlantic crossing plays through the spacer below it. */
-function day1Progress(
-  day1: HTMLElement,
-  next: HTMLElement | undefined,
-  viewportHeight: number,
-) {
-  const spacer = day1.querySelector<HTMLElement>("[data-flight-leg]");
-  const originEl = spacer ?? day1;
-  const origin = originEl.getBoundingClientRect().top;
-  const destination = next
-    ? next.getBoundingClientRect().top
-    : originEl.getBoundingClientRect().bottom;
-  const height = Math.max(1, destination - origin);
-  const start = spacer ? 0 : viewportHeight * FREEZE;
-  const end = viewportHeight * 0.4 - height;
-  return clamp((start - origin) / Math.max(1, start - end));
-}
-
 function readDayBeats(
   current: HTMLElement,
   next: HTMLElement | undefined,
@@ -995,14 +968,24 @@ function readDayBeats(
     if (beats[i].getBoundingClientRect().top <= anchor) index = i;
     else break;
   }
-  if (index < 0) return viewForDay(dayId);
+  if (index < 0) {
+    const first = beats[0];
+    return first
+      ? viewForBeat(dayId, first.dataset.beat ?? "", 0)
+      : viewForDay(dayId);
+  }
 
   const beat = beats[index];
   const following = beats[index + 1];
   const t = sectionProgress(beat, following ?? next, anchor);
   const view = viewForBeat(dayId, beat.dataset.beat ?? "", t);
-  if (!following && next && t > 0.78) {
-    return mix(view, viewForDay(Number(next.dataset.day)), (t - 0.78) / 0.22);
+  if (!following && next && t > 0.72) {
+    const nextDayId = Number(next.dataset.day);
+    const nextBeat = next.querySelector<HTMLElement>("[data-beat]");
+    const incoming = nextBeat
+      ? viewForBeat(nextDayId, nextBeat.dataset.beat ?? "", 0)
+      : viewForDay(nextDayId);
+    return mix(view, incoming, (t - 0.72) / 0.28);
   }
   return view;
 }
@@ -1032,20 +1015,6 @@ export function readJourneyView(
   const current = sections[index];
   const next = sections[index + 1];
   const dayId = Number(current.dataset.day);
-
-  if (dayId === 1) {
-    const flightT = day1Progress(current, next, viewportHeight);
-    if (flightT < 0.08) return usaDepartView();
-    const crossing = flightOutView(clamp((flightT - 0.08) / 0.74));
-    if (next && flightT > 0.82) {
-      return mix(
-        flightOutView(1),
-        viewForDay(Number(next.dataset.day)),
-        (flightT - 0.82) / 0.18,
-      );
-    }
-    return crossing;
-  }
 
   if (dayId === 10) {
     const bottom = current.getBoundingClientRect().bottom;
