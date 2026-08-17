@@ -119,16 +119,20 @@ export const trailFirenzeSeceda: LngLat[] = densify(
   0.2,
 );
 
-/** Seceda down past the cable-car top station to Ortisei. */
-export const trailSecedaOrtisei: LngLat[] = densify(
+/**
+ * Seceda down to Ortisei by gondola. The lift itself runs in two dead-straight
+ * spans (summit station → Furnes mid-station → Ortisei) — no wiggle, unlike
+ * the hiking legs. The short first hop covers the walk from the summit
+ * viewpoint over to the lift's top station.
+ */
+export const gondolaSecedaOrtisei: LngLat[] = densify(
   [
     SECEDA,
-    [11.6858, 46.6083], // cable-car top station
-    [11.68, 46.596],
-    [11.676, 46.588],
+    [11.6858, 46.6083], // summit station
+    [11.679, 46.5905], // Furnes mid-station
     ORTISEI,
   ],
-  0.3,
+  0.2,
 );
 
 /** Ortisei over Passo Sella via Canazei to Val di Fassa, ending at QC Terme Dolomiti. */
@@ -198,7 +202,7 @@ const TRAIL_LEGS = [
   { id: "ortiseiResciesa", line: trailOrtiseiResciesa },
   { id: "resciesaFirenze", line: trailResciesaFirenze },
   { id: "firenzeSeceda", line: trailFirenzeSeceda },
-  { id: "secedaOrtisei", line: trailSecedaOrtisei },
+  { id: "secedaOrtisei", line: gondolaSecedaOrtisei },
   { id: "ortiseiValDiFassa", line: busOrtiseiValDiFassa },
   { id: "fassaBolzano", line: busFassaBolzano },
   { id: "bolzanoVenice", line: railBolzanoVenice },

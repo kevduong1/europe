@@ -90,6 +90,17 @@ export const CITY = {
     pitch: 52,
     bearing: 18,
   },
+  /**
+   * The gondola drop, not a traverse — steeper pitch than `dolomites`,
+   * bearing turned to face down-valley toward Ortisei (~186°, the line's own
+   * direction) so the ~1000 m loss reads as falling away in front of you.
+   */
+  secedaDrop: {
+    center: [11.68, 46.593] as LngLat,
+    zoom: 13,
+    pitch: 60,
+    bearing: 186,
+  },
   /** Wide corridor for Ortisei → Val di Fassa over Passo Sella via Canazei. */
   toValDiFassa: {
     center: [11.72, 46.5] as LngLat,

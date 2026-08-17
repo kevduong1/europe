@@ -285,9 +285,9 @@ export const days: Day[] = [
       {
         kind: "transport",
         id: "down-to-ortisei",
-        mode: "trail",
+        mode: "gondola",
         label: "Seceda → Ortisei",
-        meta: "Cable car down",
+        meta: "Seceda cable car down into Ortisei",
         detailSlug: "down-to-ortisei",
       },
       {

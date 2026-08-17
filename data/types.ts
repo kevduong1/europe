@@ -6,6 +6,7 @@ export type TransportMode =
   | "rail"
   | "bus"
   | "trail"
+  | "gondola"
   | "flight"
   | "unresolved"
   | "water";
