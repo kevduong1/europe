@@ -36,11 +36,6 @@ const HIDDEN_LAYERS = new Set([
   "road_pier",
 ]);
 
-function paint(layer: { paint?: Record<string, unknown> }) {
-  layer.paint ??= {};
-  return layer.paint;
-}
-
 export const fallbackStyle: StyleSpecification = {
   version: 8,
   name: "europe-2026-paper",
@@ -54,6 +49,37 @@ export const fallbackStyle: StyleSpecification = {
   ],
 };
 
+export const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
+
+function paint(layer: { paint?: Record<string, unknown> }) {
+  layer.paint ??= {};
+  return layer.paint;
+}
+
+async function inlineVectorSources(style: StyleSpecification) {
+  await Promise.all(
+    Object.values(style.sources).map(async (source) => {
+      if (source.type !== "vector" || !("url" in source) || !source.url) return;
+      try {
+        const spec = await fetch(source.url).then((response) => {
+          if (!response.ok) throw new Error("tilejson");
+          return response.json();
+        });
+        if (!Array.isArray(spec.tiles) || spec.tiles.length === 0) return;
+        source.tiles = spec.tiles;
+        source.minzoom = spec.minzoom ?? 0;
+        source.maxzoom = spec.maxzoom ?? 14;
+        if (typeof spec.attribution === "string") {
+          source.attribution = spec.attribution;
+        }
+        delete source.url;
+      } catch {
+        // Keep the TileJSON url and let MapLibre try.
+      }
+    }),
+  );
+}
+
 export function adaptBasemapStyle(input: StyleSpecification): StyleSpecification {
   const style: StyleSpecification = structuredClone(input);
 
@@ -63,7 +89,7 @@ export function adaptBasemapStyle(input: StyleSpecification): StyleSpecification
     source: "ne2_shaded",
     maxzoom: 7,
     paint: {
-      "raster-opacity": 0.32,
+      "raster-opacity": 0.28,
       "raster-saturation": -0.55,
       "raster-contrast": 0.12,
       "raster-brightness-min": 0.15,
@@ -73,10 +99,9 @@ export function adaptBasemapStyle(input: StyleSpecification): StyleSpecification
   style.layers = style.layers.filter((layer) => !HIDDEN_LAYERS.has(layer.id));
 
   const bgIndex = style.layers.findIndex((layer) => layer.id === "background");
-  if (bgIndex >= 0) {
-    style.layers.splice(bgIndex + 1, 0, reliefLayer);
-  } else {
-    style.layers.unshift(reliefLayer);
+  if (!style.layers.some((layer) => layer.id === "relief")) {
+    if (bgIndex >= 0) style.layers.splice(bgIndex + 1, 0, reliefLayer);
+    else style.layers.unshift(reliefLayer);
   }
 
   for (const layer of style.layers) {
@@ -110,7 +135,7 @@ export function adaptBasemapStyle(input: StyleSpecification): StyleSpecification
         break;
       case "boundary_2":
         paint(layer)["line-color"] = DOLOMITE;
-        paint(layer)["line-opacity"] = 0.4;
+        paint(layer)["line-opacity"] = 0.45;
         break;
       case "label_country_1":
       case "label_country_2":
@@ -119,7 +144,7 @@ export function adaptBasemapStyle(input: StyleSpecification): StyleSpecification
           paint(layer)["text-color"] = INK;
           paint(layer)["text-halo-color"] = PAPER;
           paint(layer)["text-halo-width"] = 1.4;
-          paint(layer)["text-opacity"] = 0.55;
+          paint(layer)["text-opacity"] = 0.72;
         }
         break;
       case "highway_major_casing":
@@ -143,12 +168,6 @@ export function adaptBasemapStyle(input: StyleSpecification): StyleSpecification
       case "water_name_point_label":
       case "water_name_line_label":
         if (layer.type === "symbol") {
-          layer.layout = {
-            ...layer.layout,
-            "text-font": ["Noto Sans Italic"],
-            "text-size": 11,
-            "text-letter-spacing": 0.06,
-          };
           paint(layer)["text-color"] = LAGOON;
           paint(layer)["text-halo-color"] = PAPER;
           paint(layer)["text-halo-width"] = 1.2;
@@ -163,14 +182,15 @@ export function adaptBasemapStyle(input: StyleSpecification): StyleSpecification
   return style;
 }
 
-export const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
-
 export async function loadPaperStyle(): Promise<StyleSpecification> {
   try {
     const response = await fetch(STYLE_URL);
     if (!response.ok) return structuredClone(fallbackStyle);
-    return adaptBasemapStyle(await response.json());
+    const style = (await response.json()) as StyleSpecification;
+    await inlineVectorSources(style);
+    return adaptBasemapStyle(style);
   } catch {
     return structuredClone(fallbackStyle);
   }
 }
+

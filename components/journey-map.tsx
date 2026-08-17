@@ -5,8 +5,9 @@ import {
   LngLat as MapLngLat,
   Map as MapLibreMap,
   Marker,
+  setWorkerUrl,
 } from "maplibre-gl";
-import type { GeoJSONSource, StyleSpecification } from "maplibre-gl";
+import type { GeoJSONSource } from "maplibre-gl";
 import {
   forwardRef,
   useEffect,
@@ -35,6 +36,8 @@ import {
 import { OVERVIEW, type JourneyView } from "@/lib/journey-view";
 import { prefersReducedMotion } from "@/lib/motion";
 import "maplibre-gl/dist/maplibre-gl.css";
+
+setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
 export type JourneyMapHandle = {
   setView: (view: JourneyView) => void;
@@ -159,109 +162,110 @@ function crumbCollection(line: LngLat[], t: number, spacingKm: number) {
   };
 }
 
-function withRouteLayers(base: StyleSpecification): StyleSpecification {
-  const style = structuredClone(base);
-  style.sources = {
-    ...style.sources,
-    "trail-ghost": {
-      type: "geojson",
-      data: lineFeature("trail-ghost", orangeTrail),
-    },
-    "trail-active": {
-      type: "geojson",
-      data: lineFeature("trail-active", sliceLine(orangeTrail, 0, 0.002)),
-    },
-    crumbs: {
-      type: "geojson",
-      data: crumbCollection(orangeTrail, 0, 8),
-    },
-    flights: {
-      type: "geojson",
-      data: lineFeature("flight-active", sliceLine(flightOut, 0, 0.002)),
-    },
-  };
+function addRouteLayers(map: MapLibreMap) {
+  if (map.getSource("trail-ghost")) return;
+  map.addSource("trail-ghost", {
+    type: "geojson",
+    data: lineFeature("trail-ghost", orangeTrail),
+  });
+  map.addSource("trail-active", {
+    type: "geojson",
+    data: lineFeature("trail-active", sliceLine(orangeTrail, 0, 0.002)),
+  });
+  map.addSource("crumbs", {
+    type: "geojson",
+    data: crumbCollection(orangeTrail, 0, 8),
+  });
+  map.addSource("flights", {
+    type: "geojson",
+    data: lineFeature("flight-active", sliceLine(flightOut, 0, 0.002)),
+  });
   const lineWidth: ["interpolate", ["linear"], ["zoom"], ...number[]] = [
     "interpolate",
     ["linear"],
     ["zoom"],
     2,
-    3,
+    3.2,
     6,
     4.5,
     12,
     6,
   ];
-  style.layers = [
-    ...style.layers,
-    {
-      id: "trail-ghost",
-      type: "line",
-      source: "trail-ghost",
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": TRAIL,
-        "line-width": 2,
-        "line-opacity": 0.28,
-      },
+  map.addLayer({
+    id: "trail-ghost",
+    type: "line",
+    source: "trail-ghost",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": TRAIL,
+      "line-width": 2,
+      "line-opacity": 0.28,
     },
-    {
-      id: "trail-active-casing",
-      type: "line",
-      source: "trail-active",
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": "#1f2421",
-        "line-width": 7,
-        "line-opacity": 0,
-      },
+  });
+  map.addLayer({
+    id: "trail-active-casing",
+    type: "line",
+    source: "trail-active",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": "#1f2421",
+      "line-width": 7,
+      "line-opacity": 0,
     },
-    {
-      id: "trail-active",
-      type: "line",
-      source: "trail-active",
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": TRAIL,
-        "line-width": lineWidth,
-        "line-opacity": 0,
-      },
+  });
+  map.addLayer({
+    id: "trail-active",
+    type: "line",
+    source: "trail-active",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": TRAIL,
+      "line-width": lineWidth,
+      "line-opacity": 0,
     },
-    {
-      id: "trail-crumbs",
-      type: "circle",
-      source: "crumbs",
-      paint: {
-        "circle-radius": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          3,
-          2.4,
-          8,
-          3.6,
-          13,
-          4.4,
-        ],
-        "circle-color": TRAIL,
-        "circle-stroke-width": 1.4,
-        "circle-stroke-color": "#faf9f6",
-        "circle-opacity": 0,
-      },
+  });
+  map.addLayer({
+    id: "trail-crumbs",
+    type: "circle",
+    source: "crumbs",
+    paint: {
+      "circle-radius": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        3,
+        2.4,
+        8,
+        3.6,
+        13,
+        4.4,
+      ],
+      "circle-color": TRAIL,
+      "circle-stroke-width": 1.4,
+      "circle-stroke-color": "#faf9f6",
+      "circle-opacity": 0,
     },
-    {
-      id: "route-flight",
-      type: "line",
-      source: "flights",
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": TRAIL,
-        "line-width": 2.4,
-        "line-dasharray": [2.6, 1.8],
-        "line-opacity": 0,
-      },
+  });
+  map.addLayer({
+    id: "route-flight",
+    type: "line",
+    source: "flights",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": TRAIL,
+      "line-width": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        2,
+        3.4,
+        6,
+        2.6,
+      ],
+      "line-dasharray": [2.6, 1.8],
+      "line-opacity": 0,
     },
-  ];
-  return style;
+  });
 }
 
 const MARKER_OPTS = {
@@ -479,12 +483,11 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         const mount = containerRef.current;
         if (cancelled || !mount) return;
 
-        const base = await loadPaperStyle();
+        const paper = await loadPaperStyle();
         if (cancelled) return;
-        const style = withRouteLayers(base);
         map = new MapLibreMap({
           container: mount,
-          style,
+          style: paper,
           attributionControl: false,
           interactive: false,
           dragRotate: false,
@@ -493,7 +496,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           fadeDuration: prefersReducedMotion() ? 0 : 180,
           center: [11.72, 46.95],
           zoom: 6.2,
-          minZoom: 1.6,
+          minZoom: 1.4,
           maxZoom: 16,
           maxPitch: 70,
           pitch: 0,
@@ -514,6 +517,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         const finishReady = () => {
           if (!map || cancelled || finished) return;
           finished = true;
+          addRouteLayers(map);
           map.resize();
           if (markersRef.current.length === 0) {
             for (const cluster of stopClusters) {

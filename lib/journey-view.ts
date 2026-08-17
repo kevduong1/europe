@@ -1,7 +1,6 @@
 import {
   EISBACHWELLE,
   flightHome,
-  flightOut,
   MONTAGU,
   MUC,
   ORTISEI,
@@ -15,7 +14,6 @@ import {
 } from "@/data/route";
 import { days, journeyFrame } from "@/data/trip";
 import {
-  along,
   clamp,
   lerp,
   lerpBearing,
@@ -111,19 +109,11 @@ export const OVERVIEW: JourneyView = pose({
   visitedClusterIds: [],
 });
 
-const ATLANTIC_CENTER: LngLat = [-41.5, 47.2];
+const ATLANTIC_CENTER: LngLat = [-41.5, 52];
 const ATLANTIC_ZOOM = 3.05;
-const USA_CENTER: LngLat = [-97.2, 39.6];
-const USA_ZOOM = 3.4;
-
-function followPlane(t: number, zoom: number): LngLat {
-  const u = clamp(t);
-  const here = along(flightOut, u);
-  const ahead = along(flightOut, Math.min(1, u + 0.045));
-  const point = lerpLngLat(here, ahead, 0.35);
-  const latPad = 5.2 * 2 ** (USA_ZOOM - zoom);
-  return [point[0], point[1] - latPad];
-}
+const USA_CENTER: LngLat = [-97.2, 42];
+const USA_ZOOM = 3.05;
+const OCEAN_ZOOM = 2.15;
 
 function usaDepartView(): JourneyView {
   return pose({
@@ -146,15 +136,23 @@ function usaDepartView(): JourneyView {
 
 function flightOutView(t: number): JourneyView {
   const u = clamp(t);
-  const zoom =
-    u < 0.12
-      ? USA_ZOOM
-      : u < 0.74
-        ? lerp(USA_ZOOM, 3.05, smoothstep((u - 0.12) / 0.62))
-        : lerp(3.05, 7.15, smoothstep((u - 0.74) / 0.26));
-  const tracked = followPlane(u, zoom);
-  const center =
-    u < 0.88 ? tracked : lerpLngLat(tracked, MUC, smoothstep((u - 0.88) / 0.12));
+  let zoom: number;
+  let center: LngLat;
+  if (u < 0.1) {
+    zoom = USA_ZOOM;
+    center = USA_CENTER;
+  } else if (u < 0.26) {
+    const k = smoothstep((u - 0.1) / 0.16);
+    zoom = lerp(USA_ZOOM, OCEAN_ZOOM, k);
+    center = lerpLngLat(USA_CENTER, ATLANTIC_CENTER, k);
+  } else if (u < 0.76) {
+    zoom = OCEAN_ZOOM;
+    center = ATLANTIC_CENTER;
+  } else {
+    const k = smoothstep((u - 0.76) / 0.24);
+    zoom = lerp(OCEAN_ZOOM, 6.2, k);
+    center = lerpLngLat(ATLANTIC_CENTER, MUC, k);
+  }
   return pose({
     phase: "flight",
     center,
