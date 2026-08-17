@@ -1,0 +1,652 @@
+import type { Day, Destination, DetailRecord, Essential } from "./types";
+
+export const trip = {
+  title: "Europe 2026",
+  eyebrow: "Sept 5 – 14, 2026",
+  arc: "Munich, Innsbruck, the Dolomites, Venice",
+  editorial:
+    "Ten days that change character as they go: cities and rail, then three nights of huts across the Puez-Odle, then down to the lagoon. The middle is the point of the trip.",
+};
+
+export const days: Day[] = [
+  {
+    id: 1,
+    isoDate: "2026-09-05",
+    weekday: "Saturday",
+    weekdayInitial: "S",
+    monthDay: "Sept 5",
+    stripLabel: "Fly",
+    title: "Fly out",
+    summary: "Kansas City to Munich · sleep on the plane",
+    isHikeDay: false,
+    act: 1,
+    mapFrame: {
+      bounds: [-98, 32, 18, 56],
+      showFlight: true,
+    },
+    timeline: [
+      {
+        kind: "event",
+        id: "depart-mci",
+        time: "1:45 PM",
+        title: "Depart Kansas City (MCI)",
+        detailSlug: "flight-mci-muc",
+      },
+      {
+        kind: "transport",
+        id: "flight-out",
+        mode: "flight",
+        label: "MCI → Munich",
+        meta: "12+ hr overnight flight",
+        detailSlug: "flight-mci-muc",
+      },
+    ],
+    lodging: {
+      slug: "the-plane",
+      name: "The plane",
+      context: "Overnight in the air. The first night is the crossing.",
+      kind: "plane",
+    },
+    practical: [
+      { text: "Long overnight. Arrive Munich the next morning around 10:00." },
+    ],
+  },
+  {
+    id: 2,
+    isoDate: "2026-09-06",
+    weekday: "Sunday",
+    weekdayInitial: "S",
+    monthDay: "Sept 6",
+    stripLabel: "Munich",
+    title: "Landing in Munich",
+    summary: "Airport train into the city · sleep at The Wombat Hostel",
+    isHikeDay: false,
+    act: 1,
+    mapFrame: {
+      bounds: [11.48, 48.08, 11.72, 48.24],
+    },
+    timeline: [
+      {
+        kind: "event",
+        id: "arrive-muc",
+        time: "10:00",
+        title: "Arrive Munich (MUC)",
+        note: "About 10:00, after the overnight.",
+        detailSlug: "flight-mci-muc",
+      },
+      {
+        kind: "transport",
+        id: "airport-train",
+        mode: "rail",
+        label: "Airport train → München Hbf",
+        meta: "Tickets at the airport",
+        detailSlug: "airport-train",
+      },
+      {
+        kind: "event",
+        id: "check-in-wombat",
+        title: "Check in at The Wombat Hostel",
+        note: "~€30/night pp",
+        detailSlug: "wombat-hostel",
+      },
+    ],
+    lodging: {
+      slug: "wombat-hostel",
+      name: "The Wombat Hostel",
+      context: "~€30/night pp, near the Hauptbahnhof.",
+      kind: "hostel",
+      todo: "Book 1–2 months out",
+    },
+    practical: [
+      { text: "Book The Wombat Hostel 1–2 months out.", todo: true },
+      { text: "Airport train tickets at the airport." },
+    ],
+  },
+  {
+    id: 3,
+    isoDate: "2026-09-07",
+    weekday: "Monday",
+    weekdayInitial: "M",
+    monthDay: "Sept 7",
+    stripLabel: "Munich",
+    title: "Munich",
+    summary: "Open day in the city · sleep at The Wombat Hostel",
+    isHikeDay: false,
+    act: 1,
+    mapFrame: {
+      bounds: [11.48, 48.08, 11.72, 48.24],
+    },
+    timeline: [
+      {
+        kind: "open",
+        id: "open-munich",
+        text: "Nothing planned yet — the day is open.",
+      },
+      {
+        kind: "event",
+        id: "eisbachwelle",
+        title: "Eisbachwelle",
+        optional: true,
+        optionalAnnotation: "if it's running",
+        note: "Check if the wave is active — a recent cleanup effort may have temporarily eliminated it.",
+        detailSlug: "eisbachwelle",
+      },
+    ],
+    lodging: {
+      slug: "wombat-hostel",
+      name: "The Wombat Hostel",
+      context: "Second night in Munich.",
+      kind: "hostel",
+    },
+    practical: [],
+  },
+  {
+    id: 4,
+    isoDate: "2026-09-08",
+    weekday: "Tuesday",
+    weekdayInitial: "T",
+    monthDay: "Sept 8",
+    stripLabel: "Innsbruck",
+    title: "Munich → Innsbruck",
+    summary: "Eurail day · sleep at Montagu Hostel",
+    isHikeDay: false,
+    act: 1,
+    mapFrame: {
+      bounds: [11.28, 47.18, 12.28, 48.22],
+    },
+    timeline: [
+      {
+        kind: "transport",
+        id: "train-munich-innsbruck",
+        mode: "rail",
+        label: "Munich Hbf → Innsbruck",
+        meta: "~1h50 · Eurail",
+        detailSlug: "train-munich-innsbruck",
+      },
+      {
+        kind: "event",
+        id: "check-in-montagu",
+        title: "Check in at Montagu Hostel",
+        note: "~€30/night pp",
+        detailSlug: "montagu-hostel",
+      },
+    ],
+    lodging: {
+      slug: "montagu-hostel",
+      name: "Montagu Hostel",
+      context: "~€30/night pp. Book 1–2 months out.",
+      kind: "hostel",
+      todo: "Book 1–2 months out",
+    },
+    practical: [
+      { text: "Eurail day." },
+      { text: "Book Montagu Hostel 1–2 months out.", todo: true },
+    ],
+  },
+  {
+    id: 5,
+    isoDate: "2026-09-09",
+    weekday: "Wednesday",
+    weekdayInitial: "W",
+    monthDay: "Sept 9",
+    stripLabel: "Ortisei",
+    title: "Into the Dolomites",
+    summary: "Train, then bus, then the trail · sleep at Rifugio Resciesa",
+    isHikeDay: true,
+    act: 2,
+    mapFrame: {
+      bounds: [11.28, 46.48, 11.78, 47.32],
+    },
+    timeline: [
+      {
+        kind: "transport",
+        id: "train-innsbruck-bolzano",
+        mode: "rail",
+        label: "Innsbruck → Bolzano",
+        meta: "Morning · Eurail",
+        detailSlug: "train-innsbruck-bolzano",
+      },
+      {
+        kind: "transport",
+        id: "bus-bolzano-ortisei",
+        mode: "bus",
+        label: "Bolzano → Ortisei",
+        meta: "Bus",
+        detailSlug: "bus-bolzano-ortisei",
+      },
+      {
+        kind: "transport",
+        id: "onto-the-trail",
+        mode: "trail",
+        label: "Ortisei → Rifugio Resciesa",
+        meta: "Rail ends · trail begins",
+        detailSlug: "rifugio-resciesa",
+      },
+    ],
+    lodging: {
+      slug: "rifugio-resciesa",
+      name: "Rifugio Resciesa",
+      context: "First hut night, above Ortisei.",
+      kind: "hut",
+    },
+    practical: [
+      { text: "Eurail day, then bus into Val Gardena." },
+      {
+        text: "Pack light for the hut traverse — bags stay minimal for 3 days.",
+        todo: true,
+      },
+    ],
+  },
+  {
+    id: 6,
+    isoDate: "2026-09-10",
+    weekday: "Thursday",
+    weekdayInitial: "T",
+    monthDay: "Sept 10",
+    stripLabel: "Firenze",
+    title: "Resciesa to Rifugio Firenze",
+    summary: "Hike across the Odle group · sleep at Rifugio Firenze",
+    isHikeDay: true,
+    act: 2,
+    mapFrame: {
+      bounds: [11.66, 46.572, 11.8, 46.64],
+    },
+    timeline: [
+      {
+        kind: "transport",
+        id: "hike-resciesa-firenze",
+        mode: "trail",
+        label: "Resciesa → Rifugio Firenze",
+        meta: "Toward Puez-Odle",
+        detailSlug: "rifugio-firenze",
+      },
+    ],
+    lodging: {
+      slug: "rifugio-firenze",
+      name: "Rifugio Firenze",
+      context: "Second hut night, under the Odle.",
+      kind: "hut",
+    },
+    practical: [],
+  },
+  {
+    id: 7,
+    isoDate: "2026-09-11",
+    weekday: "Friday",
+    weekdayInitial: "F",
+    monthDay: "Sept 11",
+    stripLabel: "Puez",
+    title: "Firenze to Rifugio Puez",
+    summary: "Hike day · sleep at Rifugio Puez",
+    isHikeDay: true,
+    act: 2,
+    mapFrame: {
+      bounds: [11.74, 46.562, 11.86, 46.63],
+    },
+    timeline: [
+      {
+        kind: "transport",
+        id: "hike-firenze-puez",
+        mode: "trail",
+        label: "Rifugio Firenze → Rifugio Puez",
+        meta: "Onto the plateau",
+        detailSlug: "rifugio-puez",
+      },
+    ],
+    lodging: {
+      slug: "rifugio-puez",
+      name: "Rifugio Puez",
+      context: "Third hut night, on the Puez plateau.",
+      kind: "hut",
+    },
+    practical: [],
+  },
+  {
+    id: 8,
+    isoDate: "2026-09-12",
+    weekday: "Saturday",
+    weekdayInitial: "S",
+    monthDay: "Sept 12",
+    stripLabel: "Descent",
+    title: "Out of the mountains",
+    summary: "Eurail day · exit still to be decided",
+    isHikeDay: true,
+    act: 2,
+    mapFrame: {
+      bounds: [11.74, 46.5, 11.92, 46.64],
+    },
+    timeline: [
+      {
+        kind: "transport",
+        id: "exit-tbd",
+        mode: "unresolved",
+        label: "Route to be decided",
+        meta: "Exit point still open",
+        detailSlug: "exit-route",
+      },
+    ],
+    lodging: {
+      slug: "exit-night",
+      name: "Lodging to be decided",
+      context: "Where we sleep after leaving the mountains is still open.",
+      kind: "tbd",
+      todo: "Figure out departure station and the night of the 12th.",
+    },
+    practical: [
+      { text: "Figure out departure station.", todo: true },
+      { text: "Exit route still to be decided.", todo: true },
+      { text: "Eurail day once we are back on the rails." },
+    ],
+  },
+  {
+    id: 9,
+    isoDate: "2026-09-13",
+    weekday: "Sunday",
+    weekdayInitial: "S",
+    monthDay: "Sept 13",
+    stripLabel: "Venice",
+    title: "Venice",
+    summary: "Open day in the city · lodging still to be decided",
+    isHikeDay: false,
+    act: 3,
+    mapFrame: {
+      bounds: [12.26, 45.4, 12.42, 45.48],
+    },
+    timeline: [
+      {
+        kind: "open",
+        id: "open-venice",
+        text: "Nothing planned yet — the day is open.",
+      },
+    ],
+    lodging: {
+      slug: "venice-lodging",
+      name: "Venice lodging to be decided",
+      context: "The night slot is still a TODO.",
+      kind: "tbd",
+      todo: "Book Venice lodging",
+    },
+    practical: [{ text: "Book Venice lodging.", todo: true }],
+  },
+  {
+    id: 10,
+    isoDate: "2026-09-14",
+    weekday: "Monday",
+    weekdayInitial: "M",
+    monthDay: "Sept 14",
+    stripLabel: "Home",
+    title: "Home",
+    summary: "Venice to Kansas City · the line, fully traveled",
+    isHikeDay: false,
+    act: 3,
+    mapFrame: {
+      bounds: [-98, 32, 18, 56],
+      showFlight: true,
+    },
+    timeline: [
+      {
+        kind: "transport",
+        id: "flight-home",
+        mode: "flight",
+        label: "Venice → MCI",
+        meta: "Homeward",
+        detailSlug: "flight-vce-mci",
+      },
+    ],
+    lodging: {
+      slug: "flight-home",
+      name: "Homeward",
+      context: "The trip ends in the air, the same way it began.",
+      kind: "plane",
+    },
+    practical: [
+      { text: "Fly Venice → MCI. Confirmation details still to be added." },
+    ],
+  },
+];
+
+export const destinations: Destination[] = [
+  {
+    slug: "munich",
+    name: "Munich",
+    dates: "Sept 6–8",
+    dayIds: [2, 3, 4],
+    lodging: "The Wombat Hostel",
+    transportIn: "Overnight flight from Kansas City, then the airport train to München Hbf.",
+    transportOut: "Train to Innsbruck on the Eurail pass.",
+    photo: "/photos/munich.jpg",
+    photoAlt:
+      "Surfers on the Eisbachwelle in Munich, the standing wave in the Englischer Garten.",
+    summary: "The first city. Two nights after a long flight, then the train south.",
+  },
+  {
+    slug: "innsbruck",
+    name: "Innsbruck",
+    dates: "Sept 8–9",
+    dayIds: [4, 5],
+    lodging: "Montagu Hostel",
+    transportIn: "Train from Munich.",
+    transportOut: "Morning train to Bolzano, then bus to Ortisei.",
+    photo: "/photos/innsbruck.jpg",
+    photoAlt: "Innsbruck along the Inn, mountains standing over the old town.",
+    summary: "One night in the valley before the bus into the Dolomites.",
+  },
+  {
+    slug: "ortisei",
+    name: "Ortisei",
+    dates: "Sept 9",
+    dayIds: [5],
+    lodging: "We pass through; the night is up at Rifugio Resciesa.",
+    transportIn: "Bus from Bolzano.",
+    transportOut: "Onto the trail toward Rifugio Resciesa.",
+    photo: "/photos/ortisei.jpg",
+    photoAlt: "Ortisei in Val Gardena, the village at the foot of the ridge.",
+    summary: "The last town before the huts. Rail ends here; the trail begins.",
+  },
+  {
+    slug: "puez-odle",
+    name: "Puez-Odle",
+    dates: "Sept 9–12",
+    dayIds: [5, 6, 7, 8],
+    lodging: "Rifugio Resciesa, Rifugio Firenze, Rifugio Puez",
+    transportIn: "From Ortisei onto the ridge.",
+    transportOut: "Exit route still to be decided.",
+    photo: "/photos/dolomites.jpg",
+    photoAlt:
+      "The Odle peaks from Seceda, limestone spires above the Val Gardena ridge.",
+    summary: "Three hut nights across the group. This is the middle of the trip.",
+    stops: ["Rifugio Resciesa", "Rifugio Firenze", "Rifugio Puez"],
+  },
+  {
+    slug: "venice",
+    name: "Venice",
+    dates: "Sept 13–14",
+    dayIds: [9, 10],
+    lodging: "Still to be decided",
+    transportIn: "Down from the mountains once the exit is settled.",
+    transportOut: "Flight to Kansas City.",
+    photo: "/photos/venice.jpg",
+    photoAlt: "A Venice canal at water level, looking toward a bridge.",
+    summary: "The last city. An open day, then home.",
+  },
+];
+
+export const essentials: Essential[] = [
+  {
+    id: "eurail",
+    title: "Eurail pass",
+    body: "Days 4, 5, and 8 are rail days. Keep the pass with the passports.",
+  },
+  {
+    id: "flights",
+    title: "Flights",
+    body: "MCI → Munich, Sept 5, departs 1:45 PM. Overnight, 12+ hours, arriving around 10:00 the next morning. Venice → MCI, Sept 14. Confirmation details still to be added.",
+  },
+  {
+    id: "packing-huts",
+    title: "Packing for the huts",
+    body: "Pack light for the traverse. Bags stay minimal for three days, from Ortisei to the exit.",
+  },
+  {
+    id: "documents",
+    title: "Documents",
+    body: "Passports, Eurail pass, hut bookings, and hostel confirmations once they exist.",
+  },
+  {
+    id: "bookings",
+    title: "Still to book",
+    body: "The Wombat Hostel and Montagu Hostel, 1–2 months out. Venice lodging. The Day 8 exit and departure station.",
+  },
+];
+
+export const details: DetailRecord[] = [
+  {
+    slug: "flight-mci-muc",
+    dayId: 1,
+    title: "Kansas City to Munich",
+    kind: "train",
+    body: "Departs MCI at 1:45 PM on Sept 5. Overnight, 12+ hours. Arrive Munich around 10:00 the next morning.",
+  },
+  {
+    slug: "the-plane",
+    dayId: 1,
+    title: "The plane",
+    kind: "stay",
+    body: "The first night is the crossing. Sleep on the plane.",
+  },
+  {
+    slug: "airport-train",
+    dayId: 2,
+    title: "Airport train to München Hbf",
+    kind: "train",
+    body: "From MUC into the city. Tickets at the airport.",
+  },
+  {
+    slug: "wombat-hostel",
+    dayId: 2,
+    title: "The Wombat Hostel",
+    kind: "stay",
+    body: "Two nights in Munich, about €30/night pp, near the Hauptbahnhof.",
+    todo: "Book 1–2 months out",
+  },
+  {
+    slug: "eisbachwelle",
+    dayId: 3,
+    title: "Eisbachwelle",
+    kind: "note",
+    body: "The river wave in the Englischer Garten. Optional, and only if it's running.",
+    extra:
+      "Check if the wave is active — a recent cleanup effort may have temporarily eliminated it.",
+  },
+  {
+    slug: "train-munich-innsbruck",
+    dayId: 4,
+    title: "Munich to Innsbruck",
+    kind: "train",
+    body: "Eurail day. München Hbf to Innsbruck, about 1h50.",
+  },
+  {
+    slug: "montagu-hostel",
+    dayId: 4,
+    title: "Montagu Hostel",
+    kind: "stay",
+    body: "One night in Innsbruck, about €30/night pp.",
+    todo: "Book 1–2 months out",
+  },
+  {
+    slug: "train-innsbruck-bolzano",
+    dayId: 5,
+    title: "Innsbruck to Bolzano",
+    kind: "train",
+    body: "Morning train on the Eurail pass, down the Brenner.",
+  },
+  {
+    slug: "bus-bolzano-ortisei",
+    dayId: 5,
+    title: "Bolzano to Ortisei",
+    kind: "train",
+    body: "Bus from Bolzano into Val Gardena. The last motorized leg before the huts.",
+  },
+  {
+    slug: "rifugio-resciesa",
+    dayId: 5,
+    title: "Rifugio Resciesa",
+    kind: "stay",
+    body: "First hut night, above Ortisei. This is where the trail line begins.",
+  },
+  {
+    slug: "rifugio-firenze",
+    dayId: 6,
+    title: "Rifugio Firenze",
+    kind: "stay",
+    body: "Second hut night, after hiking across the Odle group from Resciesa.",
+  },
+  {
+    slug: "rifugio-puez",
+    dayId: 7,
+    title: "Rifugio Puez",
+    kind: "stay",
+    body: "Third hut night, on the Puez plateau.",
+  },
+  {
+    slug: "exit-route",
+    dayId: 8,
+    title: "Out of the mountains",
+    kind: "hike",
+    body: "The descent is still open. The trail fades here on purpose — we have not chosen the exit yet.",
+    todo: "Figure out departure station",
+  },
+  {
+    slug: "exit-night",
+    dayId: 8,
+    title: "Lodging to be decided",
+    kind: "stay",
+    body: "Where we sleep after leaving the mountains is still open.",
+    todo: "Figure out departure station and the night of the 12th.",
+  },
+  {
+    slug: "venice-lodging",
+    dayId: 9,
+    title: "Venice lodging",
+    kind: "stay",
+    body: "Still to be decided. The night slot is a TODO, not a missing page.",
+    todo: "Book Venice lodging",
+  },
+  {
+    slug: "flight-vce-mci",
+    dayId: 10,
+    title: "Venice to Kansas City",
+    kind: "train",
+    body: "Fly Venice → MCI on Sept 14. Confirmation details still to be added.",
+  },
+  {
+    slug: "flight-home",
+    dayId: 10,
+    title: "Homeward",
+    kind: "stay",
+    body: "The trip ends in the air, the same way it began.",
+  },
+];
+
+export function getDay(id: number) {
+  return days.find((day) => day.id === id);
+}
+
+export function getDestination(slug: string) {
+  return destinations.find((destination) => destination.slug === slug);
+}
+
+export function getDetail(slug: string) {
+  return details.find((detail) => detail.slug === slug);
+}
+
+export function getDetailForDay(dayId: number, slug: string) {
+  return details.find((detail) => detail.slug === slug && detail.dayId === dayId)
+    ?? details.find((detail) => detail.slug === slug);
+}
+
+export const journeyFrame: Day["mapFrame"] = {
+  bounds: [10.95, 45.28, 12.55, 48.35],
+};
+
+export const teaserDestinations = ["munich", "puez-odle", "venice"] as const;
