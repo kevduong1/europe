@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import type { Day, TimelineItem } from "@/data/types";
 import { BEAT_SPACE, DEFAULT_BEAT_SPACE } from "@/lib/journey/pacing";
 import { cn } from "@/lib/utils";
-import { HutGlyph, RouteGlyph } from "./icons";
+import { HutGlyph, RouteGlyph, TransportModeBadge } from "./icons";
 
 function BeatMark({
   item,
@@ -13,8 +13,9 @@ function BeatMark({
 }) {
   if (item.kind === "transport") {
     return (
-      <span className="absolute left-[6px] top-[10px] text-[var(--ink)]">
+      <span className="absolute left-0 top-[10px] flex w-6 flex-col items-center gap-[3px] text-[var(--ink)]">
         <RouteGlyph mode={item.mode} />
+        <TransportModeBadge mode={item.mode} />
       </span>
     );
   }
