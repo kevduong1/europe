@@ -11,7 +11,7 @@ export function EssentialsSection() {
     >
       <ul className="mt-8 space-y-8 pl-10">
         {essentials.map((item) => (
-          <li key={item.id} className="min-h-[48dvh]">
+          <li key={item.id} className="essentials-row">
             <div className="beat-head">
               <h3 className="overlay-type text-[16px] font-medium">{item.title}</h3>
               <p className="overlay-type mt-2 text-[16px] leading-relaxed">

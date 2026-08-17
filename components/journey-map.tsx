@@ -40,7 +40,6 @@ setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
 export type JourneyMapHandle = {
   setView: (view: JourneyView) => void;
-  resize: () => void;
 };
 
 type Props = {
@@ -445,7 +444,6 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
 
     useImperativeHandle(ref, () => ({
       setView: applyView,
-      resize: () => mapRef.current?.resize(),
     }));
 
     useEffect(() => {
