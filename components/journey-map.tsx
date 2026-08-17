@@ -293,6 +293,8 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
     const lastFlightKey = useRef("");
     const lastMarkerKey = useRef("");
     const lastCamera = useRef<Camera | null>(null);
+    /** Last view handed to `applyView`, replayed on resize so the width-derived offset recomputes. */
+    const lastViewRef = useRef<JourneyView | null>(null);
     const onReadyRef = useRef(onReady);
     const applyViewRef = useRef<(view: JourneyView) => void>(() => {});
     onReadyRef.current = onReady;
@@ -402,7 +404,9 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
               (view.phase === "flight" && view.flightLeg === "out") ||
               (view.phase === "day" && expanded);
           } else if (unresolved) {
-            visible = view.phase === "day" && view.dayId === 8;
+            // The Val di Fassa night, not the whole route — everything else
+            // by Day 8 is a known line.
+            visible = view.phase === "day" && view.dayId === 7;
           } else if (view.phase === "day" && expanded) {
             visible = true;
           } else if (view.phase === "day" && visited) {
@@ -444,7 +448,12 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
     function applyCamera(view: JourneyView) {
       const map = mapRef.current;
       if (!map) return;
-      const zoom = Math.min(view.zoom, MAX_FRAME_ZOOM + 1.2);
+      // Width-derived correction has to land before the MAX_FRAME_ZOOM clamp,
+      // not after, or a narrow viewport's wider (lower) zoom gets clamped
+      // back down to the same tight frame it was meant to escape.
+      const width = map.getContainer().clientWidth || FRAME_WIDTH;
+      const zoom = Math.min(view.zoom + zoomOffsetFor(width), MAX_FRAME_ZOOM + 1.2);
+      const pitch = view.pitch * pitchScaleFor(width);
       const last = lastCamera.current;
       if (
         last &&
@@ -452,7 +461,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         Math.abs(last.lat - view.center[1]) < CAMERA_EPSILON.lngLat &&
         Math.abs(last.zoom - zoom) < CAMERA_EPSILON.zoom &&
         Math.abs(last.bearing - view.bearing) < CAMERA_EPSILON.angle &&
-        Math.abs(last.pitch - view.pitch) < CAMERA_EPSILON.angle
+        Math.abs(last.pitch - pitch) < CAMERA_EPSILON.angle
       ) {
         return;
       }
@@ -461,17 +470,18 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         lat: view.center[1],
         zoom,
         bearing: view.bearing,
-        pitch: view.pitch,
+        pitch,
       };
       map.jumpTo({
         center: view.center,
         zoom,
         bearing: view.bearing,
-        pitch: view.pitch,
+        pitch,
       });
     }
 
     function applyView(view: JourneyView) {
+      lastViewRef.current = view;
       const map = mapRef.current;
       if (!map || !readyRef.current) {
         pendingRef.current = view;
@@ -530,6 +540,9 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         observer = new ResizeObserver(() => {
           if (!mapRef.current) return;
           map?.resize();
+          // Width changed, so the zoom/pitch offset did too — replay the last
+          // view rather than wait for the next scroll frame.
+          if (lastViewRef.current) applyViewRef.current(lastViewRef.current);
         });
         observer.observe(mount);
 
@@ -572,7 +585,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
             const q = document.createElement("div");
             q.className = "map-unresolved";
             q.textContent = "?";
-            q.dataset.days = "8";
+            q.dataset.days = "7";
             markersRef.current.push(
               new Marker({ element: q, anchor: "center", ...MARKER_OPTS })
                 .setLngLat(unresolvedPoint)
@@ -628,6 +641,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         mapRef.current = null;
         readyRef.current = false;
         lastCamera.current = null;
+        lastViewRef.current = null;
         lastTrailT.current = -1;
         lastFlightKey.current = "";
         lastMarkerKey.current = "";
