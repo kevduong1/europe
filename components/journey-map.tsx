@@ -51,6 +51,49 @@ const MAX_FRAME_ZOOM = 14.6;
 /** Below these deltas a camera move is sub-pixel, so the jump is skipped. */
 const CAMERA_EPSILON = { lngLat: 1e-6, zoom: 1e-4, angle: 1e-3 };
 
+/**
+ * Every `CITY.*` zoom was composed by eye against a desktop-width window.
+ * Zoom fixes meters-per-pixel, not ground extent, so the ground actually
+ * shown shrinks with the viewport — on a phone the same zoom frames a third
+ * of the intended area. Rather than re-tune every constant, `applyCamera`
+ * derives one offset from container width vs. this reference and applies it
+ * to every frame, city holds and travel corridors alike.
+ */
+const FRAME_WIDTH = 1280;
+
+/**
+ * Full correction (`log2(width / FRAME_WIDTH)`) exactly restores the desktop
+ * composition, but pin labels and line widths don't scale with zoom, so full
+ * correction on the narrowest phones crowds them. Clamped short of that:
+ * −1.9 covers phones a little past the 390px reference (log2(390/1280) ≈
+ * −1.71) with room to spare, +0.35 keeps ultra-wide desktops from pushing
+ * already-tight frames past MAX_FRAME_ZOOM.
+ */
+const ZOOM_OFFSET_MIN = -1.9;
+const ZOOM_OFFSET_MAX = 0.35;
+
+function zoomOffsetFor(width: number) {
+  const raw = Math.log2(width / FRAME_WIDTH);
+  return Math.min(ZOOM_OFFSET_MAX, Math.max(ZOOM_OFFSET_MIN, raw));
+}
+
+/**
+ * A pitched frame (`CITY.dolomites`, `CITY.seceda`, ...) spends its top third
+ * on sky on a tall narrow phone, pushing the actual subject low in the shot.
+ * Damped linearly between these two widths rather than cut off entirely —
+ * some tilt still reads as "mountains", just not the full desktop lean.
+ */
+const PITCH_NARROW_WIDTH = 390;
+const PITCH_FULL_WIDTH = 900;
+const PITCH_MIN_SCALE = 0.55;
+
+function pitchScaleFor(width: number) {
+  if (width >= PITCH_FULL_WIDTH) return 1;
+  if (width <= PITCH_NARROW_WIDTH) return PITCH_MIN_SCALE;
+  const t = (width - PITCH_NARROW_WIDTH) / (PITCH_FULL_WIDTH - PITCH_NARROW_WIDTH);
+  return PITCH_MIN_SCALE + (1 - PITCH_MIN_SCALE) * t;
+}
+
 type Camera = {
   lng: number;
   lat: number;

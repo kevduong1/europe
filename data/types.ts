@@ -1,3 +1,5 @@
+import type { Photo } from "./photos";
+
 export type LngLat = [number, number];
 
 export type TransportMode =
@@ -118,4 +120,18 @@ export type StopCluster = {
   stopIds: string[];
   expandOnDays: number[];
   anchor?: "left" | "right" | "top" | "bottom";
+};
+
+/**
+ * A photo marker on the map. `photo: null` means the image hasn't been
+ * sourced yet — a pin that should render a placeholder, not a broken path.
+ * `days`/`clusterId` mirror `OvernightStop`'s show/hide keying.
+ */
+export type PhotoPin = {
+  id: string;
+  lngLat: LngLat;
+  photo: Photo | null;
+  caption: string;
+  days: number[];
+  clusterId?: string;
 };

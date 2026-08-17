@@ -40,9 +40,4 @@ export const photos = {
     alt: "Rifugio Firenze, a stone hut under the Odle walls.",
     credit: "Wikimedia Commons",
   },
-  puez: {
-    src: "/photos/puez.jpg",
-    alt: "The path from Rifugio Puez down toward Vallunga.",
-    credit: "Wikimedia Commons",
-  },
 } as const satisfies Record<string, Photo>;

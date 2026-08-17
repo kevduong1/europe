@@ -6,7 +6,7 @@ import type { JourneyView } from "./types";
 /**
  * Where each named place falls along the continuous Europe trail, 0..1.
  * Derived from exact leg boundaries (`legT`), not a nearest-point search —
- * Bolzano and Ortisei each sit on two legs (in and back out), so a fuzzy
+ * Ortisei and Bolzano are each crossed twice (in and back out), so a fuzzy
  * search can't tell which pass it found.
  */
 export const T = {
@@ -18,10 +18,12 @@ export const T = {
   ortisei: legT.bolzanoOrtisei.end,
   resciesa: legT.ortiseiResciesa.end,
   firenze: legT.resciesaFirenze.end,
-  puez: legT.firenzePuez.end,
-  // Second pass through Ortisei, descending toward the bus back to Bolzano.
-  ortiseiOut: legT.puezValGardena.end,
-  bolzanoOut: legT.ortiseiBolzano.end,
+  seceda: legT.firenzeSeceda.end,
+  // Second pass through Ortisei, descending from the Seceda cable car.
+  ortiseiBack: legT.secedaOrtisei.end,
+  qcTerme: legT.ortiseiValDiFassa.end,
+  // Second pass through Bolzano, on the way out to Venice.
+  bolzanoOut: legT.fassaBolzano.end,
   venice: 1,
 };
 
@@ -81,12 +83,33 @@ export const CITY = {
     pitch: 8,
     bearing: 12,
   },
-  /** Val Gardena end to end — Puez's descent and the bus back down to Bolzano. */
-  valGardena: {
-    center: [11.55, 46.55] as LngLat,
-    zoom: 9.6,
+  /** Tight, pitched shot atop Seceda — the Odle ridge is the point of the stop. */
+  seceda: {
+    center: [11.6893, 46.6106] as LngLat,
+    zoom: 14.1,
+    pitch: 52,
+    bearing: 18,
+  },
+  /** Wide corridor for Ortisei → Val di Fassa over Passo Sella via Canazei. */
+  toValDiFassa: {
+    center: [11.72, 46.5] as LngLat,
+    zoom: 10.3,
     pitch: 0,
-    bearing: 10,
+    bearing: -6,
+  },
+  /** Tight shot on QC Terme Dolomiti — the spa afternoon. */
+  qcTerme: {
+    center: [11.6889, 46.4283] as LngLat,
+    zoom: 14.5,
+    pitch: 10,
+    bearing: 0,
+  },
+  /** Wide corridor for Val di Fassa → Bolzano over Passo Costalunga. */
+  fassaBolzano: {
+    center: [11.5, 46.45] as LngLat,
+    zoom: 9.9,
+    pitch: 0,
+    bearing: -10,
   },
   /** Wide southbound frame for the Bolzano → Venice rail, Verona to the lagoon. */
   toVenice: {
@@ -94,6 +117,20 @@ export const CITY = {
     zoom: 7.2,
     pitch: 0,
     bearing: 4,
+  },
+  /** Zoomed-in walk up the Englischer Garten. */
+  englishGarden: {
+    center: [11.591, 48.153] as LngLat,
+    zoom: 14.4,
+    pitch: 10,
+    bearing: 0,
+  },
+  /** The showpiece: tight and rotating onto the Hofbräuhaus. */
+  hofbrauhaus: {
+    center: [11.5799, 48.1376] as LngLat,
+    zoom: 15.2,
+    pitch: 22,
+    bearing: 40,
   },
 };
 
