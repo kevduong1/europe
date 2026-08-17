@@ -12,10 +12,10 @@ export function Itinerary() {
 
       <section
         id="places"
-        className="relative flex min-h-[100dvh] flex-col justify-end [--day-head-h:5.25rem]"
+        className="relative flex min-h-[100dvh] flex-col justify-end"
       >
-        <div className="overlay-panel mx-auto w-full max-w-[640px] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-8">
-          <div className="card-head">
+        <div className="overlay-panel mx-auto w-full max-w-[640px] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28">
+          <div className="card-head pl-10">
             <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail)]">
               Coordinates
             </p>
@@ -23,7 +23,7 @@ export function Itinerary() {
               Every stop
             </h2>
           </div>
-          <ul className="mt-6 space-y-3">
+          <ul className="mt-6 space-y-3 pl-10">
             {overnightStops.map((stop) => (
               <li
                 key={stop.id}

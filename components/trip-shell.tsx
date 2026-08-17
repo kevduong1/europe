@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { getDestination, trip } from "@/data/trip";
 import { EssentialsSection } from "./essentials-section";
 import { Hero } from "./hero";
@@ -65,6 +65,10 @@ export function TripShell() {
       labelRef.current.textContent = view.label;
     }
   }
+
+  useLayoutEffect(() => {
+    syncChrome();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -152,11 +156,14 @@ export function TripShell() {
           >
             The route
           </p>
-          <div className="trip-progress" aria-hidden="true">
-            <div className="trip-progress-fill" />
-          </div>
         </div>
       </header>
+
+      <div className="trip-rail" aria-hidden="true">
+        <div className="trip-rail-track">
+          <div className="trip-rail-fill" />
+        </div>
+      </div>
 
       <main className="relative z-10">
         <Hero />

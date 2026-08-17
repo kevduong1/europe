@@ -1,6 +1,5 @@
 import type { Day, TimelineItem } from "@/data/types";
 import { cn } from "@/lib/utils";
-import { Coords } from "./coords";
 import { HutGlyph, RouteGlyph } from "./icons";
 
 const BEAT_SPACE: Record<string, string> = {
@@ -60,7 +59,7 @@ function BeatMark({
   );
 }
 
-function BeatCopy({ item }: { item: TimelineItem }) {
+function BeatBody({ item }: { item: TimelineItem }) {
   if (item.kind === "event") {
     return (
       <>
@@ -70,6 +69,16 @@ function BeatCopy({ item }: { item: TimelineItem }) {
           </p>
         ) : null}
         <p className="overlay-type text-[16px] font-medium leading-snug">{item.title}</p>
+        {item.optionalAnnotation ? (
+          <p className="mt-0.5 font-mono text-[12px] tracking-[0.04em] text-[var(--signal)]">
+            {item.optionalAnnotation}
+          </p>
+        ) : null}
+        {item.note ? (
+          <p className="overlay-type mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
+            {item.note}
+          </p>
+        ) : null}
       </>
     );
   }
@@ -96,117 +105,60 @@ function BeatCopy({ item }: { item: TimelineItem }) {
   );
 }
 
-function BeatNotes({ item }: { item: TimelineItem }) {
-  if (item.kind === "event") {
-    return (
-      <>
-        {item.optionalAnnotation ? (
-          <p className="mt-0.5 font-mono text-[12px] tracking-[0.04em] text-[var(--signal)]">
-            {item.optionalAnnotation}
-          </p>
-        ) : null}
-        {item.note ? (
-          <p className="overlay-type mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
-            {item.note}
-          </p>
-        ) : null}
-      </>
-    );
-  }
-
-  return null;
-}
-
 export function Timeline({ day }: { day: Day }) {
+  const lodgingAlreadyOnTimeline = day.timeline.some(
+    (item) => item.id === day.lodging.slug,
+  );
+  const hideLodging =
+    lodgingAlreadyOnTimeline || day.lodging.kind === "plane";
+
   return (
     <ol className="relative">
-      {day.timeline.map((item, index) => {
-        const isLast = index === day.timeline.length - 1;
-        const lineMode =
-          item.kind === "transport"
-            ? item.mode
-            : day.isHikeDay
-              ? "trail"
-              : day.act === 3
-                ? "water"
-                : "rail";
-
-        return (
-          <li
-            key={item.id}
-            data-beat={item.id}
-            className={cn(
-              "relative pb-7 last:pb-2",
-              BEAT_SPACE[item.id],
-              item.kind === "event" && item.optional && "opacity-55",
-            )}
-          >
-            <div className="pointer-events-none absolute bottom-[-8px] left-0 top-2 w-6" aria-hidden="true">
-              <div
-                className={cn(
-                  "absolute bottom-0 left-[11px] top-0 w-[2px] bg-[var(--trail)]",
-                  isLast && "bottom-0",
-                  lineMode === "unresolved" && "opacity-50",
-                )}
-              />
-            </div>
-            <div className="beat-head">
-              <div className="flex gap-4">
-                <div className="relative w-6 shrink-0" aria-hidden="true">
-                  <BeatMark item={item} day={day} />
-                </div>
-                <div className="min-w-0 flex-1 pt-0.5">
-                  <BeatCopy item={item} />
-                </div>
+      {day.timeline.map((item) => (
+        <li
+          key={item.id}
+          data-beat={item.id}
+          className={cn(
+            "relative min-h-[56dvh] pb-10 last:pb-2",
+            BEAT_SPACE[item.id],
+            item.kind === "event" && item.optional && "opacity-55",
+          )}
+        >
+          <div className="beat-head">
+            <div className="flex gap-4">
+              <div className="relative w-6 shrink-0" aria-hidden="true">
+                <BeatMark item={item} day={day} />
+              </div>
+              <div className="min-w-0 flex-1 pt-0.5">
+                <BeatBody item={item} />
               </div>
             </div>
-            <div className="beat-copy pl-10">
-              <BeatNotes item={item} />
-            </div>
-          </li>
-        );
-      })}
+          </div>
+        </li>
+      ))}
 
-      <li
-        data-beat={day.lodging.slug}
-        className={cn("relative pb-1", BEAT_SPACE[day.lodging.slug])}
-      >
-        <div className="pointer-events-none absolute left-0 top-0 h-3 w-6" aria-hidden="true">
-          <div className="absolute left-[11px] top-0 h-3 w-[2px] bg-[var(--trail)]" />
-        </div>
-        <div className="beat-head">
-          <div className="flex gap-4">
-            <div className="relative w-6 shrink-0" aria-hidden="true">
-              <BeatMark item={{ kind: "lodging" }} day={day} />
-            </div>
-            <div className="min-w-0 flex-1 pt-1">
-              <p className="overlay-type font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--dolomite)]">
-                The night
-              </p>
-              <p className="overlay-type mt-1 text-[16px] font-medium leading-snug">
-                {day.lodging.name}
-              </p>
+      {hideLodging ? null : (
+        <li
+          data-beat={day.lodging.slug}
+          className={cn("relative min-h-[56dvh] pb-1", BEAT_SPACE[day.lodging.slug])}
+        >
+          <div className="beat-head">
+            <div className="flex gap-4">
+              <div className="relative w-6 shrink-0" aria-hidden="true">
+                <BeatMark item={{ kind: "lodging" }} day={day} />
+              </div>
+              <div className="min-w-0 flex-1 pt-1">
+                <p className="overlay-type font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--dolomite)]">
+                  The night
+                </p>
+                <p className="overlay-type mt-1 text-[16px] font-medium leading-snug">
+                  {day.lodging.name}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="beat-copy pl-10">
-          {day.lodging.lngLat ? (
-            <Coords
-              lngLat={day.lodging.lngLat}
-              label={day.lodging.name}
-              className="overlay-type mt-1 block font-mono text-[11px] tracking-[0.04em] text-[var(--dolomite)] tabular-nums"
-            />
-          ) : null}
-          <p className="overlay-type mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
-            {day.lodging.context}
-          </p>
-          {day.lodging.todo ? (
-            <p className="mt-2 font-mono text-[12px] tracking-[0.04em] text-[var(--signal)]">
-              {day.lodging.todo}
-            </p>
-          ) : null}
-        </div>
-      </li>
+        </li>
+      )}
     </ol>
   );
 }

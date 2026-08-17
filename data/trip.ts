@@ -75,7 +75,6 @@ export const days: Day[] = [
         id: "arrive-muc",
         time: "10:00",
         title: "Arrive Munich (MUC)",
-        note: "About 10:00, after the overnight.",
         detailSlug: "flight-mci-muc",
       },
       {

@@ -8,7 +8,7 @@
   --lagoon: #3e5c76;
   --signal: #b3592e;
   --trail: #e45a24;
-  --trip-header-height: 72px;
+  --trip-header-height: 5.5rem;
   --day-head-h: 4.75rem;
   --trip-progress: 0;
 }
@@ -115,7 +115,6 @@ a {
 }
 
 .trip-header-inner {
-  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -126,21 +125,32 @@ a {
   -webkit-backdrop-filter: blur(16px);
 }
 
-.trip-progress {
-  position: absolute;
-  left: 0;
-  right: 0;
+.trip-rail {
+  pointer-events: none;
+  position: fixed;
+  top: var(--trip-header-height);
   bottom: 0;
-  height: 2px;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--dolomite) 62%, var(--paper));
+  left: max(24px, calc(50% - 320px + 24px));
+  z-index: 5;
+  width: 24px;
 }
 
-.trip-progress-fill {
-  height: 100%;
+.trip-rail-track {
+  position: absolute;
+  top: 10px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: 11px;
+  width: 2px;
+  overflow: hidden;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--dolomite) 58%, var(--paper));
+}
+
+.trip-rail-fill {
   width: 100%;
-  transform: scaleX(var(--trip-progress, 0));
-  transform-origin: left center;
+  height: 100%;
+  transform: scaleY(var(--trip-progress, 0));
+  transform-origin: top center;
   background: var(--trail);
   will-change: transform;
 }
@@ -149,78 +159,36 @@ a {
 .card-head,
 .beat-head {
   position: sticky;
+  background: transparent;
 }
 
 .day-head,
 .card-head {
   top: var(--trip-header-height);
   z-index: 20;
-  padding-top: 0.7rem;
-  padding-bottom: 0.85rem;
-  margin-inline: -0.35rem;
-  padding-inline: 0.35rem;
-  background: color-mix(in srgb, var(--paper) 90%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-.day-head::after,
-.card-head::after,
-.beat-head::after {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  bottom: -1.5rem;
-  height: 1.5rem;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--paper) 82%, transparent),
-    transparent
-  );
+  padding-top: 0.65rem;
+  padding-bottom: 0.7rem;
 }
 
 .beat-head {
   top: calc(var(--trip-header-height) + var(--day-head-h));
   z-index: 19;
   padding-top: 0.35rem;
-  padding-bottom: 0.55rem;
-  margin-inline: -0.35rem;
-  padding-inline: 0.35rem;
-  background: color-mix(in srgb, var(--paper) 92%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  padding-bottom: 0.45rem;
 }
 
 @supports (animation-timeline: view()) {
   .beat-head {
     animation: beat-head-in linear both;
     animation-timeline: view();
-    animation-range: entry 0% entry 42%;
-  }
-
-  .beat-copy {
-    animation: beat-copy-in linear both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 48%;
+    animation-range: entry 0% entry 28%;
   }
 }
 
 @keyframes beat-head-in {
   from {
     opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes beat-copy-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -229,12 +197,11 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .beat-head,
-  .beat-copy {
+  .beat-head {
     animation: none;
   }
 
-  .trip-progress-fill {
+  .trip-rail-fill {
     will-change: auto;
   }
 }
