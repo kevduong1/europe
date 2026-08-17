@@ -28,13 +28,19 @@ export function DaySection({ day }: { day: Day }) {
       ref={sectionRef}
       id={`day-${day.id}`}
       data-day={day.id}
-      className="relative flex scroll-mt-[var(--trip-header-height)] flex-col"
+      className="day-section relative flex scroll-mt-[var(--trip-header-height)] flex-col"
     >
+      <div className="day-rail" aria-hidden="true">
+        <div className="day-rail-track">
+          <div className="day-rail-fill" />
+        </div>
+      </div>
+
       {day.id === 1 ? (
         <div className="h-8 shrink-0" aria-hidden="true" />
       ) : null}
 
-      <div className="mx-auto w-full max-w-[640px] px-6 pb-6">
+      <div className="day-content mx-auto w-full max-w-[640px] px-6 pb-6">
         <div ref={headRef} className="day-head pl-10">
           <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail-ink)]">
             Day {day.id} · {day.weekday}, {day.monthDay}

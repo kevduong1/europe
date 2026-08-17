@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { getDestination, trip } from "@/data/trip";
+import { days, getDestination, trip } from "@/data/trip";
 import { EssentialsSection } from "./essentials-section";
 import { Hero } from "./hero";
 import { Itinerary } from "./itinerary";
@@ -56,7 +56,11 @@ export function TripShell() {
   const lastLabel = useRef("");
   const ticking = useRef(false);
   const previousPath = useRef<string | null>(null);
+  const activeDayRef = useRef<number | null>(null);
+  const itineraryModeRef = useRef(false);
   const [mapReady, setMapReady] = useState(false);
+  const [activeDayId, setActiveDayId] = useState<number>(days[0].id);
+  const [itineraryMode, setItineraryMode] = useState(false);
 
   const syncChrome = useCallback(() => {
     const header = headerRef.current;
@@ -67,12 +71,6 @@ export function TripShell() {
       );
     }
 
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    const progress = max <= 0 ? 1 : Math.min(1, Math.max(0, window.scrollY / max));
-    document.documentElement.style.setProperty(
-      "--trip-progress",
-      progress.toFixed(4),
-    );
   }, []);
 
   /** The hero and day sections are static, so they are queried once per layout. */
@@ -97,10 +95,61 @@ export function TripShell() {
     }
   }, [collectSections]);
 
+  const syncDayChrome = useCallback(() => {
+    if (sectionsRef.current.length === 0) collectSections();
+    const sections = sectionsRef.current;
+    if (sections.length === 0) return;
+
+    const headerHeight = headerRef.current?.getBoundingClientRect().height ?? 0;
+    const dayAnchor = headerHeight + Math.min(window.innerHeight * 0.3, 240);
+    const fadeStart = headerHeight + Math.min(window.innerHeight * 0.56, 440);
+    const fadeEnd = dayAnchor;
+    const rects = sections.map((section) => section.getBoundingClientRect());
+    let nextActiveDay = Number(sections[0].dataset.day) || days[0].id;
+
+    sections.forEach((section, index) => {
+      const rect = rects[index];
+      const progress = Math.min(
+        1,
+        Math.max(0, (dayAnchor - rect.top) / Math.max(rect.height, 1)),
+      );
+      const nextTop = rects[index + 1]?.top;
+      const exit =
+        nextTop === undefined
+          ? 0
+          : Math.min(
+              1,
+              Math.max(0, (fadeStart - nextTop) / Math.max(fadeStart - fadeEnd, 1)),
+            );
+
+      section.style.setProperty("--day-progress", progress.toFixed(4));
+      section.style.setProperty("--day-exit", exit.toFixed(4));
+
+      if (rect.top <= dayAnchor) {
+        nextActiveDay = Number(section.dataset.day) || nextActiveDay;
+      }
+    });
+
+    const firstRect = rects[0];
+    const lastRect = rects[rects.length - 1];
+    const nextItineraryMode =
+      firstRect.top <= headerHeight + 8 && lastRect.bottom > headerHeight + 8;
+
+    if (activeDayRef.current !== nextActiveDay) {
+      activeDayRef.current = nextActiveDay;
+      setActiveDayId(nextActiveDay);
+    }
+    if (itineraryModeRef.current !== nextItineraryMode) {
+      itineraryModeRef.current = nextItineraryMode;
+      setItineraryMode(nextItineraryMode);
+    }
+  }, [collectSections]);
+
   useLayoutEffect(() => {
     collectSections();
     syncChrome();
-  }, [collectSections, syncChrome]);
+    syncDayChrome();
+  }, [collectSections, syncChrome, syncDayChrome]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -109,6 +158,7 @@ export function TripShell() {
       requestAnimationFrame(() => {
         try {
           syncChrome();
+          syncDayChrome();
           syncMap();
         } finally {
           ticking.current = false;
@@ -140,7 +190,7 @@ export function TripShell() {
       window.removeEventListener("resize", onResize);
       window.visualViewport?.removeEventListener("resize", onResize);
     };
-  }, [collectSections, syncChrome, syncMap]);
+  }, [collectSections, syncChrome, syncDayChrome, syncMap]);
 
   useEffect(() => {
     const previous = previousPath.current;
@@ -150,6 +200,7 @@ export function TripShell() {
     const afterScroll = () => {
       requestAnimationFrame(() => {
         syncChrome();
+        syncDayChrome();
         syncMap();
       });
     };
@@ -164,7 +215,9 @@ export function TripShell() {
       window.scrollTo({ top: 0, behavior: "auto" });
       afterScroll();
     }
-  }, [pathname, syncChrome, syncMap]);
+  }, [pathname, syncChrome, syncDayChrome, syncMap]);
+
+  const activeDay = days.find((day) => day.id === activeDayId) ?? days[0];
 
   return (
     <div className="relative">
@@ -201,33 +254,77 @@ export function TripShell() {
 
       <header ref={headerRef} className="trip-header">
         <div className="trip-header-inner">
-          <Link
-            href="/"
-            aria-label="Europe 2026, back to the start"
-            className="pointer-events-auto min-w-0 rounded-sm"
+          <div
+            className="trip-header-brand"
+            aria-hidden={itineraryMode}
+            data-visible={!itineraryMode}
           >
-            <span className="block font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--trail-ink)]">
-              {trip.eyebrow}
-            </span>
-            <span className="font-display mt-0.5 block text-[22px] leading-none [font-variation-settings:'WONK'_0.7,'opsz'_22] sm:text-[24px]">
-              {trip.title}
-            </span>
-          </Link>
-          <p
-            ref={labelRef}
-            aria-hidden="true"
-            className="max-w-[46%] text-right font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink)] sm:text-[11px]"
+            <Link
+              href="/"
+              aria-label="Europe 2026, back to the start"
+              tabIndex={itineraryMode ? -1 : undefined}
+              className="pointer-events-auto min-w-0 rounded-sm"
+            >
+              <span className="block font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--trail-ink)]">
+                {trip.eyebrow}
+              </span>
+              <span className="font-display mt-0.5 block text-[22px] leading-none [font-variation-settings:'WONK'_0.7,'opsz'_22] sm:text-[24px]">
+                {trip.title}
+              </span>
+            </Link>
+            <p
+              ref={labelRef}
+              aria-hidden="true"
+              className="max-w-[46%] text-right font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink)] sm:text-[11px]"
+            >
+              The route
+            </p>
+          </div>
+
+          <div
+            className="trip-header-day"
+            aria-hidden={!itineraryMode}
+            data-visible={itineraryMode}
           >
-            The route
-          </p>
+            <p className="trip-header-day-number font-display overlay-type">
+              Day {activeDay.id}
+            </p>
+            <div className="trip-header-day-meta overlay-type">
+              <time dateTime={activeDay.isoDate}>
+                {activeDay.weekday} · {activeDay.monthDay}
+              </time>
+              <span>{activeDay.title}</span>
+            </div>
+            <p className="trip-header-day-summary overlay-type">
+              {activeDay.summary}
+            </p>
+          </div>
         </div>
       </header>
 
-      <div className="trip-rail" aria-hidden="true">
-        <div className="trip-rail-track">
-          <div className="trip-rail-fill" />
-        </div>
-      </div>
+      <nav
+        aria-label={`Trip days, ${days.length} total`}
+        aria-hidden={!itineraryMode}
+        className="day-dots"
+        data-visible={itineraryMode}
+      >
+        {days.map((day) => {
+          const isActive = itineraryMode && activeDay.id === day.id;
+          return (
+            <a
+              key={day.id}
+              href={`#day-${day.id}`}
+              aria-label={`Day ${day.id}: ${day.title}`}
+              aria-current={isActive ? "step" : undefined}
+              tabIndex={itineraryMode ? undefined : -1}
+              className="day-dot"
+              data-active={isActive}
+            >
+              <span>{day.id}</span>
+            </a>
+          );
+        })}
+      </nav>
 
       <main className="relative z-10">
         <Hero />
