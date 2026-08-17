@@ -69,14 +69,19 @@ a {
   inset: 0;
   z-index: 0;
   width: 100%;
-  height: 100%;
   height: 100svh;
   height: 100dvh;
   pointer-events: none;
-  transform: translateZ(0);
 }
 
-.map-canvas,
+.map-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 .map-canvas .maplibregl-map,
 .map-canvas .maplibregl-canvas {
   pointer-events: none !important;
@@ -84,6 +89,26 @@ a {
 
 .maplibregl-map {
   font: inherit;
+  position: absolute !important;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.overlay-panel {
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--paper) 38%, transparent) 0%,
+    color-mix(in srgb, var(--paper) 8%, transparent) 45%,
+    transparent 100%
+  );
+}
+
+.overlay-type {
+  text-shadow:
+    0 1px 0 color-mix(in srgb, var(--paper) 88%, transparent),
+    0 0 16px var(--paper),
+    0 0 28px var(--paper);
 }
 
 .maplibregl-ctrl-attrib {
@@ -96,8 +121,16 @@ a {
   color: var(--dolomite);
 }
 
-.maplibregl-ctrl-logo {
-  display: none;
+.maplibregl-canvas-container {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.maplibregl-canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .map-pin {

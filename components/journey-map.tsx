@@ -6,7 +6,7 @@ import {
   Map as MapLibreMap,
   Marker,
 } from "maplibre-gl";
-import type { GeoJSONSource } from "maplibre-gl";
+import type { GeoJSONSource, StyleSpecification } from "maplibre-gl";
 import {
   forwardRef,
   useEffect,
@@ -58,16 +58,37 @@ function lineFeature(
   };
 }
 
+function waitForSize(el: HTMLElement) {
+  if (el.clientWidth > 16 && el.clientHeight > 16) return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth > 16 && el.clientHeight > 16) {
+        observer.disconnect();
+        resolve();
+      }
+    });
+    observer.observe(el);
+  });
+}
+
+function cameraPadding(map: MapLibreMap) {
+  const height = Math.max(map.getContainer().clientHeight, 240);
+  const width = Math.max(map.getContainer().clientWidth, 240);
+  const top = Math.min(72, Math.round(height * 0.1));
+  const side = Math.min(28, Math.round(width * 0.07));
+  const bottom = Math.min(Math.round(height * 0.42), height - top - 96);
+  return {
+    top,
+    right: side,
+    bottom: Math.max(72, bottom),
+    left: side,
+  };
+}
+
 function cameraForFrame(map: MapLibreMap, bounds: MapFrame["bounds"]) {
-  const height = window.innerHeight || 640;
-  const width = window.innerWidth || 390;
+  const padding = cameraPadding(map);
   const camera = map.cameraForBounds(bounds, {
-    padding: {
-      top: Math.round(Math.max(56, height * 0.1)),
-      right: Math.round(Math.max(24, width * 0.08)),
-      bottom: Math.round(height * 0.5),
-      left: Math.round(Math.max(24, width * 0.08)),
-    },
+    padding,
     bearing: 0,
     pitch: 0,
   });
@@ -95,6 +116,91 @@ function pinElement(stop: OvernightStop) {
   if (stop.always) el.dataset.always = "true";
   el.innerHTML = `<span class="map-pin-dot"></span><span class="map-pin-copy"><span class="map-pin-label">${stop.label}</span><span class="map-pin-coords">${formatLngLat(stop.lngLat)}</span></span>`;
   return el;
+}
+
+function withRouteLayers(base: StyleSpecification): StyleSpecification {
+  const style = structuredClone(base);
+  style.sources = {
+    ...style.sources,
+    "trail-ghost": {
+      type: "geojson",
+      data: lineFeature("trail-ghost", orangeTrail),
+    },
+    "trail-active": {
+      type: "geojson",
+      data: lineFeature("trail-active", sliceLine(orangeTrail, 0, 1)),
+    },
+    flights: {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: [
+          lineFeature("flight-out", flightOut),
+          lineFeature("flight-home", flightHome),
+        ],
+      },
+    },
+  };
+  style.layers = [
+    ...style.layers,
+    {
+      id: "trail-ghost-casing",
+      type: "line",
+      source: "trail-ghost",
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": "#fff3ec",
+        "line-width": 8,
+        "line-opacity": 0.9,
+      },
+    },
+    {
+      id: "trail-ghost",
+      type: "line",
+      source: "trail-ghost",
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": TRAIL,
+        "line-width": 3.2,
+        "line-opacity": 0.45,
+      },
+    },
+    {
+      id: "trail-active-casing",
+      type: "line",
+      source: "trail-active",
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": "#fff3ec",
+        "line-width": 9,
+        "line-opacity": 0.95,
+      },
+    },
+    {
+      id: "trail-active",
+      type: "line",
+      source: "trail-active",
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": TRAIL,
+        "line-width": 3.8,
+        "line-opacity": 1,
+      },
+    },
+    {
+      id: "route-flight",
+      type: "line",
+      source: "flights",
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": TRAIL,
+        "line-width": 1.8,
+        "line-dasharray": [3.2, 2.4],
+        "line-opacity": 0,
+      },
+    },
+  ];
+  return style;
 }
 
 export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
@@ -135,7 +241,9 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
       if (lastDay.current === dayId) return;
       lastDay.current = dayId;
       const map = mapRef.current;
-      map?.getContainer().classList.toggle("map-zoomed", dayId != null && dayId > 1 && dayId < 10);
+      map
+        ?.getContainer()
+        .classList.toggle("map-zoomed", dayId != null && dayId > 1 && dayId < 10);
 
       for (const marker of markersRef.current) {
         const days = (marker.getElement().dataset.days ?? "")
@@ -149,7 +257,6 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
             ? always || city
             : always || city || days.includes(dayId);
         marker.getElement().style.opacity = active ? "1" : "0";
-        marker.getElement().style.pointerEvents = "none";
       }
 
       if (hereRef.current) {
@@ -194,191 +301,123 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
       if (!node) return;
       let cancelled = false;
       let map: MapLibreMap | null = null;
+      let observer: ResizeObserver | undefined;
 
       async function init() {
-        let style = fallbackStyle;
-        try {
-          const response = await fetch(STYLE_URL);
-          if (response.ok) {
-            style = adaptBasemapStyle(await response.json());
-          }
-        } catch {
-          style = fallbackStyle;
-        }
-        const container = containerRef.current;
-        if (cancelled || !container) return;
-
-        style.sources = {
-          ...style.sources,
-          "trail-ghost": {
-            type: "geojson",
-            data: lineFeature("trail-ghost", orangeTrail),
-          },
-          "trail-active": {
-            type: "geojson",
-            data: lineFeature("trail-active", sliceLine(orangeTrail, 0, 1)),
-          },
-          flights: {
-            type: "geojson",
-            data: {
-              type: "FeatureCollection",
-              features: [
-                lineFeature("flight-out", flightOut),
-                lineFeature("flight-home", flightHome),
-              ],
-            },
-          },
-        };
-
-        style.layers = [
-          ...style.layers,
-          {
-            id: "trail-ghost-casing",
-            type: "line",
-            source: "trail-ghost",
-            layout: { "line-cap": "round", "line-join": "round" },
-            paint: {
-              "line-color": "#fff3ec",
-              "line-width": 7,
-              "line-opacity": 0.85,
-            },
-          },
-          {
-            id: "trail-ghost",
-            type: "line",
-            source: "trail-ghost",
-            layout: { "line-cap": "round", "line-join": "round" },
-            paint: {
-              "line-color": TRAIL,
-              "line-width": 2.8,
-              "line-opacity": 0.42,
-            },
-          },
-          {
-            id: "trail-active-casing",
-            type: "line",
-            source: "trail-active",
-            layout: { "line-cap": "round", "line-join": "round" },
-            paint: {
-              "line-color": "#fff3ec",
-              "line-width": 8,
-              "line-opacity": 0.95,
-            },
-          },
-          {
-            id: "trail-active",
-            type: "line",
-            source: "trail-active",
-            layout: { "line-cap": "round", "line-join": "round" },
-            paint: {
-              "line-color": TRAIL,
-              "line-width": 3.4,
-              "line-opacity": 1,
-            },
-          },
-          {
-            id: "route-flight",
-            type: "line",
-            source: "flights",
-            layout: { "line-cap": "round", "line-join": "round" },
-            paint: {
-              "line-color": TRAIL,
-              "line-width": 1.8,
-              "line-dasharray": [3.2, 2.4],
-              "line-opacity": 0,
-            },
-          },
-        ];
+        const start = containerRef.current;
+        if (!start) return;
+        await waitForSize(start);
+        const mount = containerRef.current;
+        if (cancelled || !mount) return;
 
         map = new MapLibreMap({
-          container,
-          style,
+          container: mount,
+          style: withRouteLayers(structuredClone(fallbackStyle)),
           attributionControl: false,
           interactive: false,
           dragRotate: false,
           pitchWithRotate: false,
           touchPitch: false,
           fadeDuration: prefersReducedMotion() ? 0 : 200,
-          bounds: [10.95, 45.28, 12.55, 48.35],
-          fitBoundsOptions: {
-            padding: { top: 72, right: 36, bottom: 280, left: 36 },
-          },
+          center: [11.72, 46.95],
+          zoom: 6.2,
         });
         map.addControl(new AttributionControl({ compact: true }), "top-right");
         mapRef.current = map;
+        map.resize();
+        observer = new ResizeObserver(() => map?.resize());
+        observer.observe(mount);
 
-        map.on("load", () => {
-          if (!map) return;
+        const finishReady = () => {
+          if (!map || cancelled) return;
+          map.resize();
+          if (markersRef.current.length === 0) {
+            for (const stop of overnightStops) {
+              const marker = new Marker({
+                element: pinElement(stop),
+                anchor: "bottom-left",
+              })
+                .setLngLat(stop.lngLat)
+                .addTo(map);
+              markersRef.current.push(marker);
+            }
 
-          for (const stop of overnightStops) {
-            const marker = new Marker({ element: pinElement(stop), anchor: "bottom-left" })
-              .setLngLat(stop.lngLat)
+            for (const place of placeLabels) {
+              const el = document.createElement("div");
+              el.className = `map-label map-label-${place.anchor ?? "right"}`;
+              el.dataset.city = "true";
+              el.dataset.always = "true";
+              el.textContent = place.label;
+              const marker = new Marker({
+                element: el,
+                anchor:
+                  place.anchor === "left"
+                    ? "right"
+                    : place.anchor === "right"
+                      ? "left"
+                      : "bottom",
+              })
+                .setLngLat(place.lngLat)
+                .addTo(map);
+              markersRef.current.push(marker);
+            }
+
+            const q = document.createElement("div");
+            q.className = "map-unresolved";
+            q.textContent = "?";
+            q.dataset.days = "8";
+            markersRef.current.push(
+              new Marker({ element: q, anchor: "center" })
+                .setLngLat(unresolvedPoint)
+                .addTo(map),
+            );
+
+            const hereEl = document.createElement("div");
+            hereEl.className = "map-here";
+            hereEl.style.opacity = "0";
+            hereRef.current = new Marker({ element: hereEl, anchor: "center" })
+              .setLngLat(orangeTrail[0])
               .addTo(map);
-            markersRef.current.push(marker);
           }
-
-          for (const place of placeLabels) {
-            const el = document.createElement("div");
-            el.className = `map-label map-label-${place.anchor ?? "right"}`;
-            el.dataset.city = "true";
-            el.dataset.always = "true";
-            el.textContent = place.label;
-            const marker = new Marker({
-              element: el,
-              anchor:
-                place.anchor === "left"
-                  ? "right"
-                  : place.anchor === "right"
-                    ? "left"
-                    : "bottom",
-            })
-              .setLngLat(place.lngLat)
-              .addTo(map);
-            markersRef.current.push(marker);
-          }
-
-          const q = document.createElement("div");
-          q.className = "map-unresolved";
-          q.textContent = "?";
-          q.dataset.days = "8";
-          markersRef.current.push(
-            new Marker({ element: q, anchor: "center" })
-              .setLngLat(unresolvedPoint)
-              .addTo(map),
-          );
-
-          const hereEl = document.createElement("div");
-          hereEl.className = "map-here";
-          hereEl.style.opacity = "0";
-          hereRef.current = new Marker({ element: hereEl, anchor: "center" })
-            .setLngLat(orangeTrail[0])
-            .addTo(map);
 
           readyRef.current = true;
           if (pendingRef.current) applyViewRef.current(pendingRef.current);
-          else applyViewRef.current({
-            bounds: [10.95, 45.28, 12.55, 48.35],
-            showFlight: false,
-            trailT: 1,
-            dayId: null,
-            label: "The route",
-          });
+          else {
+            applyViewRef.current({
+              bounds: [10.95, 45.28, 12.55, 48.35],
+              showFlight: false,
+              trailT: 1,
+              dayId: null,
+              label: "The route",
+            });
+          }
           onReadyRef.current?.();
-        });
+        };
+
+        map.once("style.load", finishReady);
+        if (map.isStyleLoaded()) finishReady();
+
+        try {
+          const response = await fetch(STYLE_URL);
+          if (!response.ok || cancelled || !map) return;
+          const nextStyle = withRouteLayers(
+            adaptBasemapStyle(await response.json()),
+          );
+          map.setStyle(nextStyle);
+          map.once("style.load", () => {
+            map?.resize();
+            if (pendingRef.current) applyViewRef.current(pendingRef.current);
+          });
+        } catch {
+          // Keep the paper fallback and orange trail.
+        }
       }
 
       void init();
 
-      const onResize = () => mapRef.current?.resize();
-      window.addEventListener("resize", onResize);
-      window.visualViewport?.addEventListener("resize", onResize);
-      window.addEventListener("orientationchange", onResize);
-
       return () => {
         cancelled = true;
-        window.removeEventListener("resize", onResize);
-        window.visualViewport?.removeEventListener("resize", onResize);
-        window.removeEventListener("orientationchange", onResize);
+        observer?.disconnect();
         markersRef.current.forEach((marker) => marker.remove());
         markersRef.current = [];
         hereRef.current?.remove();
@@ -392,7 +431,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
     return (
       <div
         ref={containerRef}
-        className="map-canvas h-full w-full"
+        className="map-canvas"
         aria-hidden="true"
       />
     );

@@ -19,7 +19,7 @@ export function Coords({
       href={href}
       className={
         className ??
-        "font-mono text-[11px] tracking-[0.04em] text-[var(--dolomite)] tabular-nums"
+        "overlay-type font-mono text-[11px] tracking-[0.04em] text-[var(--dolomite)] tabular-nums"
       }
       target="_blank"
       rel="noreferrer"

@@ -95,11 +95,11 @@ export function TripShell() {
         <JourneyMap ref={mapRef} onReady={syncMap} />
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-20 h-28 bg-gradient-to-b from-[var(--paper)]/90 to-transparent" />
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-20 h-24 bg-gradient-to-b from-[color-mix(in_srgb,var(--paper)_55%,transparent)] to-transparent" />
 
       <p
         ref={labelRef}
-        className="pointer-events-none fixed left-4 right-4 z-30 pt-[max(12px,env(safe-area-inset-top))] text-center font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--ink)]"
+        className="overlay-type pointer-events-none fixed left-4 right-4 z-30 pt-[max(12px,env(safe-area-inset-top))] text-center font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--ink)]"
       >
         The route
       </p>
@@ -108,8 +108,8 @@ export function TripShell() {
         <Hero />
         <Itinerary />
         <EssentialsSection />
-        <footer className="relative z-10 px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-10 text-center">
-          <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--dolomite)]">
+        <footer className="overlay-panel relative z-10 px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-10 text-center">
+          <p className="overlay-type font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--dolomite)]">
             Europe 2026 · Munich to Venice
           </p>
         </footer>

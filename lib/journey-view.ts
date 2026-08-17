@@ -72,7 +72,13 @@ export function readJourneyView(
   const dayId = Number(current.dataset.day);
   const from = viewForDay(dayId);
 
-  if (!next) return from;
+  if (!next) {
+    const bottom = current.getBoundingClientRect().bottom;
+    if (bottom < viewportHeight * 0.35) {
+      return { ...OVERVIEW, trailT: 1, label: "The route" };
+    }
+    return from;
+  }
 
   const start = current.getBoundingClientRect().top;
   const end = next.getBoundingClientRect().top;

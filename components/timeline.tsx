@@ -44,18 +44,18 @@ export function Timeline({ day }: { day: Day }) {
               {item.kind === "event" ? (
                 <>
                   {item.time ? (
-                    <p className="font-mono text-[13px] uppercase tracking-[0.06em] text-[var(--dolomite)]">
+                    <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.06em] text-[var(--dolomite)]">
                       {item.time}
                     </p>
                   ) : null}
-                  <p className="text-[16px] font-medium leading-snug">{item.title}</p>
+                  <p className="overlay-type text-[16px] font-medium leading-snug">{item.title}</p>
                   {item.optionalAnnotation ? (
                     <p className="mt-0.5 font-mono text-[12px] tracking-[0.04em] text-[var(--signal)]">
                       {item.optionalAnnotation}
                     </p>
                   ) : null}
                   {item.note ? (
-                    <p className="mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
+                    <p className="overlay-type mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
                       {item.note}
                     </p>
                   ) : null}
@@ -63,18 +63,18 @@ export function Timeline({ day }: { day: Day }) {
               ) : null}
               {item.kind === "transport" ? (
                 <div className="pt-1">
-                  <p className="font-mono text-[13px] uppercase tracking-[0.06em]">
+                  <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.06em]">
                     {item.label}
                   </p>
                   {item.meta ? (
-                    <p className="mt-1 font-mono text-[12px] tracking-[0.04em] text-[var(--dolomite)]">
+                    <p className="overlay-type mt-1 font-mono text-[12px] tracking-[0.04em] text-[var(--dolomite)]">
                       {item.meta}
                     </p>
                   ) : null}
                 </div>
               ) : null}
               {item.kind === "open" ? (
-                <p className="pt-6 pb-8 text-[16px] leading-relaxed text-[var(--dolomite)]">
+                <p className="overlay-type pt-6 pb-8 text-[16px] leading-relaxed text-[var(--dolomite)]">
                   {item.text}
                 </p>
               ) : null}
@@ -100,20 +100,20 @@ export function Timeline({ day }: { day: Day }) {
           </span>
         </div>
         <div className="min-w-0 flex-1 pt-1">
-          <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--dolomite)]">
+          <p className="overlay-type font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--dolomite)]">
             The night
           </p>
-          <p className="mt-1 text-[16px] font-medium leading-snug">
+          <p className="overlay-type mt-1 text-[16px] font-medium leading-snug">
             {day.lodging.name}
           </p>
           {day.lodging.lngLat ? (
             <Coords
               lngLat={day.lodging.lngLat}
               label={day.lodging.name}
-              className="mt-1 block font-mono text-[11px] tracking-[0.04em] text-[var(--dolomite)] tabular-nums"
+              className="overlay-type mt-1 block font-mono text-[11px] tracking-[0.04em] text-[var(--dolomite)] tabular-nums"
             />
           ) : null}
-          <p className="mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
+          <p className="overlay-type mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
             {day.lodging.context}
           </p>
           {day.lodging.todo ? (
