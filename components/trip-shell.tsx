@@ -49,6 +49,7 @@ function targetForPath(pathname: string) {
 export function TripShell() {
   const pathname = usePathname();
   const mapRef = useRef<JourneyMapHandle | null>(null);
+  const mapStageRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const labelRef = useRef<HTMLParagraphElement>(null);
   const heroRef = useRef<HTMLElement | null>(null);
@@ -57,6 +58,12 @@ export function TripShell() {
   const ticking = useRef(false);
   const previousPath = useRef<string | null>(null);
   const [mapReady, setMapReady] = useState(false);
+
+  /** Mirrors the 100svh map stage instead of Safari's animated visual viewport. */
+  const getStableViewportHeight = useCallback(
+    () => mapStageRef.current?.clientHeight ?? window.innerHeight,
+    [],
+  );
 
   const syncChrome = useCallback(() => {
     const header = headerRef.current;
@@ -67,13 +74,14 @@ export function TripShell() {
       );
     }
 
-    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const max =
+      document.documentElement.scrollHeight - getStableViewportHeight();
     const progress = max <= 0 ? 1 : Math.min(1, Math.max(0, window.scrollY / max));
     document.documentElement.style.setProperty(
       "--trip-progress",
       progress.toFixed(4),
     );
-  }, []);
+  }, [getStableViewportHeight]);
 
   /** The hero and day sections are static, so they are queried once per layout. */
   const collectSections = useCallback(() => {
@@ -88,14 +96,14 @@ export function TripShell() {
     const view = readJourneyView(
       heroRef.current,
       sectionsRef.current,
-      window.innerHeight,
+      getStableViewportHeight(),
     );
     mapRef.current?.setView(view);
     if (labelRef.current && view.label !== lastLabel.current) {
       lastLabel.current = view.label;
       labelRef.current.textContent = view.label;
     }
-  }, [collectSections]);
+  }, [collectSections, getStableViewportHeight]);
 
   useLayoutEffect(() => {
     collectSections();
@@ -115,9 +123,8 @@ export function TripShell() {
         }
       });
     };
-    const onResize = () => {
+    const onStableViewportResize = () => {
       collectSections();
-      mapRef.current?.resize();
       onScroll();
     };
 
@@ -130,15 +137,19 @@ export function TripShell() {
         : null;
     if (header && headerObserver) headerObserver.observe(header);
 
+    const mapStage = mapStageRef.current;
+    const viewportObserver =
+      mapStage && typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(onStableViewportResize)
+        : null;
+    if (mapStage && viewportObserver) viewportObserver.observe(mapStage);
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-    window.visualViewport?.addEventListener("resize", onResize);
     onScroll();
     return () => {
       headerObserver?.disconnect();
+      viewportObserver?.disconnect();
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
-      window.visualViewport?.removeEventListener("resize", onResize);
     };
   }, [collectSections, syncChrome, syncMap]);
 
@@ -183,7 +194,7 @@ export function TripShell() {
         </a>
       </nav>
 
-      <div className="map-stage">
+      <div ref={mapStageRef} className="map-stage">
         {mapReady ? null : (
           <p className="absolute right-4 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-[1] font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--dolomite)]">
             Loading map

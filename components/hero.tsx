@@ -5,7 +5,7 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative flex min-h-[100dvh] flex-col justify-end"
+      className="hero-stage relative flex flex-col justify-end"
     >
       <div className="px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[calc(7rem+env(safe-area-inset-top))]">
         <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail-ink)]">
