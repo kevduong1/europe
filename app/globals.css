@@ -540,7 +540,8 @@ a {
 .map-cluster,
 .map-unresolved,
 .map-here,
-.map-plane {
+.map-plane,
+.map-photo-pin {
   pointer-events: none;
   transition: opacity 0.28s ease;
 }
@@ -662,6 +663,98 @@ a {
 .map-plane {
   color: var(--trail);
   filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--paper) 80%, transparent));
+}
+
+/*
+ * A photo pinned to a spot on the map: a square thumbnail in a paper frame,
+ * a mono caption pill, and a thin trail-coloured stem running down to a dot
+ * at the exact coordinate — the same dot-on-a-point language as .map-pin,
+ * just with a picture floated above it instead of a text label beside it.
+ * Sized in fixed CSS px (not by the image's intrinsic size) so opacity
+ * fade-in/out never triggers layout — only compositing.
+ */
+.map-photo-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.map-photo-pin-frame {
+  display: block;
+  overflow: hidden;
+  width: 56px;
+  height: 56px;
+  padding: 3px;
+  border-radius: 5px;
+  background: var(--paper);
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--trail) 55%, var(--ink) 10%),
+    0 3px 10px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+
+.map-photo-pin-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  object-fit: cover;
+}
+
+/* Graceful placeholder for a pin whose photo hasn't been sourced yet — reads as "pending", not broken. */
+.map-photo-pin-empty {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border: 1.5px dashed color-mix(in srgb, var(--dolomite) 55%, transparent);
+  border-radius: 2px;
+  color: color-mix(in srgb, var(--dolomite) 80%, var(--paper));
+}
+
+.map-photo-pin-caption {
+  max-width: 92px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  padding: 1px 6px 2px;
+  border-radius: 2px;
+}
+
+.map-photo-pin-stem {
+  width: 2px;
+  height: 8px;
+  background: var(--trail);
+}
+
+.map-photo-pin-dot {
+  width: 6px;
+  height: 6px;
+  margin-top: -1px;
+  border-radius: 50%;
+  background: var(--trail);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--paper) 82%, transparent);
+}
+
+/* Narrow phones: up to five of these can be in play around Val Gardena — shrink the
+   frame and drop the caption rather than let square photos with text crowd the frame. */
+@media (max-width: 520px) {
+  .map-photo-pin-frame {
+    width: 38px;
+    height: 38px;
+    padding: 2px;
+  }
+
+  .map-photo-pin-caption {
+    display: none;
+  }
 }
 
 .sr-only {

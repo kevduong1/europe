@@ -18,10 +18,11 @@ import {
   flightOut,
   orangeTrail,
   overnightStops,
+  photoPins,
   stopClusters,
   unresolvedPoint,
 } from "@/data/route";
-import type { OvernightStop, StopCluster } from "@/data/types";
+import type { OvernightStop, PhotoPin, StopCluster } from "@/data/types";
 import { loadPaperStyle } from "@/lib/basemap-style";
 import {
   along,
@@ -146,6 +147,37 @@ function clusterElement(cluster: StopCluster) {
   const badge =
     count > 1 ? `<span class="map-cluster-count">${count}</span>` : "";
   el.innerHTML = `${badge}<span class="map-cluster-label">${cluster.label}</span>`;
+  return el;
+}
+
+/** Outline-camera glyph for a photo pin that has no image yet (see `photoPinElement`). */
+const PHOTO_PLACEHOLDER_ICON =
+  '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
+  '<path fill="none" stroke="currentColor" stroke-width="1.6" ' +
+  'd="M4 8.5h3l1.4-2h7.2l1.4 2H20a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1Z"/>' +
+  '<circle cx="12" cy="13" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+  "</svg>";
+
+/**
+ * The overnight-stop id a photo pin should be considered "in play" with, for
+ * markers whose own id isn't already a stop id (see `photoPinFocusTarget`).
+ */
+const PHOTO_PIN_FOCUS_OVERRIDES: Record<string, string> = {
+  "qc-terme": "val-di-fassa-tbd",
+  venice: "venice-tbd",
+  innsbruck: "montagu",
+};
+
+function photoPinElement(pin: PhotoPin) {
+  const el = document.createElement("div");
+  el.className = "map-photo-pin";
+  el.dataset.pin = pin.id;
+  el.dataset.days = pin.days.join(",");
+  if (pin.clusterId) el.dataset.cluster = pin.clusterId;
+  const frameInner = pin.photo
+    ? `<img class="map-photo-pin-img" src="${pin.photo.pinSrc}" alt="${pin.photo.alt.replace(/"/g, "&quot;")}" width="64" height="64" loading="lazy" decoding="async" />`
+    : `<span class="map-photo-pin-empty" aria-hidden="true">${PHOTO_PLACEHOLDER_ICON}</span>`;
+  el.innerHTML = `<span class="map-photo-pin-frame">${frameInner}</span><span class="map-photo-pin-caption">${pin.caption}</span><span class="map-photo-pin-stem"></span><span class="map-photo-pin-dot"></span>`;
   return el;
 }
 
@@ -279,12 +311,27 @@ const MARKER_OPTS = {
   rotationAlignment: "viewport" as const,
 };
 
+const STOP_IDS = new Set(overnightStops.map((stop) => stop.id));
+
+/**
+ * The overnight-stop id whose `focusStopId` moment this photo belongs to, if
+ * any. Most pin ids already match a stop id 1:1 (ortisei, resciesa, firenze,
+ * seceda, eisbachwelle); `PHOTO_PIN_FOCUS_OVERRIDES` covers the ones that
+ * don't. A pin with no resolvable stop (hofbrauhaus — not an overnight stop)
+ * returns null, and falls back to a coarser day-based gate in `applyMarkers`.
+ */
+function photoPinFocusTarget(pin: PhotoPin): string | null {
+  const candidate = PHOTO_PIN_FOCUS_OVERRIDES[pin.id] ?? pin.id;
+  return STOP_IDS.has(candidate) ? candidate : null;
+}
+
 export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
   function JourneyMap({ onReady }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MapLibreMap | null>(null);
     const markersRef = useRef<Marker[]>([]);
     const clusterMarkersRef = useRef<Marker[]>([]);
+    const photoMarkersRef = useRef<Marker[]>([]);
     const hereRef = useRef<Marker | null>(null);
     const planeRef = useRef<Marker | null>(null);
     const readyRef = useRef(false);
@@ -418,6 +465,22 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           el.classList.toggle("map-pin-active", view.focusStopId === stopId);
           el.style.opacity = visible ? "1" : "0";
         }
+
+        photoMarkersRef.current.forEach((marker, index) => {
+          const pin = photoPins[index];
+          const el = marker.getElement();
+          const expanded = pin.clusterId
+            ? view.expandedClusterIds.includes(pin.clusterId)
+            : true;
+          const focusTarget = photoPinFocusTarget(pin);
+          const visible =
+            view.phase === "day" &&
+            expanded &&
+            (focusTarget
+              ? view.focusStopId === focusTarget
+              : pin.days.includes(view.dayId ?? -1));
+          el.style.opacity = visible ? "1" : "0";
+        });
       }
 
       const herePos =
@@ -582,6 +645,18 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
               markersRef.current.push(marker);
             }
 
+            for (const pin of photoPins) {
+              const marker = new Marker({
+                element: photoPinElement(pin),
+                anchor: "bottom",
+                ...MARKER_OPTS,
+              })
+                .setLngLat(pin.lngLat)
+                .addTo(map);
+              marker.getElement().style.opacity = "0";
+              photoMarkersRef.current.push(marker);
+            }
+
             const q = document.createElement("div");
             q.className = "map-unresolved";
             q.textContent = "?";
@@ -633,6 +708,8 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         markersRef.current = [];
         clusterMarkersRef.current.forEach((marker) => marker.remove());
         clusterMarkersRef.current = [];
+        photoMarkersRef.current.forEach((marker) => marker.remove());
+        photoMarkersRef.current = [];
         hereRef.current?.remove();
         hereRef.current = null;
         planeRef.current?.remove();

@@ -408,7 +408,7 @@ export const photoPins: PhotoPin[] = [
   {
     id: "hofbrauhaus",
     lngLat: HOFBRAUHAUS,
-    photo: null,
+    photo: photos.hofbrauhaus,
     caption: "Hofbräuhaus am Platzl",
     days: [3],
     clusterId: "munich",
