@@ -124,7 +124,7 @@ export function TripShell() {
         <Hero />
         <section
           id="crossing"
-          className="relative h-[190vh]"
+          className="relative h-[210vh]"
           aria-hidden="true"
         />
         <Itinerary />

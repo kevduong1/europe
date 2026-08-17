@@ -196,6 +196,26 @@ export function bearingBetween(a: LngLat, b: LngLat): number {
   return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
 
+export function smoothstep(t: number) {
+  const u = clamp(t);
+  return u * u * (3 - 2 * u);
+}
+
+export function pointsAlong(line: LngLat[], t: number, spacingKm: number): LngLat[] {
+  if (line.length < 2 || t <= 0.0001) return [];
+  const total = lineLengthKm(line);
+  if (total === 0) return [line[0]];
+  const end = total * clamp(t);
+  const points: LngLat[] = [];
+  for (let d = 0; d <= end; d += spacingKm) {
+    points.push(along(line, d / total));
+  }
+  const tip = along(line, clamp(t));
+  const last = points[points.length - 1];
+  if (!last || haversineKm(last, tip) > spacingKm * 0.25) points.push(tip);
+  return points;
+}
+
 export function lerpBounds(
   a: [number, number, number, number],
   b: [number, number, number, number],

@@ -22,7 +22,7 @@ import {
   unresolvedPoint,
 } from "@/data/route";
 import type { MapFrame, OvernightStop, StopCluster } from "@/data/types";
-import { satelliteStyle } from "@/lib/basemap-style";
+import { adaptBasemapStyle, fallbackStyle, STYLE_URL } from "@/lib/basemap-style";
 import {
   along,
   bearingBetween,
@@ -364,13 +364,12 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
 
           if (stopId === "mci") {
             visible =
-              view.phase === "mci" ||
-              (view.phase === "flight" &&
-                view.flightLeg === "out" &&
-                view.flightT < 0.28) ||
-              (view.phase === "flight" &&
-                view.flightLeg === "home" &&
-                view.flightT > 0.72);
+              view.flightLeg === "out" ||
+              (view.flightLeg === "home" && view.flightT > 0.55);
+          } else if (stopId === "muc") {
+            visible =
+              (view.phase === "flight" && view.flightLeg === "out") ||
+              (view.phase === "day" && expanded);
           } else if (unresolved) {
             visible = view.phase === "day" && view.dayId === 8;
           } else if (view.phase === "day" && expanded) {
@@ -459,7 +458,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         const mount = containerRef.current;
         if (cancelled || !mount) return;
 
-        const style = withRouteLayers(satelliteStyle());
+        const style = withRouteLayers(structuredClone(fallbackStyle));
         map = new MapLibreMap({
           container: mount,
           style,
@@ -471,10 +470,10 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           fadeDuration: prefersReducedMotion() ? 0 : 180,
           center: [11.72, 46.95],
           zoom: 6.2,
-          minZoom: 1.8,
+          minZoom: 1.6,
           maxZoom: 16,
-          maxPitch: 78,
-          pitch: 36,
+          maxPitch: 70,
+          pitch: 0,
         });
         map.addControl(
           new AttributionControl({ compact: true }),
@@ -484,13 +483,6 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         map.resize();
         observer = new ResizeObserver(() => map?.resize());
         observer.observe(mount);
-
-        map.on("error", (event) => {
-          const message = event.error?.message ?? "";
-          if (message.toLowerCase().includes("terrain") && map?.getTerrain()) {
-            map.setTerrain(null);
-          }
-        });
 
         const finishReady = () => {
           if (!map || cancelled) return;
@@ -567,11 +559,20 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         if (map.isStyleLoaded()) finishReady();
 
         try {
-          if (!map.getTerrain()) {
-            map.setTerrain({ source: "terrain", exaggeration: 1.5 });
-          }
+          const response = await fetch(STYLE_URL);
+          if (!response.ok || cancelled || !map) return;
+          const nextStyle = withRouteLayers(
+            adaptBasemapStyle(await response.json()),
+          );
+          map.setStyle(nextStyle);
+          map.once("style.load", () => {
+            lastTrailT.current = -1;
+            lastFlightKey.current = "";
+            map?.resize();
+            applyViewRef.current(pendingRef.current ?? OVERVIEW);
+          });
         } catch {
-          // Satellite still works without the DEM mesh.
+          // Keep the paper fallback and orange trail.
         }
       }
 
