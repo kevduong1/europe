@@ -31,9 +31,27 @@ function targetIdForPath(pathname: string) {
 export function TripShell() {
   const pathname = usePathname();
   const mapRef = useRef<JourneyMapHandle | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
   const labelRef = useRef<HTMLParagraphElement>(null);
   const lastLabel = useRef("");
   const ticking = useRef(false);
+
+  function syncChrome() {
+    const header = headerRef.current;
+    if (header) {
+      document.documentElement.style.setProperty(
+        "--trip-header-height",
+        `${Math.round(header.getBoundingClientRect().height)}px`,
+      );
+    }
+
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = max <= 0 ? 1 : Math.min(1, Math.max(0, window.scrollY / max));
+    document.documentElement.style.setProperty(
+      "--trip-progress",
+      progress.toFixed(4),
+    );
+  }
 
   function syncMap() {
     const hero = document.getElementById("hero");
@@ -54,6 +72,7 @@ export function TripShell() {
       ticking.current = true;
       requestAnimationFrame(() => {
         try {
+          syncChrome();
           syncMap();
         } finally {
           ticking.current = false;
@@ -65,11 +84,21 @@ export function TripShell() {
       onScroll();
     };
 
+    const header = headerRef.current;
+    const headerObserver =
+      header && typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            syncChrome();
+          })
+        : null;
+    if (header && headerObserver) headerObserver.observe(header);
+
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
     window.visualViewport?.addEventListener("resize", onResize);
     onScroll();
     return () => {
+      headerObserver?.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       window.visualViewport?.removeEventListener("resize", onResize);
@@ -82,7 +111,10 @@ export function TripShell() {
     const node = document.getElementById(id);
     if (!node) return;
     node.scrollIntoView({ behavior: "auto", block: "start" });
-    requestAnimationFrame(syncMap);
+    requestAnimationFrame(() => {
+      syncChrome();
+      syncMap();
+    });
   }, [pathname]);
 
   return (
@@ -95,10 +127,16 @@ export function TripShell() {
       </a>
 
       <div className="map-stage">
-        <JourneyMap ref={mapRef} onReady={syncMap} />
+        <JourneyMap
+          ref={mapRef}
+          onReady={() => {
+            syncChrome();
+            syncMap();
+          }}
+        />
       </div>
 
-      <header className="trip-header">
+      <header ref={headerRef} className="trip-header">
         <div className="trip-header-inner">
           <div className="min-w-0">
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--trail)]">
@@ -114,6 +152,9 @@ export function TripShell() {
           >
             The route
           </p>
+          <div className="trip-progress" aria-hidden="true">
+            <div className="trip-progress-fill" />
+          </div>
         </div>
       </header>
 

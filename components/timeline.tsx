@@ -1,4 +1,4 @@
-import type { Day } from "@/data/types";
+import type { Day, TimelineItem } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { Coords } from "./coords";
 import { HutGlyph, RouteGlyph } from "./icons";
@@ -23,6 +23,100 @@ const BEAT_SPACE: Record<string, string> = {
   "flight-home": "min-h-[180dvh]",
 };
 
+function BeatMark({
+  item,
+  day,
+}: {
+  item: TimelineItem | { kind: "lodging" };
+  day: Day;
+}) {
+  if (item.kind === "transport") {
+    return (
+      <span className="absolute left-[6px] top-[10px] text-[var(--ink)]">
+        <RouteGlyph mode={item.mode} />
+      </span>
+    );
+  }
+
+  if (item.kind === "lodging") {
+    return (
+      <span className="absolute left-[5px] top-[10px] text-[var(--meadow)]">
+        {day.lodging.kind === "hut" ? (
+          <HutGlyph className="h-3.5 w-3.5" />
+        ) : (
+          <span
+            className={cn(
+              "block h-[10px] w-[10px] rounded-full",
+              day.lodging.kind === "tbd" ? "bg-[var(--signal)]" : "bg-[var(--trail)]",
+            )}
+          />
+        )}
+      </span>
+    );
+  }
+
+  return (
+    <span className="absolute left-[8px] top-[7px] h-[8px] w-[8px] rounded-full bg-[var(--trail)]" />
+  );
+}
+
+function BeatCopy({ item }: { item: TimelineItem }) {
+  if (item.kind === "event") {
+    return (
+      <>
+        {item.time ? (
+          <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.06em] text-[var(--dolomite)]">
+            {item.time}
+          </p>
+        ) : null}
+        <p className="overlay-type text-[16px] font-medium leading-snug">{item.title}</p>
+      </>
+    );
+  }
+
+  if (item.kind === "transport") {
+    return (
+      <div className="pt-1">
+        <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.06em]">
+          {item.label}
+        </p>
+        {item.meta ? (
+          <p className="overlay-type mt-1 font-mono text-[12px] tracking-[0.04em] text-[var(--dolomite)]">
+            {item.meta}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <p className="overlay-type pt-2 text-[16px] leading-relaxed text-[var(--dolomite)]">
+      {item.text}
+    </p>
+  );
+}
+
+function BeatNotes({ item }: { item: TimelineItem }) {
+  if (item.kind === "event") {
+    return (
+      <>
+        {item.optionalAnnotation ? (
+          <p className="mt-0.5 font-mono text-[12px] tracking-[0.04em] text-[var(--signal)]">
+            {item.optionalAnnotation}
+          </p>
+        ) : null}
+        {item.note ? (
+          <p className="overlay-type mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
+            {item.note}
+          </p>
+        ) : null}
+      </>
+    );
+  }
+
+  return null;
+}
+
 export function Timeline({ day }: { day: Day }) {
   return (
     <ol className="relative">
@@ -42,69 +136,32 @@ export function Timeline({ day }: { day: Day }) {
             key={item.id}
             data-beat={item.id}
             className={cn(
-              "relative flex gap-4 pb-7 last:pb-2",
+              "relative pb-7 last:pb-2",
               BEAT_SPACE[item.id],
+              item.kind === "event" && item.optional && "opacity-55",
             )}
           >
-            <div className="relative w-6 shrink-0" aria-hidden="true">
+            <div className="pointer-events-none absolute bottom-[-8px] left-0 top-2 w-6" aria-hidden="true">
               <div
                 className={cn(
-                  "absolute left-[11px] top-2 w-[2px] bg-[var(--trail)]",
-                  isLast ? "bottom-0" : "bottom-[-8px]",
+                  "absolute bottom-0 left-[11px] top-0 w-[2px] bg-[var(--trail)]",
+                  isLast && "bottom-0",
                   lineMode === "unresolved" && "opacity-50",
                 )}
               />
-              {item.kind === "transport" ? (
-                <span className="absolute left-[6px] top-[10px] text-[var(--ink)]">
-                  <RouteGlyph mode={item.mode} />
-                </span>
-              ) : (
-                <span className="absolute left-[8px] top-[7px] h-[8px] w-[8px] rounded-full bg-[var(--trail)]" />
-              )}
             </div>
-            <div
-              className={cn(
-                "min-w-0 flex-1 pt-0.5",
-                item.kind === "event" && item.optional && "opacity-55",
-              )}
-            >
-              {item.kind === "event" ? (
-                <>
-                  {item.time ? (
-                    <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.06em] text-[var(--dolomite)]">
-                      {item.time}
-                    </p>
-                  ) : null}
-                  <p className="overlay-type text-[16px] font-medium leading-snug">{item.title}</p>
-                  {item.optionalAnnotation ? (
-                    <p className="mt-0.5 font-mono text-[12px] tracking-[0.04em] text-[var(--signal)]">
-                      {item.optionalAnnotation}
-                    </p>
-                  ) : null}
-                  {item.note ? (
-                    <p className="overlay-type mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
-                      {item.note}
-                    </p>
-                  ) : null}
-                </>
-              ) : null}
-              {item.kind === "transport" ? (
-                <div className="pt-1">
-                  <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.06em]">
-                    {item.label}
-                  </p>
-                  {item.meta ? (
-                    <p className="overlay-type mt-1 font-mono text-[12px] tracking-[0.04em] text-[var(--dolomite)]">
-                      {item.meta}
-                    </p>
-                  ) : null}
+            <div className="beat-head">
+              <div className="flex gap-4">
+                <div className="relative w-6 shrink-0" aria-hidden="true">
+                  <BeatMark item={item} day={day} />
                 </div>
-              ) : null}
-              {item.kind === "open" ? (
-                <p className="overlay-type pt-6 pb-8 text-[16px] leading-relaxed text-[var(--dolomite)]">
-                  {item.text}
-                </p>
-              ) : null}
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <BeatCopy item={item} />
+                </div>
+              </div>
+            </div>
+            <div className="beat-copy pl-10">
+              <BeatNotes item={item} />
             </div>
           </li>
         );
@@ -112,30 +169,27 @@ export function Timeline({ day }: { day: Day }) {
 
       <li
         data-beat={day.lodging.slug}
-        className={cn("relative flex gap-4 pb-1", BEAT_SPACE[day.lodging.slug])}
+        className={cn("relative pb-1", BEAT_SPACE[day.lodging.slug])}
       >
-        <div className="relative w-6 shrink-0" aria-hidden="true">
+        <div className="pointer-events-none absolute left-0 top-0 h-3 w-6" aria-hidden="true">
           <div className="absolute left-[11px] top-0 h-3 w-[2px] bg-[var(--trail)]" />
-          <span className="absolute left-[5px] top-[10px] text-[var(--meadow)]">
-            {day.lodging.kind === "hut" ? (
-              <HutGlyph className="h-3.5 w-3.5" />
-            ) : (
-              <span
-                className={cn(
-                  "block h-[10px] w-[10px] rounded-full",
-                  day.lodging.kind === "tbd" ? "bg-[var(--signal)]" : "bg-[var(--trail)]",
-                )}
-              />
-            )}
-          </span>
         </div>
-        <div className="min-w-0 flex-1 pt-1">
-          <p className="overlay-type font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--dolomite)]">
-            The night
-          </p>
-          <p className="overlay-type mt-1 text-[16px] font-medium leading-snug">
-            {day.lodging.name}
-          </p>
+        <div className="beat-head">
+          <div className="flex gap-4">
+            <div className="relative w-6 shrink-0" aria-hidden="true">
+              <BeatMark item={{ kind: "lodging" }} day={day} />
+            </div>
+            <div className="min-w-0 flex-1 pt-1">
+              <p className="overlay-type font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--dolomite)]">
+                The night
+              </p>
+              <p className="overlay-type mt-1 text-[16px] font-medium leading-snug">
+                {day.lodging.name}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="beat-copy pl-10">
           {day.lodging.lngLat ? (
             <Coords
               lngLat={day.lodging.lngLat}

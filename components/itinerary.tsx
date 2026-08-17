@@ -12,15 +12,17 @@ export function Itinerary() {
 
       <section
         id="places"
-        className="relative flex min-h-[100dvh] flex-col justify-end"
+        className="relative flex min-h-[100dvh] flex-col justify-end [--day-head-h:5.25rem]"
       >
-        <div className="overlay-panel mx-auto w-full max-w-[640px] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28">
-          <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail)]">
-            Coordinates
-          </p>
-          <h2 className="overlay-type font-display mt-2 text-[32px] leading-[1.08]">
-            Every stop
-          </h2>
+        <div className="overlay-panel mx-auto w-full max-w-[640px] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-8">
+          <div className="card-head">
+            <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail)]">
+              Coordinates
+            </p>
+            <h2 className="overlay-type font-display mt-2 text-[32px] leading-[1.08]">
+              Every stop
+            </h2>
+          </div>
           <ul className="mt-6 space-y-3">
             {overnightStops.map((stop) => (
               <li
