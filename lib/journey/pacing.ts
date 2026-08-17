@@ -20,11 +20,15 @@ export const BEAT_SPACE: Record<string, number> = {
   "arrive-muc": 88,
   "airport-train": 150,
   "check-in-wombat": 72,
-  "open-munich": 80,
-  eisbachwelle: 92,
   // Auto "the night" row for wombat-hostel (days 2 & 3): compact card, a
   // little more than the bare default so it doesn't feel clipped.
   "wombat-hostel": 64,
+  "open-munich": 80,
+  eisbachwelle: 92,
+  // Camera set-pieces (rides a walking line / zooms while rotating bearing)
+  // — need more room than a plain event so the move reads, not snaps.
+  "english-garden": 100,
+  "hofbrauhaus": 110,
   "leave-wombat": 78,
   "walk-hbf": 88,
   "train-munich-innsbruck": 240,
@@ -34,26 +38,34 @@ export const BEAT_SPACE: Record<string, number> = {
   "train-innsbruck-bolzano": 190,
   "bus-bolzano-ortisei": 120,
   "onto-the-trail": 140,
-  // Auto "the night" rows for the three huts — these are the payoff beat of
-  // a full hiking day, worth more room than a city check-in.
+  // Auto "the night" row for the hut — the payoff beat of a full hiking day,
+  // worth more room than a city check-in.
   "rifugio-resciesa": 90,
   "hike-resciesa-firenze": 160,
   "rifugio-firenze": 90,
-  "hike-firenze-puez": 160,
-  "rifugio-puez": 90,
-  // Day 8, out of the mountains: hike down (was the single unresolved
-  // "exit-tbd" placeholder, now three real beats).
-  "exit-to-valley": 130,
-  // Mirrors bus-bolzano-ortisei — same route, opposite direction.
-  "bus-ortisei-bolzano": 120,
+  // Day 7: busiest day in the trip (5 beats). Kept individually generous —
+  // seceda-summit especially, it's the payoff of the whole middle
+  // section — but scaled back from a naive sum so the day's total (~580vh)
+  // lands close to days 4 and 5 (554/540) rather than dwarfing them.
+  "hike-firenze-seceda": 150,
+  "seceda-summit": 110,
+  "down-to-ortisei": 90,
+  "to-val-di-fassa": 90,
+  "qc-terme-dolomiti": 80,
+  // Auto "the night" row — a real hotel night, not a TBD placeholder, so a
+  // touch more than the TBD lodging rows below.
+  "val-di-fassa-night": 60,
+  // Shorter mountain leg than bus-bolzano-ortisei.
+  "bus-fassa-bolzano": 90,
   // Long ride down to Venice; give it the room a train-munich-innsbruck-scale leg gets.
   "train-bolzano-venice": 200,
-  // Auto "the night" row, still TBD — kept short since there's nothing to read yet.
-  "exit-night": 60,
+  // Auto "the night" row, first night in Venice — same weight as the other real check-ins.
+  "venice-first-night": 64,
   "open-venice": 80,
-  // Auto "the night" row, still TBD — same as exit-night.
+  // Auto "the night" row, still TBD — kept short since there's nothing to read yet.
   "venice-lodging": 60,
-  // Same MCI<->Munich crossing as flight-out.
+  // Same MCI<->Munich crossing as flight-out. Also day 10's lodging slug
+  // (kind: "plane"), so this one span covers both — no separate lodging row.
   "flight-home": 200,
 };
 

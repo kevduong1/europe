@@ -34,6 +34,7 @@ export function DaySection({ day }: { day: Day }) {
         <div className="day-rail-track">
           <div className="day-rail-fill" />
         </div>
+        <div className="day-rail-dot" />
       </div>
 
       {day.id === 1 ? (

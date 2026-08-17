@@ -210,20 +210,30 @@ a {
   text-align: right;
 }
 
+/*
+ * The rail is sized in JS to the exact edge-to-edge span between this day's
+ * top and the next day's top (--day-rail-h), not just this section's own
+ * box — that's what keeps days tiling with no gap and the dot exact. It
+ * exits with the day, so a finished day's line doesn't just sit there.
+ */
 .day-rail {
   pointer-events: none;
   position: absolute;
   top: 0;
-  bottom: 0;
   left: max(24px, calc(50% - 320px + 24px));
   z-index: 0;
   width: 24px;
+  height: var(--day-rail-h, 100%);
+  opacity: calc(1 - var(--day-exit, 0));
+  transform: translate3d(0, calc(var(--day-exit, 0) * -18px), 0);
+  will-change: opacity, transform;
 }
 
+/* No top/bottom inset — the track must span the section edge to edge or the dot drifts off the anchor line. */
 .day-rail-track {
   position: absolute;
-  top: 12px;
-  bottom: 12px;
+  top: 0;
+  bottom: 0;
   left: 11px;
   width: 2px;
   overflow: hidden;
@@ -240,12 +250,33 @@ a {
   will-change: transform;
 }
 
+/*
+ * The main orange dot. Offset = progress × track height, computed in JS
+ * (--day-progress is 0..1, --day-rail-h is the track's own px height), so
+ * translate3d(0, progress * railH, 0) lands the dot exactly on the anchor
+ * line the rest of the day-chrome math reads from — it appears to hold
+ * still there while the day scrolls past underneath it.
+ */
+.day-rail-dot {
+  position: absolute;
+  top: 0;
+  left: 5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--trail);
+  box-shadow:
+    0 0 0 5px color-mix(in srgb, var(--trail) 22%, transparent),
+    0 0 16px 3px color-mix(in srgb, var(--trail) 30%, transparent);
+  opacity: var(--day-live, 0);
+  transform: translate3d(0, calc(var(--day-progress, 0) * var(--day-rail-h, 0px)), 0)
+    translateY(-50%) scale(calc(0.7 + 0.3 * var(--day-live, 0)));
+  will-change: transform, opacity;
+}
+
 .day-content {
   position: relative;
   z-index: 1;
-  opacity: calc(1 - var(--day-exit, 0));
-  transform: translateY(calc(var(--day-exit, 0) * -18px));
-  will-change: opacity, transform;
 }
 
 .day-dots {
@@ -338,16 +369,39 @@ a {
   padding-bottom: 0.7rem;
 }
 
+/* Pushed out and faded with the day it belongs to — see .day-head, .beat-head below. */
+.day-head {
+  opacity: calc(1 - var(--day-exit, 0));
+  transform: translate3d(0, calc(var(--day-exit, 0) * -18px), 0);
+  will-change: opacity, transform;
+}
+
 .beat-head {
   top: calc(var(--trip-header-height) + var(--day-head-h));
   z-index: 19;
   padding-top: 0.35rem;
   padding-bottom: 0.45rem;
+  /*
+   * The exit push/fade lives here, on the sticky element itself. The entry
+   * animation (below) targets .beat-head-reveal, an inner wrapper — a CSS
+   * animation wins over a declarative style on the same property, so if both
+   * lived on .beat-head the exit transform would be silently overridden.
+   */
+  opacity: calc(1 - var(--day-exit, 0));
+  transform: translate3d(0, calc(var(--day-exit, 0) * -18px), 0);
+  will-change: opacity, transform;
 }
 
 .beat-row {
   min-height: calc(var(--beat-span, 56) * var(--beat-scale, 1) * 1vh);
   min-height: calc(var(--beat-span, 56) * var(--beat-scale, 1) * 1svh);
+  /*
+   * Named timeline subject for the beat-head entry animation. Must be this
+   * tall, non-sticky row — NOT .beat-head itself, which is position: sticky.
+   * A view-progress timeline whose subject is sticky reads its own
+   * scroll-shifted box back as input, which stutters exactly while pinned.
+   */
+  view-timeline-name: --beat-entry;
 }
 
 .essentials-row {
@@ -356,10 +410,16 @@ a {
 }
 
 @supports (animation-timeline: view()) {
-  .beat-head {
+  .beat-head-reveal {
     animation: beat-head-in linear both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 28%;
+    animation-timeline: --beat-entry;
+    /*
+     * entry 0% fires when .beat-row's top reaches the viewport bottom; the
+     * entry phase length is min(row height, viewport height), so for most
+     * beats (well under 100vh) this range is roughly the row's own height.
+     * 15% keeps the fade+rise to ~10-15vh of scroll instead of the whole row.
+     */
+    animation-range: entry 0% entry 15%;
   }
 }
 
@@ -379,17 +439,25 @@ a {
     --beat-scale: 0.32;
   }
 
-  .beat-head {
+  .beat-head-reveal {
     animation: none;
   }
 
-  .day-rail-fill,
-  .day-content {
+  .day-head,
+  .beat-head,
+  .day-rail {
+    transform: none;
     will-change: auto;
   }
 
-  .day-content {
+  .day-rail-fill,
+  .day-rail-dot {
     transform: none;
+    will-change: auto;
+  }
+
+  .day-rail-dot {
+    opacity: 0;
   }
 
   .trip-header-brand,
