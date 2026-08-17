@@ -53,8 +53,11 @@ export function TripShell() {
       if (ticking.current) return;
       ticking.current = true;
       requestAnimationFrame(() => {
-        syncMap();
-        ticking.current = false;
+        try {
+          syncMap();
+        } finally {
+          ticking.current = false;
+        }
       });
     };
     const onResize = () => {

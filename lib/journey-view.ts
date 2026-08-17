@@ -204,6 +204,7 @@ function flightHomeView(t: number): JourneyView {
 
 function viewForDay(dayId: number): JourneyView {
   const day = days[dayId - 1];
+  if (!day) return OVERVIEW;
   const cameras: Record<
     number,
     {
@@ -254,7 +255,7 @@ function viewForDay(dayId: number): JourneyView {
     9: { center: VENICE, zoom: 13.7, pitch: 0, bearing: 0 },
     10: { center: VCE, zoom: 12.6, pitch: 0, bearing: 0 },
   };
-  const cam = cameras[dayId];
+  const cam = cameras[dayId] ?? cameras[2];
   return pose({
     phase: "day",
     center: cam.center,
@@ -334,6 +335,22 @@ function sectionProgress(
   return span <= 0 ? 0 : clamp((anchor - start) / span);
 }
 
+/** Day 1 flight starts the instant the hero freeze lifts, not after the section top hits the reading anchor. */
+function day1Progress(
+  day1: HTMLElement,
+  next: HTMLElement | undefined,
+  viewportHeight: number,
+) {
+  const origin = day1.getBoundingClientRect().top;
+  const destination = next
+    ? next.getBoundingClientRect().top
+    : day1.getBoundingClientRect().bottom;
+  const height = Math.max(1, destination - origin);
+  const start = viewportHeight * FREEZE;
+  const span = start - (viewportHeight * 0.4 - height);
+  return clamp((start - origin) / Math.max(1, span));
+}
+
 export function readJourneyView(
   hero: HTMLElement | null,
   sections: HTMLElement[],
@@ -362,12 +379,17 @@ export function readJourneyView(
   const t = sectionProgress(current, next, anchor);
 
   if (dayId === 1) {
-    if (t < 0.14) return usaDepartView();
-    const flight = flightOutView(clamp((t - 0.14) / 0.68));
-    if (next && t > 0.82) {
-      return mix(flightOutView(1), viewForDay(Number(next.dataset.day)), (t - 0.82) / 0.18);
+    const flightT = day1Progress(current, next, viewportHeight);
+    if (flightT < 0.08) return usaDepartView();
+    const crossing = flightOutView(clamp((flightT - 0.08) / 0.74));
+    if (next && flightT > 0.82) {
+      return mix(
+        flightOutView(1),
+        viewForDay(Number(next.dataset.day)),
+        (flightT - 0.82) / 0.18,
+      );
     }
-    return flight;
+    return crossing;
   }
 
   if (dayId === 5) {
