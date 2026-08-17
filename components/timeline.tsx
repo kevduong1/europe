@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Day, TimelineItem } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { HutGlyph, RouteGlyph } from "./icons";
@@ -75,6 +76,10 @@ function BeatBody({ item }: { item: TimelineItem }) {
           <p className="mt-0.5 font-mono text-[12px] tracking-[0.04em] text-[var(--signal)]">
             {item.optionalAnnotation}
           </p>
+        ) : item.optional ? (
+          <p className="mt-0.5 font-mono text-[12px] tracking-[0.04em] text-[var(--signal)]">
+            Optional
+          </p>
         ) : null}
         {item.note ? (
           <p className="overlay-type mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
@@ -107,6 +112,38 @@ function BeatBody({ item }: { item: TimelineItem }) {
   );
 }
 
+function BeatRow({
+  beatId,
+  className,
+  bodyClassName,
+  mark,
+  children,
+}: {
+  beatId: string;
+  className?: string;
+  bodyClassName?: string;
+  mark: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <li
+      data-beat={beatId}
+      className={cn("relative min-h-[56dvh] pb-10 last:pb-2", className)}
+    >
+      <div className="beat-head">
+        <div className="flex gap-4">
+          <div className="relative w-6 shrink-0" aria-hidden="true">
+            {mark}
+          </div>
+          <div className={cn("min-w-0 flex-1 pt-0.5", bodyClassName)}>
+            {children}
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+}
+
 export function Timeline({ day }: { day: Day }) {
   const lodgingAlreadyOnTimeline = day.timeline.some(
     (item) => item.id === day.lodging.slug,
@@ -117,49 +154,30 @@ export function Timeline({ day }: { day: Day }) {
   return (
     <ol className="relative">
       {day.timeline.map((item) => (
-        <li
+        <BeatRow
           key={item.id}
-          data-beat={item.id}
-          className={cn(
-            "relative min-h-[56dvh] pb-10 last:pb-2",
-            BEAT_SPACE[item.id],
-            item.kind === "event" && item.optional && "opacity-55",
-          )}
+          beatId={item.id}
+          className={BEAT_SPACE[item.id]}
+          mark={<BeatMark item={item} day={day} />}
         >
-          <div className="beat-head">
-            <div className="flex gap-4">
-              <div className="relative w-6 shrink-0" aria-hidden="true">
-                <BeatMark item={item} day={day} />
-              </div>
-              <div className="min-w-0 flex-1 pt-0.5">
-                <BeatBody item={item} />
-              </div>
-            </div>
-          </div>
-        </li>
+          <BeatBody item={item} />
+        </BeatRow>
       ))}
 
       {hideLodging ? null : (
-        <li
-          data-beat={day.lodging.slug}
-          className={cn("relative min-h-[56dvh] pb-1", BEAT_SPACE[day.lodging.slug])}
+        <BeatRow
+          beatId={day.lodging.slug}
+          className={cn("pb-1 last:pb-1", BEAT_SPACE[day.lodging.slug])}
+          bodyClassName="pt-1"
+          mark={<BeatMark item={{ kind: "lodging" }} day={day} />}
         >
-          <div className="beat-head">
-            <div className="flex gap-4">
-              <div className="relative w-6 shrink-0" aria-hidden="true">
-                <BeatMark item={{ kind: "lodging" }} day={day} />
-              </div>
-              <div className="min-w-0 flex-1 pt-1">
-                <p className="overlay-type font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--dolomite)]">
-                  The night
-                </p>
-                <p className="overlay-type mt-1 text-[16px] font-medium leading-snug">
-                  {day.lodging.name}
-                </p>
-              </div>
-            </div>
-          </div>
-        </li>
+          <p className="overlay-type font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--dolomite)]">
+            The night
+          </p>
+          <p className="overlay-type mt-1 text-[16px] font-medium leading-snug">
+            {day.lodging.name}
+          </p>
+        </BeatRow>
       )}
     </ol>
   );

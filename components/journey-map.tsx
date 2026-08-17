@@ -33,6 +33,7 @@ import {
   sliceLine,
   type LngLat,
 } from "@/lib/geo";
+import { TRAIL } from "@/lib/palette";
 import { OVERVIEW, type JourneyView } from "@/lib/journey-view";
 import { prefersReducedMotion } from "@/lib/motion";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -48,7 +49,6 @@ type Props = {
   onReady?: () => void;
 };
 
-const TRAIL = "#e45a24";
 const MAX_FRAME_ZOOM = 14.6;
 
 function lineFeature(
@@ -127,7 +127,6 @@ function pinElement(stop: OvernightStop) {
   el.dataset.stop = stop.id;
   el.dataset.days = stop.days.join(",");
   if (stop.clusterId) el.dataset.cluster = stop.clusterId;
-  if (stop.always) el.dataset.always = "true";
   el.innerHTML = `<span class="map-pin-dot"></span><span class="map-pin-copy"><span class="map-pin-label">${stop.label}</span><span class="map-pin-coords">${formatLngLat(stop.lngLat)}</span></span>`;
   return el;
 }

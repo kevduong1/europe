@@ -36,7 +36,7 @@ export function DaySection({ day }: { day: Day }) {
 
       <div className="mx-auto w-full max-w-[640px] px-6 pb-6">
         <div ref={headRef} className="day-head pl-10">
-          <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail)]">
+          <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail-ink)]">
             Day {day.id} · {day.weekday}, {day.monthDay}
           </p>
           <h2 className="overlay-type font-display mt-2 text-[32px] leading-[1.08] [font-variation-settings:'WONK'_0.8,'opsz'_32]">
@@ -46,6 +46,24 @@ export function DaySection({ day }: { day: Day }) {
             {day.summary}
           </p>
         </div>
+
+        {day.practical.length > 0 ? (
+          <ul className="mt-6 space-y-2 pl-10">
+            {day.practical.map((item) => (
+              <li
+                key={item.text}
+                className="overlay-type text-[15px] leading-relaxed text-[var(--dolomite)]"
+              >
+                {item.todo ? (
+                  <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--signal)]">
+                    To do ·{" "}
+                  </span>
+                ) : null}
+                {item.text}
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
         <div className="mt-8">
           <Timeline day={day} />

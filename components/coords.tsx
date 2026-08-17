@@ -13,10 +13,14 @@ export function Coords({
   const [lng, lat] = lngLat;
   const query = label ? `&q=${encodeURIComponent(label)}` : "";
   const href = `https://maps.apple.com/?ll=${lat},${lng}${query}`;
+  const ariaLabel = label
+    ? `${label} on Apple Maps, opens in a new window`
+    : "Open in Apple Maps, new window";
 
   return (
     <a
       href={href}
+      aria-label={ariaLabel}
       className={
         className ??
         "overlay-type font-mono text-[11px] tracking-[0.04em] text-[var(--dolomite)] tabular-nums"

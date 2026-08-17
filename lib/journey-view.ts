@@ -3,7 +3,6 @@ import {
   busBolzanoOrtisei,
   EISBACHWELLE,
   FIRENZE,
-  flightHome,
   INNSBRUCK_HBF,
   MONTAGU,
   MUC,
@@ -24,7 +23,7 @@ import {
   walkWombatHbf,
   WOMBAT,
 } from "@/data/route";
-import { days, journeyFrame } from "@/data/trip";
+import { getDay, journeyFrame } from "@/data/trip";
 import {
   along,
   clamp,
@@ -36,7 +35,7 @@ import {
   type LngLat,
 } from "@/lib/geo";
 
-export type JourneyPhase = "overview" | "mci" | "flight" | "day";
+export type JourneyPhase = "overview" | "flight" | "day";
 export type FlightLeg = "out" | "home" | null;
 
 export type JourneyView = {
@@ -50,8 +49,6 @@ export type JourneyView = {
   flightT: number;
   flightLeg: FlightLeg;
   trailT: number;
-  voxelOpacity: number;
-  climbM: number;
   jump: boolean;
   dayId: number | null;
   label: string;
@@ -177,8 +174,6 @@ function pose(
   return {
     bounds: journeyFrame.bounds,
     jump: false,
-    voxelOpacity: 0,
-    climbM: 1200,
     ...rest,
     expandedClusterIds: expandedClusterIds ?? clusters.expandedClusterIds,
     visitedClusterIds: visitedClusterIds ?? clusters.visitedClusterIds,
@@ -199,8 +194,6 @@ function cityHold(
     amount?: number;
     expandedClusterIds?: string[];
     visitedClusterIds?: string[];
-    voxel?: number;
-    climb?: number;
   },
 ): JourneyView {
   const amount = clamp(opts.amount ?? 0);
@@ -218,8 +211,6 @@ function cityHold(
     flightT: 0,
     flightLeg: null,
     trailT: opts.trailT,
-    voxelOpacity: opts.voxel ?? 0,
-    climbM: opts.climb ?? 1200,
     dayId: opts.dayId,
     label: opts.label,
     here: opts.here ?? null,
@@ -330,7 +321,6 @@ function flightHomeView(t: number): JourneyView {
     flightT: Math.max(0.006, u),
     flightLeg: "home",
     trailT: 1,
-    voxelOpacity: 0,
     jump: false,
     dayId: 10,
     label: "Venice → Kansas City",
@@ -411,7 +401,7 @@ function rideLine(
 }
 
 function viewForDay(dayId: number): JourneyView {
-  const day = days[dayId - 1];
+  const day = getDay(dayId);
   if (!day) return OVERVIEW;
   const label = `Day ${day.id} · ${day.stripLabel}`;
   switch (dayId) {
@@ -441,8 +431,6 @@ function viewForDay(dayId: number): JourneyView {
         focusStopId: "resciesa",
         focus: RESCIESA,
         amount: 0.22,
-        voxel: 0.7,
-        climb: 1800,
         expandedClusterIds: ["dolomites"],
         visitedClusterIds: ["munich", "innsbruck"],
       });
@@ -455,8 +443,6 @@ function viewForDay(dayId: number): JourneyView {
         focusStopId: "firenze",
         focus: FIRENZE,
         amount: 0.28,
-        voxel: 1,
-        climb: 2100,
         expandedClusterIds: ["dolomites"],
         visitedClusterIds: ["munich", "innsbruck"],
       });
@@ -469,8 +455,6 @@ function viewForDay(dayId: number): JourneyView {
         focusStopId: "puez",
         focus: PUEZ,
         amount: 0.2,
-        voxel: 0.7,
-        climb: 1700,
         expandedClusterIds: ["dolomites"],
         visitedClusterIds: ["munich", "innsbruck"],
       });
@@ -700,8 +684,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
           trailT: T.ortisei,
           here: ORTISEI,
           focusStopId: "ortisei",
-          voxel: 0.45,
-          climb: 1400,
           expandedClusterIds: ["dolomites"],
           visitedClusterIds: ["munich", "innsbruck"],
         }),
@@ -712,8 +694,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
           here: RESCIESA,
           focus: RESCIESA,
           amount: 0.24,
-          voxel: 1,
-          climb: 2200,
           expandedClusterIds: ["dolomites"],
           visitedClusterIds: ["munich", "innsbruck"],
         }),
@@ -725,8 +705,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
           focusStopId: "resciesa",
           focus: RESCIESA,
           amount: 0.3,
-          voxel: 1,
-          climb: 2200,
           expandedClusterIds: ["dolomites"],
           visitedClusterIds: ["munich", "innsbruck"],
         }),
@@ -744,8 +722,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
         focusStopId: "resciesa",
         focus: RESCIESA,
         amount: 0.3,
-        voxel: 1,
-        climb: 2200,
         expandedClusterIds: ["dolomites"],
         visitedClusterIds: ["munich", "innsbruck"],
       });
@@ -757,8 +733,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
           trailT: T.resciesa,
           here: RESCIESA,
           focusStopId: "resciesa",
-          voxel: 0.8,
-          climb: 1900,
           expandedClusterIds: ["dolomites"],
           visitedClusterIds: ["munich", "innsbruck"],
         }),
@@ -769,8 +743,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
           here: FIRENZE,
           focus: FIRENZE,
           amount: 0.22,
-          voxel: 1,
-          climb: 2300,
           expandedClusterIds: ["dolomites"],
           visitedClusterIds: ["munich", "innsbruck"],
         }),
@@ -782,8 +754,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
           focusStopId: "firenze",
           focus: FIRENZE,
           amount: 0.28,
-          voxel: 1,
-          climb: 2300,
           expandedClusterIds: ["dolomites"],
           visitedClusterIds: ["munich", "innsbruck"],
         }),
@@ -801,8 +771,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
         focusStopId: "firenze",
         focus: FIRENZE,
         amount: 0.28,
-        voxel: 1,
-        climb: 2300,
         expandedClusterIds: ["dolomites"],
         visitedClusterIds: ["munich", "innsbruck"],
       });
@@ -814,8 +782,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
           trailT: T.firenze,
           here: FIRENZE,
           focusStopId: "firenze",
-          voxel: 1,
-          climb: 2100,
           expandedClusterIds: ["dolomites"],
           visitedClusterIds: ["munich", "innsbruck"],
         }),
@@ -826,8 +792,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
           here: PUEZ,
           focus: PUEZ,
           amount: 0.24,
-          voxel: 1,
-          climb: 2480,
           expandedClusterIds: ["dolomites"],
           visitedClusterIds: ["munich", "innsbruck"],
         }),
@@ -839,8 +803,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
           focusStopId: "puez",
           focus: PUEZ,
           amount: 0.3,
-          voxel: 1,
-          climb: 2480,
           expandedClusterIds: ["dolomites"],
           visitedClusterIds: ["munich", "innsbruck"],
         }),
@@ -858,8 +820,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
         focusStopId: "puez",
         focus: PUEZ,
         amount: 0.3,
-        voxel: 1,
-        climb: 2480,
         expandedClusterIds: ["dolomites"],
         visitedClusterIds: ["munich", "innsbruck"],
       });
@@ -872,8 +832,6 @@ function viewForBeat(dayId: number, beatId: string, t: number): JourneyView {
         here: PUEZ,
         focusStopId: "puez",
         amount: 0.12,
-        voxel: 0.55,
-        climb: 1600,
         expandedClusterIds: ["dolomites"],
         visitedClusterIds: ["munich", "innsbruck"],
       });
@@ -913,8 +871,6 @@ function mix(a: JourneyView, b: JourneyView, t: number): JourneyView {
       ? (a.flightLeg ?? b.flightLeg)
       : pick.flightLeg,
     trailT: lerp(a.trailT, b.trailT, u),
-    voxelOpacity: lerp(a.voxelOpacity, b.voxelOpacity, u),
-    climbM: lerp(a.climbM, b.climbM, u),
     jump: false,
     dayId: pick.dayId,
     label: pick.label,

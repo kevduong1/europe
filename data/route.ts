@@ -1,5 +1,5 @@
-import { densify, greatCircle, nearestT, type LngLat } from "@/lib/geo";
-import type { OvernightStop, PlaceLabel, RouteSegment, StopCluster } from "./types";
+import { densify, greatCircle, type LngLat } from "@/lib/geo";
+import type { OvernightStop, StopCluster } from "./types";
 
 export const MCI: LngLat = [-94.7139, 39.2976];
 export const MUC: LngLat = [11.7861, 48.3538];
@@ -131,16 +131,6 @@ const towardVenice: LngLat[] = densify(
   10,
 );
 
-const waterToVenice: LngLat[] = densify(
-  [
-    [12.238, 45.482],
-    [12.28, 45.46],
-    [12.315, 45.445],
-    [12.327, 45.437],
-  ],
-  1,
-);
-
 export const MUNICH_HBF: LngLat = [11.5583, 48.1402];
 export const INNSBRUCK_HBF: LngLat = [11.401, 47.2634];
 export const BOLZANO: LngLat = [11.357, 46.498];
@@ -166,92 +156,6 @@ export const walkWombatHbf: LngLat[] = densify(
 export const flightOut = greatCircle(MCI, MUC, 96);
 export const flightHome = greatCircle(VCE, MCI, 96);
 
-export const routeSegments: RouteSegment[] = [
-  {
-    id: "flight-out",
-    mode: "flight",
-    days: [1],
-    coordinates: flightOut,
-    label: "MCI → MUC",
-  },
-  {
-    id: "rail-munich-innsbruck",
-    mode: "rail",
-    days: [4],
-    coordinates: railMunichInnsbruck,
-    label: "Munich → Innsbruck",
-  },
-  {
-    id: "rail-innsbruck-bolzano",
-    mode: "rail",
-    days: [5],
-    coordinates: railInnsbruckBolzano,
-    label: "Innsbruck → Bolzano",
-  },
-  {
-    id: "bus-bolzano-ortisei",
-    mode: "bus",
-    days: [5],
-    coordinates: busBolzanoOrtisei,
-    label: "Bolzano → Ortisei",
-  },
-  {
-    id: "trail-ortisei-resciesa",
-    mode: "trail",
-    days: [5],
-    coordinates: trailOrtiseiResciesa,
-  },
-  {
-    id: "trail-resciesa-firenze",
-    mode: "trail",
-    days: [6],
-    coordinates: trailResciesaFirenze,
-  },
-  {
-    id: "trail-firenze-puez",
-    mode: "trail",
-    days: [7],
-    coordinates: trailFirenzePuez,
-  },
-  {
-    id: "unresolved-exit",
-    mode: "unresolved",
-    days: [8],
-    coordinates: unresolvedExit,
-    label: "route to be decided",
-  },
-  {
-    id: "toward-venice",
-    mode: "unresolved",
-    days: [8, 9],
-    coordinates: towardVenice,
-    label: "route to be decided",
-  },
-  {
-    id: "water-venice",
-    mode: "water",
-    days: [9, 10],
-    coordinates: waterToVenice,
-  },
-  {
-    id: "flight-home",
-    mode: "flight",
-    days: [10],
-    coordinates: flightHome,
-    label: "VCE → MCI",
-  },
-];
-
-export const groundLine: LngLat[] = [
-  ...railMunichInnsbruck,
-  ...railInnsbruckBolzano.slice(1),
-  ...busBolzanoOrtisei.slice(1),
-  ...trailOrtiseiResciesa.slice(1),
-  ...trailResciesaFirenze.slice(1),
-  ...trailFirenzePuez.slice(1),
-  ...unresolvedExit.slice(1),
-];
-
 /** Continuous Europe line used for the orange trail, including the open exit. */
 export const orangeTrail: LngLat[] = [
   ...railMunichInnsbruck,
@@ -262,26 +166,6 @@ export const orangeTrail: LngLat[] = [
   ...trailFirenzePuez.slice(1),
   ...towardVenice.slice(1),
 ];
-
-const trailFocus: Record<number, LngLat> = {
-  1: MUNICH_HBF,
-  2: WOMBAT,
-  3: WOMBAT,
-  4: MONTAGU,
-  5: RESCIESA,
-  6: FIRENZE,
-  7: PUEZ,
-  8: unresolvedExit[unresolvedExit.length - 1],
-  9: VENICE,
-  10: VENICE,
-};
-
-export function trailTForDay(dayId: number | null) {
-  if (dayId == null || dayId <= 1) return 0;
-  const point = trailFocus[dayId];
-  if (!point) return 0;
-  return nearestT(orangeTrail, point);
-}
 
 export const overnightStops: OvernightStop[] = [
   {
@@ -431,52 +315,4 @@ export const stopClusters: StopCluster[] = [
   },
 ];
 
-export const placeLabels: PlaceLabel[] = [
-  {
-    id: "munich",
-    lngLat: [11.575, 48.137],
-    label: "Munich",
-    destinationSlug: "munich",
-    anchor: "right",
-  },
-  {
-    id: "innsbruck",
-    lngLat: [11.404, 47.269],
-    label: "Innsbruck",
-    destinationSlug: "innsbruck",
-    anchor: "left",
-  },
-  {
-    id: "ortisei",
-    lngLat: [11.672, 46.576],
-    label: "Ortisei",
-    destinationSlug: "ortisei",
-    anchor: "left",
-  },
-  {
-    id: "puez-odle",
-    lngLat: [11.74, 46.608],
-    label: "Puez-Odle",
-    destinationSlug: "puez-odle",
-    anchor: "top",
-  },
-  {
-    id: "venice",
-    lngLat: [12.327, 45.437],
-    label: "Venice",
-    destinationSlug: "venice",
-    anchor: "left",
-  },
-];
-
 export const unresolvedPoint: LngLat = unresolvedExit[unresolvedExit.length - 1];
-
-export function segmentsForDay(dayId: number | null) {
-  if (dayId == null) {
-    return routeSegments.filter((segment) => segment.mode !== "flight");
-  }
-  return routeSegments.filter((segment) => {
-    if (segment.mode === "flight") return segment.days.includes(dayId);
-    return true;
-  });
-}

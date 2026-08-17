@@ -1,4 +1,6 @@
-export type LngLat = [number, number];
+import type { LngLat } from "@/data/types";
+
+export type { LngLat };
 
 const EARTH_KM = 6371;
 
@@ -123,16 +125,6 @@ export function sliceLine(line: LngLat[], t0: number, t1: number): LngLat[] {
   return points;
 }
 
-export function padBounds(
-  bounds: [number, number, number, number],
-  pad = 0.08,
-): [number, number, number, number] {
-  const [w, s, e, n] = bounds;
-  const lngPad = (e - w) * pad;
-  const latPad = (n - s) * pad;
-  return [w - lngPad, s - latPad, e + lngPad, n + latPad];
-}
-
 export function nearestT(line: LngLat[], point: LngLat): number {
   if (line.length < 2) return 0;
   const total = lineLengthKm(line);
@@ -216,29 +208,3 @@ export function pointsAlong(line: LngLat[], t: number, spacingKm: number): LngLa
   return points;
 }
 
-export function lerpBounds(
-  a: [number, number, number, number],
-  b: [number, number, number, number],
-  t: number,
-): [number, number, number, number] {
-  return [
-    lerp(a[0], b[0], t),
-    lerp(a[1], b[1], t),
-    lerp(a[2], b[2], t),
-    lerp(a[3], b[3], t),
-  ];
-}
-
-export function boundsOf(points: LngLat[]): [number, number, number, number] {
-  let w = Infinity;
-  let s = Infinity;
-  let e = -Infinity;
-  let n = -Infinity;
-  for (const [lng, lat] of points) {
-    w = Math.min(w, lng);
-    s = Math.min(s, lat);
-    e = Math.max(e, lng);
-    n = Math.max(n, lat);
-  }
-  return [w, s, e, n];
-}

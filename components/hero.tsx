@@ -8,7 +8,7 @@ export function Hero() {
       className="relative flex min-h-[100dvh] flex-col justify-end"
     >
       <div className="overlay-panel px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[calc(7rem+env(safe-area-inset-top))]">
-        <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail)]">
+        <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail-ink)]">
           {trip.eyebrow}
         </p>
         <h1 className="overlay-type font-display mt-3 max-w-[20ch] text-[42px] leading-[1.05] [font-variation-settings:'WONK'_1,'SOFT'_20,'opsz'_42] sm:text-[52px]">
@@ -28,7 +28,7 @@ export function Hero() {
         </p>
         <a
           href="#itinerary"
-          className="overlay-type mt-8 inline-flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--trail)]"
+          className="overlay-type mt-8 inline-flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--trail-ink)]"
         >
           Scroll the itinerary
           <span aria-hidden="true" className="text-[16px]">

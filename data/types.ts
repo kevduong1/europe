@@ -58,7 +58,6 @@ export type MapFrame = {
   zoom?: number;
   bearing?: number;
   pitch?: number;
-  showFlight?: boolean;
 };
 
 export type Day = {
@@ -99,11 +98,13 @@ export type Essential = {
   body: string;
 };
 
+export type DetailKind = "stay" | "hike" | "train" | "flight" | "bus" | "note";
+
 export type DetailRecord = {
   slug: string;
   dayId: number;
   title: string;
-  kind: "stay" | "hike" | "train" | "reservation" | "note";
+  kind: DetailKind;
   body: string;
   extra?: string;
   todo?: string;
@@ -119,7 +120,6 @@ export type OvernightStop = {
   destinationSlug?: string;
   detailSlug?: string;
   days: number[];
-  always?: boolean;
   clusterId?: string;
 };
 
@@ -130,20 +130,4 @@ export type StopCluster = {
   stopIds: string[];
   expandOnDays: number[];
   anchor?: "left" | "right" | "top" | "bottom";
-};
-
-export type PlaceLabel = {
-  id: string;
-  lngLat: LngLat;
-  label: string;
-  destinationSlug: string;
-  anchor?: "left" | "right" | "top" | "bottom";
-};
-
-export type RouteSegment = {
-  id: string;
-  mode: TransportMode;
-  days: number[];
-  coordinates: LngLat[];
-  label?: string;
 };

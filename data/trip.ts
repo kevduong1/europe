@@ -550,7 +550,7 @@ export const details: DetailRecord[] = [
     slug: "flight-mci-muc",
     dayId: 1,
     title: "Kansas City to Munich",
-    kind: "train",
+    kind: "flight",
     body: "Departs MCI at 1:45 PM on Sept 5. Overnight, 12+ hours. Arrive Munich around 10:00 the next morning.",
   },
   {
@@ -610,7 +610,7 @@ export const details: DetailRecord[] = [
     slug: "bus-bolzano-ortisei",
     dayId: 5,
     title: "Bolzano to Ortisei",
-    kind: "train",
+    kind: "bus",
     body: "Bus from Bolzano into Val Gardena. The last motorized leg before the huts.",
   },
   {
@@ -662,7 +662,7 @@ export const details: DetailRecord[] = [
     slug: "flight-vce-mci",
     dayId: 10,
     title: "Venice to Kansas City",
-    kind: "train",
+    kind: "flight",
     body: "Fly Venice → MCI on Sept 14. Confirmation details still to be added.",
   },
   {
@@ -682,10 +682,6 @@ export function getDestination(slug: string) {
   return destinations.find((destination) => destination.slug === slug);
 }
 
-export function getDetail(slug: string) {
-  return details.find((detail) => detail.slug === slug);
-}
-
 export function getDetailForDay(dayId: number, slug: string) {
   return details.find((detail) => detail.slug === slug && detail.dayId === dayId)
     ?? details.find((detail) => detail.slug === slug);
@@ -696,5 +692,3 @@ export const journeyFrame: Day["mapFrame"] = {
   pitch: 38,
   bearing: 8,
 };
-
-export const teaserDestinations = ["munich", "puez-odle", "venice"] as const;

@@ -1,8 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getDestination, trip } from "@/data/trip";
 import { EssentialsSection } from "./essentials-section";
 import { Hero } from "./hero";
@@ -35,6 +36,8 @@ export function TripShell() {
   const labelRef = useRef<HTMLParagraphElement>(null);
   const lastLabel = useRef("");
   const ticking = useRef(false);
+  const previousPath = useRef<string | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   function syncChrome() {
     const header = headerRef.current;
@@ -110,30 +113,50 @@ export function TripShell() {
   }, []);
 
   useEffect(() => {
+    const previous = previousPath.current;
+    previousPath.current = pathname;
     const id = targetIdForPath(pathname);
-    if (!id) return;
-    const node = document.getElementById(id);
-    if (!node) return;
-    node.scrollIntoView({ behavior: "auto", block: "start" });
-    requestAnimationFrame(() => {
-      syncChrome();
-      syncMap();
-    });
+
+    const afterScroll = () => {
+      requestAnimationFrame(() => {
+        syncChrome();
+        syncMap();
+      });
+    };
+
+    if (id) {
+      const node = document.getElementById(id);
+      if (!node) return;
+      node.scrollIntoView({ behavior: "auto", block: "start" });
+      afterScroll();
+      return;
+    }
+
+    if (previous && previous !== "/" && pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "auto" });
+      afterScroll();
+    }
   }, [pathname]);
 
   return (
     <div className="relative">
       <a
         href="#itinerary"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-[var(--paper)] focus:px-3 focus:py-2"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-[var(--paper)] focus:px-3 focus:py-2"
       >
         Skip to itinerary
       </a>
 
       <div className="map-stage">
+        {mapReady ? null : (
+          <p className="absolute right-4 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-[1] font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--dolomite)]">
+            Loading map
+          </p>
+        )}
         <JourneyMap
           ref={mapRef}
           onReady={() => {
+            setMapReady(true);
             syncChrome();
             syncMap();
           }}
@@ -142,16 +165,22 @@ export function TripShell() {
 
       <header ref={headerRef} className="trip-header">
         <div className="trip-header-inner">
-          <div className="min-w-0">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--trail)]">
+          <Link
+            href="/"
+            aria-label="Europe 2026, back to the start"
+            className="pointer-events-auto min-w-0 rounded-sm"
+          >
+            <span className="block font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--trail-ink)]">
               {trip.eyebrow}
-            </p>
-            <p className="font-display mt-0.5 text-[22px] leading-none [font-variation-settings:'WONK'_0.7,'opsz'_22] sm:text-[24px]">
+            </span>
+            <span className="font-display mt-0.5 block text-[22px] leading-none [font-variation-settings:'WONK'_0.7,'opsz'_22] sm:text-[24px]">
               {trip.title}
-            </p>
-          </div>
+            </span>
+          </Link>
           <p
             ref={labelRef}
+            aria-live="polite"
+            aria-atomic="true"
             className="max-w-[46%] text-right font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink)] sm:text-[11px]"
           >
             The route

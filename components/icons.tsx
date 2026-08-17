@@ -4,7 +4,7 @@ export function RouteGlyph({
   mode,
   className,
 }: {
-  mode: TransportMode | "rail" | "trail" | "water";
+  mode: TransportMode;
   className?: string;
 }) {
   const color =
@@ -57,33 +57,6 @@ export function HutGlyph({ className }: { className?: string }) {
       aria-hidden="true"
     >
       <polygon points="7,1.2 13,6.6 13,13 1,13 1,6.6" fill="currentColor" />
-    </svg>
-  );
-}
-
-export function Chevron({
-  direction,
-  className,
-}: {
-  direction: "left" | "right";
-  className?: string;
-}) {
-  return (
-    <svg
-      className={className}
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      aria-hidden="true"
-    >
-      <path
-        d={direction === "left" ? "M11.5 3.5 L6 9 l5.5 5.5" : "M6.5 3.5 L12 9 l-5.5 5.5"}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
     </svg>
   );
 }

@@ -1,9 +1,5 @@
 import type { StyleSpecification } from "maplibre-gl";
-
-const PAPER = "#FAF9F6";
-const INK = "#1F2421";
-const DOLOMITE = "#8A8F98";
-const LAGOON = "#3E5C76";
+import { DOLOMITE, INK, LAGOON, PAPER } from "@/lib/palette";
 
 const HIDDEN_LAYERS = new Set([
   "highway_path",

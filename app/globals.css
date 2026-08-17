@@ -3,11 +3,12 @@
 :root {
   --paper: #faf9f6;
   --ink: #1f2421;
-  --dolomite: #8a8f98;
+  --dolomite: #5e636c;
   --meadow: #4e6e58;
   --lagoon: #3e5c76;
   --signal: #b3592e;
   --trail: #e45a24;
+  --trail-ink: color-mix(in srgb, var(--trail) 76%, var(--ink));
   --trip-header-height: 5.5rem;
   --day-head-h: 4.75rem;
   --trip-progress: 0;
@@ -21,6 +22,7 @@
   --color-lagoon: var(--lagoon);
   --color-signal: var(--signal);
   --color-trail: var(--trail);
+  --color-trail-ink: var(--trail-ink);
   --font-display: "Fraunces", "Fraunces Fallback", Georgia, serif;
   --font-sans: "Source Sans 3", "Source Sans 3 Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, monospace;
@@ -89,6 +91,12 @@ a {
 .map-canvas .maplibregl-map,
 .map-canvas .maplibregl-canvas {
   pointer-events: none !important;
+}
+
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-attrib a,
+.maplibregl-ctrl-attrib-button {
+  pointer-events: auto !important;
 }
 
 .maplibregl-map {
@@ -341,27 +349,6 @@ a {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--paper) 78%, transparent);
 }
 
-.map-label {
-  border: 0;
-  background: transparent;
-  padding: 0 0 0 8px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink);
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-.map-label-left {
-  padding: 0 8px 0 0;
-}
-
-.map-label-top {
-  padding: 0 0 8px;
-}
-
 .map-unresolved {
   font-family: var(--font-mono);
   font-size: 16px;
@@ -397,7 +384,6 @@ a {
 
 .sr-only:focus,
 .focus\:not-sr-only:focus {
-  position: static;
   width: auto;
   height: auto;
   margin: 0;

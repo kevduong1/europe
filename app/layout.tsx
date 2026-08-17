@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, IBM_Plex_Mono, Source_Sans_3 } from "next/font/google";
 import { TripShell } from "@/components/trip-shell";
+import { photos } from "@/data/photos";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -46,7 +47,7 @@ export const metadata: Metadata = {
     title: "Europe 2026",
     description:
       "Munich → Innsbruck → the Dolomites → Venice. Sept 5–14, 2026.",
-    images: [{ url: "/photos/dolomites.jpg", width: 1600, height: 2000 }],
+    images: [{ url: photos.dolomites.src, width: 1600, height: 2000 }],
   },
 };
 
