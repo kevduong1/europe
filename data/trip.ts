@@ -3,7 +3,6 @@ import type { Day, Destination, DetailRecord, Essential } from "./types";
 export const trip = {
   title: "Europe 2026",
   eyebrow: "Sept 5 – 14, 2026",
-  arc: "Munich, Innsbruck, the Dolomites, Venice",
   editorial:
     "Ten days that change character as they go: cities and rail, then three nights of huts across the Puez-Odle, then down to the lagoon. The middle is the point of the trip.",
 };
@@ -13,18 +12,10 @@ export const days: Day[] = [
     id: 1,
     isoDate: "2026-09-05",
     weekday: "Saturday",
-    weekdayInitial: "S",
     monthDay: "Sept 5",
     stripLabel: "Fly",
     title: "Fly out",
     summary: "Kansas City to Munich · sleep on the plane",
-    isHikeDay: false,
-    act: 1,
-    mapFrame: {
-      bounds: [11.48, 48.08, 11.86, 48.38],
-      pitch: 28,
-      bearing: 8,
-    },
     timeline: [
       {
         kind: "event",
@@ -47,7 +38,6 @@ export const days: Day[] = [
       name: "The plane",
       context: "Overnight in the air. The first night is the crossing.",
       kind: "plane",
-      lngLat: [-94.7139, 39.2976],
     },
     practical: [
       { text: "Long overnight. Arrive Munich the next morning around 10:00." },
@@ -57,18 +47,10 @@ export const days: Day[] = [
     id: 2,
     isoDate: "2026-09-06",
     weekday: "Sunday",
-    weekdayInitial: "S",
     monthDay: "Sept 6",
     stripLabel: "Munich",
     title: "Landing in Munich",
     summary: "Airport train into the city · sleep at The Wombat Hostel",
-    isHikeDay: false,
-    act: 1,
-    mapFrame: {
-      bounds: [11.48, 48.08, 11.72, 48.24],
-      pitch: 32,
-      bearing: 12,
-    },
     timeline: [
       {
         kind: "event",
@@ -99,7 +81,6 @@ export const days: Day[] = [
       context: "~€30/night pp, near the Hauptbahnhof.",
       kind: "hostel",
       todo: "Book 1–2 months out",
-      lngLat: [11.555, 48.1405],
     },
     practical: [
       { text: "Book The Wombat Hostel 1–2 months out.", todo: true },
@@ -110,18 +91,10 @@ export const days: Day[] = [
     id: 3,
     isoDate: "2026-09-07",
     weekday: "Monday",
-    weekdayInitial: "M",
     monthDay: "Sept 7",
     stripLabel: "Munich",
     title: "Munich",
     summary: "Open day in the city · sleep at The Wombat Hostel",
-    isHikeDay: false,
-    act: 1,
-    mapFrame: {
-      bounds: [11.48, 48.08, 11.72, 48.24],
-      pitch: 36,
-      bearing: 8,
-    },
     timeline: [
       {
         kind: "open",
@@ -143,7 +116,6 @@ export const days: Day[] = [
       name: "The Wombat Hostel",
       context: "Second night in Munich.",
       kind: "hostel",
-      lngLat: [11.555, 48.1405],
     },
     practical: [],
   },
@@ -151,18 +123,10 @@ export const days: Day[] = [
     id: 4,
     isoDate: "2026-09-08",
     weekday: "Tuesday",
-    weekdayInitial: "T",
     monthDay: "Sept 8",
     stripLabel: "Innsbruck",
     title: "Munich → Innsbruck",
     summary: "Eurail day · sleep at Montagu Hostel",
-    isHikeDay: false,
-    act: 1,
-    mapFrame: {
-      bounds: [11.28, 47.18, 12.28, 48.22],
-      pitch: 52,
-      bearing: 6,
-    },
     timeline: [
       {
         kind: "event",
@@ -200,7 +164,6 @@ export const days: Day[] = [
       context: "~€30/night pp. Book 1–2 months out.",
       kind: "hostel",
       todo: "Book 1–2 months out",
-      lngLat: [11.394, 47.267],
     },
     practical: [
       { text: "Eurail day." },
@@ -211,18 +174,10 @@ export const days: Day[] = [
     id: 5,
     isoDate: "2026-09-09",
     weekday: "Wednesday",
-    weekdayInitial: "W",
     monthDay: "Sept 9",
     stripLabel: "Ortisei",
     title: "Into the Dolomites",
     summary: "Train, then bus, then the trail · sleep at Rifugio Resciesa",
-    isHikeDay: true,
-    act: 2,
-    mapFrame: {
-      bounds: [11.28, 46.48, 11.78, 47.32],
-      pitch: 54,
-      bearing: 18,
-    },
     timeline: [
       {
         kind: "transport",
@@ -254,7 +209,6 @@ export const days: Day[] = [
       name: "Rifugio Resciesa",
       context: "First hut night, above Ortisei.",
       kind: "hut",
-      lngLat: [11.6825, 46.5986],
     },
     practical: [
       { text: "Eurail day, then bus into Val Gardena." },
@@ -268,18 +222,10 @@ export const days: Day[] = [
     id: 6,
     isoDate: "2026-09-10",
     weekday: "Thursday",
-    weekdayInitial: "T",
     monthDay: "Sept 10",
     stripLabel: "Firenze",
     title: "Resciesa to Rifugio Firenze",
     summary: "Hike across the Odle group · sleep at Rifugio Firenze",
-    isHikeDay: true,
-    act: 2,
-    mapFrame: {
-      bounds: [11.66, 46.572, 11.8, 46.64],
-      pitch: 64,
-      bearing: 28,
-    },
     timeline: [
       {
         kind: "transport",
@@ -295,7 +241,6 @@ export const days: Day[] = [
       name: "Rifugio Firenze",
       context: "Second hut night, under the Odle.",
       kind: "hut",
-      lngLat: [11.7672, 46.6117],
     },
     practical: [],
   },
@@ -303,18 +248,10 @@ export const days: Day[] = [
     id: 7,
     isoDate: "2026-09-11",
     weekday: "Friday",
-    weekdayInitial: "F",
     monthDay: "Sept 11",
     stripLabel: "Puez",
     title: "Firenze to Rifugio Puez",
     summary: "Hike day · sleep at Rifugio Puez",
-    isHikeDay: true,
-    act: 2,
-    mapFrame: {
-      bounds: [11.74, 46.562, 11.86, 46.63],
-      pitch: 62,
-      bearing: 42,
-    },
     timeline: [
       {
         kind: "transport",
@@ -330,7 +267,6 @@ export const days: Day[] = [
       name: "Rifugio Puez",
       context: "Third hut night, on the Puez plateau.",
       kind: "hut",
-      lngLat: [11.8161, 46.59],
     },
     practical: [],
   },
@@ -338,18 +274,10 @@ export const days: Day[] = [
     id: 8,
     isoDate: "2026-09-12",
     weekday: "Saturday",
-    weekdayInitial: "S",
     monthDay: "Sept 12",
     stripLabel: "Descent",
     title: "Out of the mountains",
     summary: "Eurail day · exit still to be decided",
-    isHikeDay: true,
-    act: 2,
-    mapFrame: {
-      bounds: [11.74, 46.5, 11.92, 46.64],
-      pitch: 52,
-      bearing: 16,
-    },
     timeline: [
       {
         kind: "transport",
@@ -366,7 +294,6 @@ export const days: Day[] = [
       context: "Where we sleep after leaving the mountains is still open.",
       kind: "tbd",
       todo: "Figure out departure station and the night of the 12th.",
-      lngLat: [11.835, 46.548],
     },
     practical: [
       { text: "Figure out departure station.", todo: true },
@@ -378,18 +305,10 @@ export const days: Day[] = [
     id: 9,
     isoDate: "2026-09-13",
     weekday: "Sunday",
-    weekdayInitial: "S",
     monthDay: "Sept 13",
     stripLabel: "Venice",
     title: "Venice",
     summary: "Open day in the city · lodging still to be decided",
-    isHikeDay: false,
-    act: 3,
-    mapFrame: {
-      bounds: [12.26, 45.4, 12.42, 45.48],
-      pitch: 42,
-      bearing: -12,
-    },
     timeline: [
       {
         kind: "open",
@@ -403,7 +322,6 @@ export const days: Day[] = [
       context: "The night slot is still a TODO.",
       kind: "tbd",
       todo: "Book Venice lodging",
-      lngLat: [12.327, 45.437],
     },
     practical: [{ text: "Book Venice lodging.", todo: true }],
   },
@@ -411,18 +329,10 @@ export const days: Day[] = [
     id: 10,
     isoDate: "2026-09-14",
     weekday: "Monday",
-    weekdayInitial: "M",
     monthDay: "Sept 14",
     stripLabel: "Home",
     title: "Home",
     summary: "Venice to Kansas City · the line, fully traveled",
-    isHikeDay: false,
-    act: 3,
-    mapFrame: {
-      bounds: [12.22, 45.38, 12.44, 45.54],
-      pitch: 28,
-      bearing: 0,
-    },
     timeline: [
       {
         kind: "transport",
@@ -438,7 +348,6 @@ export const days: Day[] = [
       name: "Homeward",
       context: "The trip ends in the air, the same way it began.",
       kind: "plane",
-      lngLat: [12.3519, 45.5053],
     },
     practical: [
       { text: "Fly Venice → MCI. Confirmation details still to be added." },
@@ -674,21 +583,34 @@ export const details: DetailRecord[] = [
   },
 ];
 
+const dayById = new Map<number, Day>();
+for (const day of days) {
+  if (!dayById.has(day.id)) dayById.set(day.id, day);
+}
+
+const destinationBySlug = new Map<string, Destination>();
+for (const destination of destinations) {
+  if (!destinationBySlug.has(destination.slug)) {
+    destinationBySlug.set(destination.slug, destination);
+  }
+}
+
+const detailBySlug = new Map<string, DetailRecord>();
+const detailByDayAndSlug = new Map<string, DetailRecord>();
+for (const detail of details) {
+  const key = `${detail.dayId}/${detail.slug}`;
+  if (!detailByDayAndSlug.has(key)) detailByDayAndSlug.set(key, detail);
+  if (!detailBySlug.has(detail.slug)) detailBySlug.set(detail.slug, detail);
+}
+
 export function getDay(id: number) {
-  return days.find((day) => day.id === id);
+  return dayById.get(id);
 }
 
 export function getDestination(slug: string) {
-  return destinations.find((destination) => destination.slug === slug);
+  return destinationBySlug.get(slug);
 }
 
 export function getDetailForDay(dayId: number, slug: string) {
-  return details.find((detail) => detail.slug === slug && detail.dayId === dayId)
-    ?? details.find((detail) => detail.slug === slug);
+  return detailByDayAndSlug.get(`${dayId}/${slug}`) ?? detailBySlug.get(slug);
 }
-
-export const journeyFrame: Day["mapFrame"] = {
-  bounds: [10.95, 45.28, 12.55, 48.35],
-  pitch: 38,
-  bearing: 8,
-};

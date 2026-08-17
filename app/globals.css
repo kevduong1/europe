@@ -12,6 +12,7 @@
   --trip-header-height: 5.5rem;
   --day-head-h: 4.75rem;
   --trip-progress: 0;
+  --beat-scale: 1;
 }
 
 @theme inline {
@@ -185,6 +186,10 @@ a {
   padding-bottom: 0.45rem;
 }
 
+.beat-row {
+  min-height: calc(var(--beat-span, 56) * var(--beat-scale, 1) * 1dvh);
+}
+
 @supports (animation-timeline: view()) {
   .beat-head {
     animation: beat-head-in linear both;
@@ -205,6 +210,10 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --beat-scale: 0.32;
+  }
+
   .beat-head {
     animation: none;
   }

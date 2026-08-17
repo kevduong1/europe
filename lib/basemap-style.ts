@@ -32,7 +32,7 @@ const HIDDEN_LAYERS = new Set([
   "road_pier",
 ]);
 
-export const fallbackStyle: StyleSpecification = {
+const fallbackStyle: StyleSpecification = {
   version: 8,
   name: "europe-2026-paper",
   sources: {},
@@ -45,7 +45,7 @@ export const fallbackStyle: StyleSpecification = {
   ],
 };
 
-export const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
+const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 
 function paint(layer: { paint?: Record<string, unknown> }) {
   layer.paint ??= {};
@@ -76,7 +76,7 @@ async function inlineVectorSources(style: StyleSpecification) {
   );
 }
 
-export function adaptBasemapStyle(input: StyleSpecification): StyleSpecification {
+function adaptBasemapStyle(input: StyleSpecification): StyleSpecification {
   const style: StyleSpecification = structuredClone(input);
 
   const reliefLayer = {

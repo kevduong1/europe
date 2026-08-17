@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, IBM_Plex_Mono, Source_Sans_3 } from "next/font/google";
-import { TripShell } from "@/components/trip-shell";
 import { photos } from "@/data/photos";
 import "./globals.css";
 
@@ -65,7 +64,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${fraunces.variable} ${sourceSans.variable} ${plexMono.variable} h-full`}
     >
       <body className="min-h-full font-sans text-[var(--ink)] antialiased">
-        <TripShell />
         {children}
       </body>
     </html>

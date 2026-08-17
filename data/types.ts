@@ -45,7 +45,6 @@ export type Lodging = {
   kind: LodgingKind;
   todo?: string;
   address?: string;
-  lngLat?: LngLat;
 };
 
 export type PracticalItem = {
@@ -53,25 +52,14 @@ export type PracticalItem = {
   todo?: boolean;
 };
 
-export type MapFrame = {
-  bounds: [number, number, number, number];
-  zoom?: number;
-  bearing?: number;
-  pitch?: number;
-};
-
 export type Day = {
   id: number;
   isoDate: string;
   weekday: string;
-  weekdayInitial: string;
   monthDay: string;
   stripLabel: string;
   title: string;
   summary: string;
-  isHikeDay: boolean;
-  act: 1 | 2 | 3;
-  mapFrame: MapFrame;
   timeline: TimelineItem[];
   lodging: Lodging;
   practical: PracticalItem[];

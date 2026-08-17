@@ -2,7 +2,6 @@
 
 import {
   AttributionControl,
-  LngLat as MapLngLat,
   Map as MapLibreMap,
   Marker,
   setWorkerUrl,
@@ -22,12 +21,11 @@ import {
   stopClusters,
   unresolvedPoint,
 } from "@/data/route";
-import type { MapFrame, OvernightStop, StopCluster } from "@/data/types";
+import type { OvernightStop, StopCluster } from "@/data/types";
 import { loadPaperStyle } from "@/lib/basemap-style";
 import {
   along,
   bearingBetween,
-  centerOfBounds,
   formatLngLat,
   pointsAlong,
   sliceLine,
@@ -51,6 +49,17 @@ type Props = {
 
 const MAX_FRAME_ZOOM = 14.6;
 
+/** Below these deltas a camera move is sub-pixel, so the jump is skipped. */
+const CAMERA_EPSILON = { lngLat: 1e-6, zoom: 1e-4, angle: 1e-3 };
+
+type Camera = {
+  lng: number;
+  lat: number;
+  zoom: number;
+  bearing: number;
+  pitch: number;
+};
+
 function lineFeature(
   id: string,
   coordinates: LngLat[],
@@ -64,61 +73,17 @@ function lineFeature(
   };
 }
 
-function waitForSize(el: HTMLElement) {
+function waitForSize(el: HTMLElement, signal: { cancelled: boolean }) {
   if (el.clientWidth > 16 && el.clientHeight > 16) return Promise.resolve();
   return new Promise<void>((resolve) => {
     const observer = new ResizeObserver(() => {
-      if (el.clientWidth > 16 && el.clientHeight > 16) {
+      if (signal.cancelled || (el.clientWidth > 16 && el.clientHeight > 16)) {
         observer.disconnect();
         resolve();
       }
     });
     observer.observe(el);
   });
-}
-
-function cameraPadding(map: MapLibreMap) {
-  const height = Math.max(map.getContainer().clientHeight, 240);
-  const width = Math.max(map.getContainer().clientWidth, 240);
-  const top = Math.min(108, Math.round(height * 0.16));
-  const side = Math.min(28, Math.round(width * 0.07));
-  const bottom = Math.min(Math.round(height * 0.42), height - top - 96);
-  return {
-    top,
-    right: side,
-    bottom: Math.max(88, bottom),
-    left: side,
-  };
-}
-
-function cameraForFrame(
-  map: MapLibreMap,
-  bounds: MapFrame["bounds"],
-  pitch: number,
-  bearing: number,
-) {
-  const padding = cameraPadding(map);
-  const camera = map.cameraForBounds(bounds, {
-    padding,
-    bearing,
-    pitch,
-    maxZoom: MAX_FRAME_ZOOM,
-  });
-  if (!camera?.center) {
-    return {
-      center: centerOfBounds(bounds),
-      zoom: 7,
-      bearing,
-      pitch,
-    };
-  }
-  const ll = MapLngLat.convert(camera.center);
-  return {
-    center: [ll.lng, ll.lat] as LngLat,
-    zoom: Math.min(camera.zoom ?? 7, MAX_FRAME_ZOOM),
-    bearing,
-    pitch,
-  };
 }
 
 function pinElement(stop: OvernightStop) {
@@ -285,6 +250,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
     const lastTrailT = useRef(-1);
     const lastFlightKey = useRef("");
     const lastMarkerKey = useRef("");
+    const lastCamera = useRef<Camera | null>(null);
     const onReadyRef = useRef(onReady);
     const applyViewRef = useRef<(view: JourneyView) => void>(() => {});
     onReadyRef.current = onReady;
@@ -433,6 +399,36 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
       }
     }
 
+    function applyCamera(view: JourneyView) {
+      const map = mapRef.current;
+      if (!map) return;
+      const zoom = Math.min(view.zoom, MAX_FRAME_ZOOM + 1.2);
+      const last = lastCamera.current;
+      if (
+        last &&
+        Math.abs(last.lng - view.center[0]) < CAMERA_EPSILON.lngLat &&
+        Math.abs(last.lat - view.center[1]) < CAMERA_EPSILON.lngLat &&
+        Math.abs(last.zoom - zoom) < CAMERA_EPSILON.zoom &&
+        Math.abs(last.bearing - view.bearing) < CAMERA_EPSILON.angle &&
+        Math.abs(last.pitch - view.pitch) < CAMERA_EPSILON.angle
+      ) {
+        return;
+      }
+      lastCamera.current = {
+        lng: view.center[0],
+        lat: view.center[1],
+        zoom,
+        bearing: view.bearing,
+        pitch: view.pitch,
+      };
+      map.jumpTo({
+        center: view.center,
+        zoom,
+        bearing: view.bearing,
+        pitch: view.pitch,
+      });
+    }
+
     function applyView(view: JourneyView) {
       const map = mapRef.current;
       if (!map || !readyRef.current) {
@@ -440,25 +436,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         return;
       }
 
-      const pitch = view.pitch;
-      const bearing = view.bearing;
-      if (view.center && view.zoom != null) {
-        map.jumpTo({
-          center: view.center,
-          zoom: Math.min(view.zoom, MAX_FRAME_ZOOM + 1.2),
-          bearing,
-          pitch,
-        });
-      } else {
-        const next = cameraForFrame(map, view.bounds, pitch, bearing);
-        map.jumpTo({
-          center: next.center,
-          zoom: next.zoom,
-          bearing: next.bearing,
-          pitch: next.pitch,
-        });
-      }
-
+      applyCamera(view);
       applyTrail(view);
       applyFlight(view);
       applyMarkers(view);
@@ -473,19 +451,19 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
     useEffect(() => {
       const node = containerRef.current;
       if (!node) return;
-      let cancelled = false;
+      const signal = { cancelled: false };
       let map: MapLibreMap | null = null;
       let observer: ResizeObserver | undefined;
 
       async function init() {
         const start = containerRef.current;
         if (!start) return;
-        await waitForSize(start);
+        await waitForSize(start, signal);
         const mount = containerRef.current;
-        if (cancelled || !mount) return;
+        if (signal.cancelled || !mount) return;
 
         const paper = await loadPaperStyle();
-        if (cancelled) return;
+        if (signal.cancelled) return;
         map = new MapLibreMap({
           container: mount,
           style: paper,
@@ -516,7 +494,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
 
         let finished = false;
         const finishReady = () => {
-          if (!map || cancelled || finished) return;
+          if (!map || signal.cancelled || finished) return;
           finished = true;
           addRouteLayers(map);
           map.resize();
@@ -595,7 +573,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
       void init();
 
       return () => {
-        cancelled = true;
+        signal.cancelled = true;
         observer?.disconnect();
         markersRef.current.forEach((marker) => marker.remove());
         markersRef.current = [];
@@ -608,6 +586,10 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         map?.remove();
         mapRef.current = null;
         readyRef.current = false;
+        lastCamera.current = null;
+        lastTrailT.current = -1;
+        lastFlightKey.current = "";
+        lastMarkerKey.current = "";
       };
     }, []);
 

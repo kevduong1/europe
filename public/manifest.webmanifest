@@ -3,7 +3,16 @@
   "short_name": "Europe 2026",
   "description": "Munich, Innsbruck, the Dolomites, Venice. Sept 5–14, 2026.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ],
   "background_color": "#FAF9F6",
   "theme_color": "#FAF9F6",
   "lang": "en"

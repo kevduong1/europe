@@ -6,6 +6,12 @@ const ALLOWED = new Set([
   "maplibre-gl-shared.mjs",
 ]);
 
+export function generateStaticParams() {
+  return [...ALLOWED].map((file) => ({ file }));
+}
+
+export const dynamicParams = false;
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ file: string }> },

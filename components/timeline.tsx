@@ -1,28 +1,30 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { Day, TimelineItem } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { HutGlyph, RouteGlyph } from "./icons";
 
-const BEAT_SPACE: Record<string, string> = {
-  "depart-mci": "min-h-[72dvh]",
-  "flight-out": "min-h-[220dvh]",
-  "arrive-muc": "min-h-[88dvh]",
-  "airport-train": "min-h-[150dvh]",
-  "check-in-wombat": "min-h-[72dvh]",
-  "open-munich": "min-h-[80dvh]",
-  eisbachwelle: "min-h-[92dvh]",
-  "leave-wombat": "min-h-[78dvh]",
-  "walk-hbf": "min-h-[88dvh]",
-  "train-munich-innsbruck": "min-h-[240dvh]",
-  "check-in-montagu": "min-h-[84dvh]",
-  "train-innsbruck-bolzano": "min-h-[190dvh]",
-  "bus-bolzano-ortisei": "min-h-[120dvh]",
-  "onto-the-trail": "min-h-[140dvh]",
-  "hike-resciesa-firenze": "min-h-[160dvh]",
-  "hike-firenze-puez": "min-h-[160dvh]",
-  "exit-tbd": "min-h-[110dvh]",
-  "open-venice": "min-h-[80dvh]",
-  "flight-home": "min-h-[180dvh]",
+const DEFAULT_BEAT_SPACE = 56;
+
+const BEAT_SPACE: Record<string, number> = {
+  "depart-mci": 72,
+  "flight-out": 220,
+  "arrive-muc": 88,
+  "airport-train": 150,
+  "check-in-wombat": 72,
+  "open-munich": 80,
+  eisbachwelle: 92,
+  "leave-wombat": 78,
+  "walk-hbf": 88,
+  "train-munich-innsbruck": 240,
+  "check-in-montagu": 84,
+  "train-innsbruck-bolzano": 190,
+  "bus-bolzano-ortisei": 120,
+  "onto-the-trail": 140,
+  "hike-resciesa-firenze": 160,
+  "hike-firenze-puez": 160,
+  "exit-tbd": 110,
+  "open-venice": 80,
+  "flight-home": 180,
 };
 
 function BeatMark({
@@ -114,12 +116,14 @@ function BeatBody({ item }: { item: TimelineItem }) {
 
 function BeatRow({
   beatId,
+  span,
   className,
   bodyClassName,
   mark,
   children,
 }: {
   beatId: string;
+  span?: number;
   className?: string;
   bodyClassName?: string;
   mark: ReactNode;
@@ -128,7 +132,12 @@ function BeatRow({
   return (
     <li
       data-beat={beatId}
-      className={cn("relative min-h-[56dvh] pb-10 last:pb-2", className)}
+      className={cn("beat-row relative pb-10 last:pb-2", className)}
+      style={
+        {
+          "--beat-span": `${span ?? DEFAULT_BEAT_SPACE}`,
+        } as CSSProperties
+      }
     >
       <div className="beat-head">
         <div className="flex gap-4">
@@ -157,7 +166,7 @@ export function Timeline({ day }: { day: Day }) {
         <BeatRow
           key={item.id}
           beatId={item.id}
-          className={BEAT_SPACE[item.id]}
+          span={BEAT_SPACE[item.id]}
           mark={<BeatMark item={item} day={day} />}
         >
           <BeatBody item={item} />
@@ -167,7 +176,8 @@ export function Timeline({ day }: { day: Day }) {
       {hideLodging ? null : (
         <BeatRow
           beatId={day.lodging.slug}
-          className={cn("pb-1 last:pb-1", BEAT_SPACE[day.lodging.slug])}
+          span={BEAT_SPACE[day.lodging.slug]}
+          className="pb-1 last:pb-1"
           bodyClassName="pt-1"
           mark={<BeatMark item={{ kind: "lodging" }} day={day} />}
         >

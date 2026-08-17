@@ -16,7 +16,7 @@ export function OverlaySection({
 }) {
   return (
     <section id={id} className={cn("relative flex flex-col", className)}>
-      <div className="overlay-panel mx-auto w-full max-w-[640px] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-2">
+      <div className="mx-auto w-full max-w-[640px] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-2">
         <div className="card-head pl-10">
           <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail-ink)]">
             {eyebrow}

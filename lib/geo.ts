@@ -85,41 +85,75 @@ export function densify(line: LngLat[], maxSegKm = 1.2): LngLat[] {
   return out;
 }
 
-export function lineLengthKm(line: LngLat[]): number {
+type LineMetrics = {
+  /** Cumulative distance in km from the line start to each vertex. */
+  cumulative: number[];
+  total: number;
+};
+
+/**
+ * Vertex distances are walked once per line and reused. The scroll loop calls
+ * `along`/`sliceLine`/`pointsAlong` many times per frame on the same handful of
+ * module-level route lines, so recomputing haversine per call is what makes the
+ * trail update quadratic.
+ */
+const lineMetrics = new WeakMap<LngLat[], LineMetrics>();
+
+function metricsFor(line: LngLat[]): LineMetrics {
+  const cached = lineMetrics.get(line);
+  if (cached) return cached;
+  const cumulative: number[] = [];
   let total = 0;
-  for (let i = 1; i < line.length; i += 1) {
-    total += haversineKm(line[i - 1], line[i]);
+  for (let i = 0; i < line.length; i += 1) {
+    if (i > 0) total += haversineKm(line[i - 1], line[i]);
+    cumulative.push(total);
   }
-  return total;
+  const metrics: LineMetrics = { cumulative, total };
+  lineMetrics.set(line, metrics);
+  return metrics;
+}
+
+export function lineLengthKm(line: LngLat[]): number {
+  return metricsFor(line).total;
+}
+
+/** Last vertex index whose cumulative distance is at or before `km`. */
+function vertexAt(cumulative: number[], km: number): number {
+  let lo = 0;
+  let hi = cumulative.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (cumulative[mid] <= km) lo = mid;
+    else hi = mid - 1;
+  }
+  return lo;
 }
 
 export function along(line: LngLat[], t: number): LngLat {
   if (line.length === 0) return [0, 0];
   if (line.length === 1 || t <= 0) return line[0];
   if (t >= 1) return line[line.length - 1];
-  const total = lineLengthKm(line);
-  let remaining = t * total;
-  for (let i = 1; i < line.length; i += 1) {
-    const seg = haversineKm(line[i - 1], line[i]);
-    if (seg === 0) continue;
-    if (remaining <= seg) return lerpLngLat(line[i - 1], line[i], remaining / seg);
-    remaining -= seg;
-  }
-  return line[line.length - 1];
+  const { cumulative, total } = metricsFor(line);
+  if (total === 0) return line[0];
+  const target = t * total;
+  const i = vertexAt(cumulative, target);
+  if (i >= line.length - 1) return line[line.length - 1];
+  const seg = cumulative[i + 1] - cumulative[i];
+  if (seg === 0) return line[i];
+  return lerpLngLat(line[i], line[i + 1], (target - cumulative[i]) / seg);
 }
 
 export function sliceLine(line: LngLat[], t0: number, t1: number): LngLat[] {
   const start = Math.min(t0, t1);
   const end = Math.max(t0, t1);
   const points: LngLat[] = [along(line, start)];
-  const total = lineLengthKm(line);
-  let acc = 0;
-  for (let i = 1; i < line.length; i += 1) {
-    const prev = acc;
-    acc += haversineKm(line[i - 1], line[i]);
-    const t = acc / total;
-    if (t > start && t < end) points.push(line[i]);
-    if (prev / total < end && t >= end) break;
+  const { cumulative, total } = metricsFor(line);
+  if (total > 0) {
+    for (let i = 1; i < line.length; i += 1) {
+      const t = cumulative[i] / total;
+      if (t >= end) break;
+      if (t > start) points.push(line[i]);
+    }
   }
   points.push(along(line, end));
   return points;
@@ -127,15 +161,14 @@ export function sliceLine(line: LngLat[], t0: number, t1: number): LngLat[] {
 
 export function nearestT(line: LngLat[], point: LngLat): number {
   if (line.length < 2) return 0;
-  const total = lineLengthKm(line);
+  const { cumulative, total } = metricsFor(line);
   if (total === 0) return 0;
   let bestD = Infinity;
   let bestT = 0;
-  let acc = 0;
   for (let i = 1; i < line.length; i += 1) {
     const a = line[i - 1];
     const b = line[i];
-    const seg = haversineKm(a, b);
+    const seg = cumulative[i] - cumulative[i - 1];
     const samples = 3;
     for (let s = 0; s <= samples; s += 1) {
       const u = s / samples;
@@ -143,18 +176,11 @@ export function nearestT(line: LngLat[], point: LngLat): number {
       const d = haversineKm(candidate, point);
       if (d < bestD) {
         bestD = d;
-        bestT = (acc + seg * u) / total;
+        bestT = (cumulative[i - 1] + seg * u) / total;
       }
     }
-    acc += seg;
   }
   return bestT;
-}
-
-export function centerOfBounds(
-  bounds: [number, number, number, number],
-): LngLat {
-  return [(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2];
 }
 
 export function formatLngLat([lng, lat]: LngLat) {
@@ -195,7 +221,7 @@ export function smoothstep(t: number) {
 
 export function pointsAlong(line: LngLat[], t: number, spacingKm: number): LngLat[] {
   if (line.length < 2 || t <= 0.0001) return [];
-  const total = lineLengthKm(line);
+  const { total } = metricsFor(line);
   if (total === 0) return [line[0]];
   const end = total * clamp(t);
   const points: LngLat[] = [];
