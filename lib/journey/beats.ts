@@ -44,7 +44,7 @@ import {
   usaDepartView,
 } from "./cameras";
 import { CLUSTERS } from "./clusters";
-import { mix, rideLine } from "./transitions";
+import { hikeLine, mix, rideLine } from "./transitions";
 import type { JourneyView } from "./types";
 
 /**
@@ -465,7 +465,7 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
         t,
       );
     case "onto-the-trail":
-      return rideLine(
+      return hikeLine(
         cityHold(CITY.dolomites, {
           dayId: 5,
           label: "Ortisei → Resciesa",
@@ -494,7 +494,7 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
     case "rifugio-resciesa":
       return resciesaHold();
     case "hike-resciesa-firenze":
-      return rideLine(
+      return hikeLine(
         cityHold(CITY.dolomites, {
           dayId: 6,
           label: "Resciesa → Firenze",
@@ -523,7 +523,7 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
     case "rifugio-firenze":
       return firenzeHold();
     case "hike-firenze-seceda":
-      return rideLine(
+      return hikeLine(
         firenzeHold(),
         pose({
           phase: "day",

@@ -96,3 +96,53 @@ export function rideLine(
     (t - ARRIVE) / (1 - ARRIVE),
   );
 }
+
+/**
+ * A close travel shot for walking legs. It keeps the authored zoom, pitch,
+ * and bearing, but moves the camera target with the hiker so the dot remains
+ * the subject instead of crossing a fixed regional frame.
+ */
+export function hikeLine(
+  from: JourneyView,
+  travel: JourneyView,
+  arrive: JourneyView,
+  line: LngLat[],
+  trailFrom: number,
+  trailTo: number,
+  t: number,
+): JourneyView {
+  const origin = along(line, 0);
+  if (t < DEPART) {
+    return mix(
+      from,
+      {
+        ...travel,
+        center: origin,
+        here: origin,
+        trailT: trailFrom,
+      },
+      t / DEPART,
+    );
+  }
+  if (t < ARRIVE) {
+    const u = smoothstep((t - DEPART) / (ARRIVE - DEPART));
+    const here = along(line, u);
+    return {
+      ...travel,
+      center: here,
+      here,
+      trailT: lerp(trailFrom, trailTo, u),
+    };
+  }
+  const destination = along(line, 1);
+  return mix(
+    {
+      ...travel,
+      center: destination,
+      here: destination,
+      trailT: trailTo,
+    },
+    arrive,
+    (t - ARRIVE) / (1 - ARRIVE),
+  );
+}

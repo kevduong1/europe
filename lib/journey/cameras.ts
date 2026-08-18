@@ -97,9 +97,13 @@ export const CITY = {
     pitch: 8,
     bearing: 12,
   },
-  /** Tight, pitched shot atop Seceda — the Odle ridge is the point of the stop. */
+  /**
+   * Tight, pitched shot across Seceda toward the Odle ridge. The camera target
+   * sits northeast of the summit so Seceda lands in the open right side of
+   * the frame instead of underneath the story and photo cards.
+   */
   seceda: {
-    center: [11.7257836, 46.6005922] as LngLat,
+    center: [11.7335, 46.6055] as LngLat,
     zoom: 14.28,
     pitch: 52,
     bearing: 104,
