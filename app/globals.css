@@ -546,6 +546,24 @@ a {
   transition: opacity 0.28s ease;
 }
 
+/*
+ * `!important` is load-bearing here: MapLibre's own Marker class re-writes
+ * `this._element.style.opacity` from its internal occlusion tracking on
+ * every camera move (see the comment on `applyMarkers` in journey-map.tsx),
+ * which would clobber a plain inline-opacity toggle a frame later. A class
+ * rule flagged `!important` is the one thing that wins over that unflagged
+ * inline write, so all marker show/hide goes through this class instead of
+ * `el.style.opacity`.
+ */
+.map-pin.is-hidden,
+.map-cluster.is-hidden,
+.map-unresolved.is-hidden,
+.map-here.is-hidden,
+.map-plane.is-hidden,
+.map-photo-pin.is-hidden {
+  opacity: 0 !important;
+}
+
 .map-pin {
   display: flex;
   align-items: flex-start;

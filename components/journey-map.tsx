@@ -405,6 +405,15 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
       setLineOpacity("route-flight", show ? 0.95 : 0);
     }
 
+    /**
+     * Marker visibility is toggled via the `is-hidden` class (globals.css,
+     * `opacity: 0 !important`), never by setting `el.style.opacity` directly.
+     * MapLibre's own `Marker` re-asserts `this._element.style.opacity` from
+     * its internal occlusion state on every "move"/"moveend" event — i.e.
+     * after every `map.jumpTo()` below — which would silently clobber a
+     * plain inline-opacity toggle back to "1" a frame later. `!important`
+     * on a class rule beats that unflagged inline write.
+     */
     function applyMarkers(view: JourneyView) {
       const map = mapRef.current;
       const markerKey = `${view.phase}|${view.dayId}|${view.expandedClusterIds.join(",")}|${view.visitedClusterIds.join(",")}|${view.flightLeg}|${view.focusStopId}|${view.flightT < 0.28}|${view.flightT > 0.72}`;
@@ -424,7 +433,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           const visible =
             view.phase === "overview" ||
             (view.phase === "day" && !expanded && !visited);
-          marker.getElement().style.opacity = visible ? "1" : "0";
+          marker.getElement().classList.toggle("is-hidden", !visible);
         }
 
         for (const marker of markersRef.current) {
@@ -463,7 +472,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
 
           el.classList.toggle("map-pin-visited", visitedLook);
           el.classList.toggle("map-pin-active", view.focusStopId === stopId);
-          el.style.opacity = visible ? "1" : "0";
+          el.classList.toggle("is-hidden", !visible);
         }
 
         photoMarkersRef.current.forEach((marker, index) => {
@@ -479,7 +488,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
             (focusTarget
               ? view.focusStopId === focusTarget
               : pin.days.includes(view.dayId ?? -1));
-          el.style.opacity = visible ? "1" : "0";
+          el.classList.toggle("is-hidden", !visible);
         });
       }
 
@@ -490,13 +499,15 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           : null);
       const onPlane = Boolean(view.showFlight);
       if (hereRef.current) {
-        hereRef.current.getElement().style.opacity = herePos && !onPlane ? "1" : "0";
+        hereRef.current
+          .getElement()
+          .classList.toggle("is-hidden", !(herePos && !onPlane));
         if (herePos && !onPlane) {
           hereRef.current.setLngLat(herePos);
         }
       }
       if (planeRef.current) {
-        planeRef.current.getElement().style.opacity = onPlane ? "1" : "0";
+        planeRef.current.getElement().classList.toggle("is-hidden", !onPlane);
         if (onPlane) {
           const line = view.flightLeg === "home" ? flightHome : flightOut;
           const t = Math.max(0.004, view.flightT);
@@ -653,7 +664,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
               })
                 .setLngLat(pin.lngLat)
                 .addTo(map);
-              marker.getElement().style.opacity = "0";
+              marker.getElement().classList.add("is-hidden");
               photoMarkersRef.current.push(marker);
             }
 
@@ -668,8 +679,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
             );
 
             const hereEl = document.createElement("div");
-            hereEl.className = "map-here";
-            hereEl.style.opacity = "0";
+            hereEl.className = "map-here is-hidden";
             hereRef.current = new Marker({
               element: hereEl,
               anchor: "center",
@@ -679,7 +689,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
               .addTo(map);
 
             const planeEl = planeElement();
-            planeEl.style.opacity = "0";
+            planeEl.classList.add("is-hidden");
             planeRef.current = new Marker({
               element: planeEl,
               anchor: "center",

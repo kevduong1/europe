@@ -22,5 +22,17 @@
     "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Bayreuth2009\" title=\"User:Bayreuth2009\">Bayreuth2009</a>",
     "license": "CC BY 3.0",
     "url": "https://commons.wikimedia.org/wiki/File:M%C3%BCnchen,_Hofbr%C3%A4uhaus_am_Platzl_01.jpg"
+  },
+  "ortisei.jpg": {
+    "title": "File:Pfarrkirche St Ulrich in Gröden Ostansicht.jpg",
+    "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Moroder\" title=\"User:Moroder\">Wolfgang Moroder</a>",
+    "license": "CC BY-SA 3.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Pfarrkirche_St_Ulrich_in_Gr%C3%B6den_Ostansicht.jpg"
+  },
+  "firenze.jpg": {
+    "title": "File:Rifugio Firenze.jpg",
+    "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Nimue\" title=\"User:Nimue\">Nimue</a>",
+    "license": "CC BY-SA 3.0",
+    "url": "https://commons.wikimedia.org/wiki/File:Rifugio_Firenze.jpg"
   }
 }
