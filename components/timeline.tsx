@@ -1,6 +1,4 @@
-import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
-import { secedaGallery, wombatGallery } from "@/data/photos";
 import type { Day, TimelineItem } from "@/data/types";
 import { BEAT_SPACE, DEFAULT_BEAT_SPACE } from "@/lib/journey/pacing";
 import { cn } from "@/lib/utils";
@@ -75,55 +73,6 @@ function BeatBody({ item }: { item: TimelineItem }) {
           <p className="overlay-type mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
             {item.note}
           </p>
-        ) : null}
-        {item.id === "check-in-wombat" ? (
-          <div className="place-gallery mt-5" aria-label="Photos of Wombat's City Hostel Munich Hauptbahnhof">
-            {wombatGallery.map((photo, index) => (
-              <figure key={photo.src} className="place-gallery-card">
-                <Image
-                  className="place-gallery-image"
-                  src={photo.src}
-                  alt={photo.alt}
-                  width={photo.width}
-                  height={photo.height}
-                  sizes="(max-width: 640px) 88vw, 620px"
-                  loading={index === 0 ? "eager" : "lazy"}
-                />
-                <figcaption className="place-gallery-caption">
-                  <span>{photo.caption}</span>
-                  <a href={photo.sourceUrl} target="_blank" rel="noreferrer">
-                    {photo.credit}
-                  </a>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        ) : null}
-        {item.id === "seceda-summit" ? (
-          <div
-            className="seceda-gallery mt-4"
-            aria-label="Photos from Seceda"
-          >
-            {secedaGallery.map((photo, index) => (
-              <figure key={photo.src} className="seceda-gallery-card">
-                <Image
-                  className="seceda-gallery-image"
-                  src={photo.src}
-                  alt={photo.alt}
-                  width={photo.width}
-                  height={photo.height}
-                  sizes="(max-width: 640px) 72vw, 360px"
-                  loading={index === 0 ? "eager" : "lazy"}
-                />
-                <figcaption className="seceda-gallery-caption">
-                  <span>{photo.caption}</span>
-                  <a href={photo.sourceUrl} target="_blank" rel="noreferrer">
-                    {photo.credit}
-                  </a>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
         ) : null}
       </>
     );

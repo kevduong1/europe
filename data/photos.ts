@@ -37,6 +37,18 @@ export const photos = {
     alt: "The green Seceda ridge leading toward the jagged Odle peaks under summer clouds.",
     credit: "Luigi Rossini · Wikimedia Commons",
   },
+  secedaPanorama: {
+    src: "/photos/seceda-panorama.jpg",
+    pinSrc: "/photos/seceda-panorama.jpg",
+    alt: "A wide summer panorama across the green Seceda plateau and surrounding Dolomites.",
+    credit: "Jaromír Kavan · Wikimedia Commons",
+  },
+  secedaApproach: {
+    src: "/photos/seceda-approach.jpg",
+    pinSrc: "/photos/seceda-approach.jpg",
+    alt: "The wooded and grassy approach to Seceda above Val Gardena.",
+    credit: "Syrio · Wikimedia Commons",
+  },
   venice: {
     src: "/photos/venice.jpg",
     pinSrc: "/photos/pins/venice.jpg",
@@ -98,77 +110,3 @@ export const photos = {
     credit: "Derbrauni · Wikimedia Commons",
   },
 } as const satisfies Record<string, Photo>;
-
-export type GalleryPhoto = {
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
-  caption: string;
-  credit: string;
-  sourceUrl: string;
-};
-
-export const secedaGallery = [
-  {
-    src: "/photos/seceda-clouds.jpg",
-    alt: "The green Seceda ridge leading toward the jagged Odle peaks under summer clouds.",
-    width: 1600,
-    height: 1067,
-    caption: "The Odle ridge from Seceda",
-    credit: "Luigi Rossini · CC BY-SA 4.0",
-    sourceUrl: "https://commons.wikimedia.org/wiki/File:Seceda_e_nuvole.jpg",
-  },
-  {
-    src: "/photos/seceda-panorama.jpg",
-    alt: "A wide summer panorama across the green Seceda plateau and surrounding Dolomites.",
-    width: 1800,
-    height: 500,
-    caption: "Across the Seceda plateau",
-    credit: "Jaromír Kavan · CC0",
-    sourceUrl:
-      "https://commons.wikimedia.org/wiki/File:Seceda_2.518_(Panorama)_(Unsplash).jpg",
-  },
-  {
-    src: "/photos/seceda-approach.jpg",
-    alt: "The wooded and grassy approach to Seceda above Val Gardena.",
-    width: 1600,
-    height: 1200,
-    caption: "The approach above Val Gardena",
-    credit: "Syrio · CC BY-SA 4.0",
-    sourceUrl: "https://commons.wikimedia.org/wiki/File:Seceda_01.jpg",
-  },
-] as const satisfies readonly GalleryPhoto[];
-
-export const wombatGallery = [
-  {
-    src: photos.wombatExterior.src,
-    alt: photos.wombatExterior.alt,
-    width: 1803,
-    height: 1200,
-    caption: "The front door on Senefelderstrasse",
-    credit: photos.wombatExterior.credit,
-    sourceUrl:
-      "https://www.wombats-hostels.com/munich/hauptbahnhof/service/wombats-munich-hauptbahnhof-gallery/detail/architecture-munich-hauptbahnhof",
-  },
-  {
-    src: photos.wombatCourtyard.src,
-    alt: photos.wombatCourtyard.alt,
-    width: 1799,
-    height: 1200,
-    caption: "The glass-roofed courtyard",
-    credit: photos.wombatCourtyard.credit,
-    sourceUrl:
-      "https://www.wombats-hostels.com/munich/hauptbahnhof/service/wombats-munich-hauptbahnhof-gallery/detail/architecture-munich-hauptbahnhof",
-  },
-  {
-    src: photos.wombatDorm.src,
-    alt: photos.wombatDorm.alt,
-    width: 1800,
-    height: 1200,
-    caption: "Curtained bunks and in-room lockers",
-    credit: photos.wombatDorm.credit,
-    sourceUrl:
-      "https://www.wombats-hostels.com/munich/hauptbahnhof/service/wombats-munich-hauptbahnhof-gallery/detail/dorms-munich-hauptbahnhof",
-  },
-] as const satisfies readonly GalleryPhoto[];

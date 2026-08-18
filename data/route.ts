@@ -579,9 +579,13 @@ export const photoPins: PhotoPin[] = [
     id: "seceda",
     lngLat: SECEDA,
     photo: photos.seceda,
+    secondaryPhoto: photos.secedaPanorama,
+    additionalPhotos: [photos.secedaApproach],
     caption: "The Odle peaks from Seceda",
     days: [7],
     clusterId: "dolomites",
+    variant: "stack",
+    offset: [-46, -18],
   },
   {
     id: "qc-terme",

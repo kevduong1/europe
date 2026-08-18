@@ -396,140 +396,6 @@ a {
   view-timeline-name: --beat-entry;
 }
 
-.seceda-gallery {
-  display: grid;
-  width: min(100%, 520px);
-  grid-auto-columns: min(78%, 360px);
-  grid-auto-flow: column;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 2px 3px 8px;
-  scroll-padding-inline: 3px;
-  scroll-snap-type: x mandatory;
-  scrollbar-color: color-mix(in srgb, var(--trail) 55%, transparent) transparent;
-  scrollbar-width: thin;
-}
-
-.seceda-gallery-card {
-  overflow: hidden;
-  border: 3px solid color-mix(in srgb, var(--paper) 94%, transparent);
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--paper) 92%, transparent);
-  box-shadow: 0 3px 14px color-mix(in srgb, var(--ink) 20%, transparent);
-  scroll-snap-align: start;
-}
-
-.seceda-gallery-image {
-  display: block;
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-
-.seceda-gallery-caption {
-  display: flex;
-  min-width: 0;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 5px 7px 6px;
-  font-family: var(--font-mono);
-  font-size: 8px;
-  line-height: 1.35;
-  letter-spacing: 0.03em;
-  color: var(--dolomite);
-}
-
-.seceda-gallery-caption span {
-  overflow: hidden;
-  color: var(--ink);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.seceda-gallery-caption a {
-  flex: none;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-@media (max-width: 520px) {
-  .seceda-gallery {
-    grid-auto-columns: 82%;
-  }
-
-  .seceda-gallery-image {
-    height: 128px;
-  }
-
-  .seceda-gallery-caption {
-    display: block;
-  }
-
-  .seceda-gallery-caption a {
-    display: block;
-    margin-top: 2px;
-  }
-}
-
-.place-gallery {
-  display: grid;
-  width: min(92vw, 720px);
-  grid-auto-columns: min(88vw, 620px);
-  grid-auto-flow: column;
-  gap: 16px;
-  overflow-x: auto;
-  padding: 4px 5px 14px;
-  scroll-padding-inline: 5px;
-  scroll-snap-type: x mandatory;
-  scrollbar-color: color-mix(in srgb, var(--trail) 60%, transparent) transparent;
-  scrollbar-width: thin;
-}
-
-.place-gallery-card {
-  overflow: hidden;
-  border: 5px solid color-mix(in srgb, var(--paper) 96%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--paper) 94%, transparent);
-  box-shadow: 0 8px 28px color-mix(in srgb, var(--ink) 25%, transparent);
-  scroll-snap-align: start;
-}
-
-.place-gallery-image {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 3 / 2;
-  object-fit: cover;
-}
-
-.place-gallery-caption {
-  display: flex;
-  min-width: 0;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 9px 11px 10px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  line-height: 1.4;
-  letter-spacing: 0.03em;
-  color: var(--dolomite);
-}
-
-.place-gallery-caption span {
-  overflow: hidden;
-  color: var(--ink);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.place-gallery-caption a {
-  flex: none;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 .essentials-row {
   min-height: 48vh;
   min-height: 48svh;
@@ -678,7 +544,7 @@ a {
 }
 
 .map-photo-pin-frame + .map-photo-pin-frame {
-  margin-left: -8px;
+  margin-left: -12px;
   transform: translateY(3px) rotate(2.5deg);
 }
 
@@ -700,27 +566,6 @@ a {
   opacity: 0 !important;
 }
 
-@media (max-width: 520px) {
-  .place-gallery {
-    width: min(92vw, 430px);
-    grid-auto-columns: min(86vw, 390px);
-  }
-
-  .place-gallery-card {
-    border-width: 4px;
-  }
-
-  .place-gallery-caption {
-    display: block;
-    padding: 7px 9px 8px;
-    font-size: 9px;
-  }
-
-  .place-gallery-caption a {
-    display: block;
-    margin-top: 2px;
-  }
-}
 .map-pin {
   display: flex;
   align-items: flex-start;
@@ -840,7 +685,7 @@ a {
 }
 
 /*
- * A photo pinned to a spot on the map: a square thumbnail in a paper frame,
+ * A photo pinned to a spot on the map: a substantial square print in a paper frame,
  * a mono caption pill, and a thin trail-coloured stem running down to a dot
  * at the exact coordinate — the same dot-on-a-point language as .map-pin,
  * just with a picture floated above it instead of a text label beside it.
@@ -857,10 +702,10 @@ a {
 .map-photo-pin-frame {
   display: block;
   overflow: hidden;
-  width: 56px;
-  height: 56px;
-  padding: 3px;
-  border-radius: 5px;
+  width: 82px;
+  height: 82px;
+  padding: 4px;
+  border-radius: 6px;
   background: var(--paper);
   box-shadow:
     0 0 0 1.5px color-mix(in srgb, var(--trail) 55%, var(--ink) 10%),
@@ -887,10 +732,10 @@ a {
 }
 
 .map-photo-pin-caption {
-  max-width: 92px;
+  max-width: 132px;
   overflow: hidden;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   text-align: center;
@@ -904,21 +749,20 @@ a {
 
 .map-photo-pin-stem {
   width: 2px;
-  height: 8px;
+  height: 10px;
   background: var(--trail);
 }
 
 .map-photo-pin-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   margin-top: -1px;
   border-radius: 50%;
   background: var(--trail);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--paper) 82%, transparent);
 }
 
-/* The Wombat close-up gets three substantial overlapping prints; the rest of
-   the map keeps the compact thumbnail treatment above. */
+/* Featured Munich and Seceda moments get three overlapping landscape prints. */
 .map-photo-pin-stack {
   gap: 4px;
   transition: opacity 0.38s ease;
@@ -927,19 +771,19 @@ a {
 .map-photo-pin-stack .map-photo-pin-gallery {
   position: relative;
   display: block;
-  width: 340px;
-  height: 205px;
+  width: 400px;
+  height: 244px;
 }
 
 .map-photo-pin-stack .map-photo-pin-frame {
   position: absolute;
-  left: 58px;
-  top: 20px;
-  width: 224px;
-  height: 150px;
+  left: 68px;
+  top: 22px;
+  width: 264px;
+  height: 176px;
   margin-left: 0;
-  padding: 5px;
-  border-radius: 7px;
+  padding: 6px;
+  border-radius: 8px;
   box-shadow:
     0 0 0 1.5px color-mix(in srgb, var(--trail) 48%, var(--ink) 10%),
     0 9px 24px color-mix(in srgb, var(--ink) 34%, transparent);
@@ -952,7 +796,7 @@ a {
 
 .map-photo-pin-stack .map-photo-pin-frame:nth-child(2) {
   left: 4px;
-  top: 40px;
+  top: 48px;
   z-index: 2;
   transform: rotate(-9deg);
 }
@@ -960,36 +804,35 @@ a {
 .map-photo-pin-stack .map-photo-pin-frame:nth-child(3) {
   right: 4px;
   left: auto;
-  top: 46px;
+  top: 56px;
   z-index: 1;
   transform: rotate(8deg);
 }
 
 .map-photo-pin-stack .map-photo-pin-caption {
-  max-width: 280px;
-  padding: 2px 8px 3px;
-  font-size: 10px;
+  max-width: 330px;
+  padding: 2px 9px 3px;
+  font-size: 11px;
   letter-spacing: 0.07em;
 }
 
 .map-photo-pin-stack .map-photo-pin-stem {
-  height: 10px;
+  height: 12px;
 }
 
 .map-photo-pin-stack .map-photo-pin-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   margin-top: -2px;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--paper) 82%, transparent);
 }
 
-/* Narrow phones: up to five of these can be in play around Val Gardena — shrink the
-   frame and drop the caption rather than let square photos with text crowd the frame. */
+/* Narrow phones keep the map legible while preserving the larger-photo treatment. */
 @media (max-width: 520px) {
   .map-photo-pin-frame {
-    width: 38px;
-    height: 38px;
-    padding: 2px;
+    width: 56px;
+    height: 56px;
+    padding: 3px;
   }
 
   .map-photo-pin-caption {
@@ -997,26 +840,26 @@ a {
   }
 
   .map-photo-pin-stack .map-photo-pin-gallery {
-    width: 260px;
-    height: 158px;
+    width: 310px;
+    height: 188px;
   }
 
   .map-photo-pin-stack .map-photo-pin-frame {
-    left: 46px;
-    top: 16px;
-    width: 168px;
-    height: 112px;
+    left: 55px;
+    top: 18px;
+    width: 200px;
+    height: 134px;
     padding: 4px;
   }
 
   .map-photo-pin-stack .map-photo-pin-frame:nth-child(2) {
     left: 3px;
-    top: 31px;
+    top: 37px;
   }
 
   .map-photo-pin-stack .map-photo-pin-frame:nth-child(3) {
     right: 3px;
-    top: 35px;
+    top: 42px;
   }
 
   .map-photo-pin-stack .map-photo-pin-caption {

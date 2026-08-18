@@ -193,7 +193,7 @@ function photoPinElement(pin: PhotoPin) {
       ? photos
           .map(
             (photo) =>
-              `<span class="map-photo-pin-frame"><img class="map-photo-pin-img" src="${pin.variant === "stack" ? photo.src : photo.pinSrc}" alt="${photo.alt.replace(/"/g, "&quot;")}" width="${pin.variant === "stack" ? 448 : 64}" height="${pin.variant === "stack" ? 300 : 64}" loading="lazy" decoding="async" /></span>`,
+              `<span class="map-photo-pin-frame"><img class="map-photo-pin-img" src="${pin.variant === "stack" ? photo.src : photo.pinSrc}" alt="${photo.alt.replace(/"/g, "&quot;")}" width="${pin.variant === "stack" ? 528 : 128}" height="${pin.variant === "stack" ? 352 : 128}" loading="lazy" decoding="async" /></span>`,
           )
           .join("")
       : `<span class="map-photo-pin-frame"><span class="map-photo-pin-empty" aria-hidden="true">${PHOTO_PLACEHOLDER_ICON}</span></span>`;
@@ -811,11 +811,14 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
                 element: photoPinElement(pin),
                 anchor: "bottom",
                 // Bottom anchoring places the dot's lower edge on the point;
-                // move it down by half its 6px height to center it precisely,
+                // move it down by half its rendered height to center it precisely,
                 // while retaining per-landmark separation for nearby photos.
                 offset: pin.offset
-                  ? [pin.offset[0], pin.offset[1] + 3]
-                  : [0, 3],
+                  ? [
+                      pin.offset[0],
+                      pin.offset[1] + (pin.variant === "stack" ? 5 : 4),
+                    ]
+                  : [0, pin.variant === "stack" ? 5 : 4],
                 ...MARKER_OPTS,
               })
                 .setLngLat(pin.lngLat)
