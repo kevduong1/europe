@@ -47,13 +47,26 @@ import { CLUSTERS } from "./clusters";
 import { hikeLine, mix, rideLine } from "./transitions";
 import type { JourneyView } from "./types";
 
-function wombatClose(dayId: number, label: string): JourneyView {
+const WOMBAT_CLOSE_ZOOM = 15.08;
+const WOMBAT_CLOSE_PITCH = 32;
+/** Bearing at the end of the hostel orbit, so leave-wombat can pick up cleanly. */
+const WOMBAT_ORBIT_END = 86;
+/** Englischer Garten walk eases toward this heading; Hofbräuhaus picks it up. */
+const GARDEN_ORBIT_END = 18;
+/** Extra turn after the Hofbräuhaus zoom settles; day 3's hostel beat starts here. */
+const HOFBRAUHAUS_ORBIT_END = CITY.hofbrauhaus.bearing + 32;
+
+function wombatClose(
+  dayId: number,
+  label: string,
+  extras: { bearing?: number; pitch?: number; zoom?: number } = {},
+): JourneyView {
   return pose({
     phase: "day",
     center: WOMBAT,
-    zoom: 15.25,
-    pitch: 34,
-    bearing: 58,
+    zoom: extras.zoom ?? WOMBAT_CLOSE_ZOOM,
+    pitch: extras.pitch ?? WOMBAT_CLOSE_PITCH,
+    bearing: extras.bearing ?? WOMBAT_ORBIT_END,
     showFlight: false,
     flightT: 0,
     flightLeg: null,
@@ -67,7 +80,11 @@ function wombatClose(dayId: number, label: string): JourneyView {
   });
 }
 
-/** Zoom and orbit in, hold on the hostel photos, then return to the city. */
+/**
+ * Zoom and orbit onto the hostel photos. Arrival follows the walk from Hbf
+ * first; the close shot then holds and keeps rotating. Pulling back to the
+ * city is a later beat — doing it here fought the day handoff.
+ */
 function wombatMoment(
   dayId: number,
   label: string,
@@ -75,35 +92,64 @@ function wombatMoment(
   arriving = false,
 ): JourneyView {
   const u = clamp(t);
-  const approach = smoothstep(clamp(u / 0.2));
-  const here = arriving ? along(walkWombatHbf, 1 - approach) : WOMBAT;
-  const wide = munichStay(dayId, label, {
-    here,
-    focusStopId: null,
-    focus: here,
-    amount: arriving ? lerp(0.12, 0.2, approach) : 0,
-  });
-  const close = wombatClose(dayId, label);
-  let view: JourneyView;
 
-  if (u < 0.36) {
-    view = mix(wide, close, clamp((u - 0.08) / 0.28));
-  } else if (u < 0.7) {
-    view = close;
-  } else {
-    view = mix(
-      close,
-      munichStay(dayId, "Munich", {
-        here: WOMBAT,
-        focusStopId: null,
-      }),
-      (u - 0.7) / 0.3,
-    );
+  if (arriving) {
+    const walkT = smoothstep(clamp(u / 0.22));
+    const settle = smoothstep(clamp((u - 0.14) / 0.5));
+    const here = walkT >= 0.999 ? WOMBAT : along(walkWombatHbf, 1 - walkT);
+    return pose({
+      phase: "day",
+      center: lerpLngLat(CITY.munich.center, WOMBAT, lerp(0.16, 1, settle)),
+      zoom: lerp(CITY.munich.zoom + 0.18, WOMBAT_CLOSE_ZOOM, settle),
+      pitch: lerp(CITY.munich.pitch, WOMBAT_CLOSE_PITCH, settle),
+      bearing: lerpBearing(CITY.munich.bearing, lerp(16, WOMBAT_ORBIT_END, smoothstep(u)), settle),
+      showFlight: false,
+      flightT: 0,
+      flightLeg: null,
+      trailT: 0,
+      dayId,
+      label,
+      here,
+      focusStopId: settle > 0.16 ? "wombat" : null,
+      localRouteId: "hbf-wombat",
+      localRouteT: walkT,
+      expandedClusterIds: CLUSTERS.munich,
+      visitedClusterIds: CLUSTERS.none,
+    });
   }
 
-  return arriving
-    ? { ...view, localRouteId: "hbf-wombat", localRouteT: approach }
-    : view;
+  // Day 2 night is already at the hostel. Day 3 night comes back across
+  // the city from the Hofbräuhaus close-up.
+  const fromHofbrau = dayId >= 3;
+  const settle = smoothstep(clamp(u / (fromHofbrau ? 0.48 : 0.22)));
+  const start = fromHofbrau
+    ? CITY.hofbrauhaus
+    : {
+        center: WOMBAT,
+        zoom: WOMBAT_CLOSE_ZOOM,
+        pitch: WOMBAT_CLOSE_PITCH,
+        bearing: WOMBAT_ORBIT_END,
+      };
+
+  return pose({
+    phase: "day",
+    center: lerpLngLat(start.center, WOMBAT, fromHofbrau ? settle : 1),
+    zoom: lerp(start.zoom, WOMBAT_CLOSE_ZOOM, fromHofbrau ? settle : 1),
+    pitch: lerp(start.pitch, WOMBAT_CLOSE_PITCH, fromHofbrau ? settle : 1),
+    bearing: fromHofbrau
+      ? lerpBearing(HOFBRAUHAUS_ORBIT_END, WOMBAT_ORBIT_END, settle)
+      : WOMBAT_ORBIT_END,
+    showFlight: false,
+    flightT: 0,
+    flightLeg: null,
+    trailT: 0,
+    dayId,
+    label,
+    here: lerpLngLat(fromHofbrau ? HOFBRAUHAUS : WOMBAT, WOMBAT, settle),
+    focusStopId: !fromHofbrau || settle > 0.22 ? "wombat" : "hofbrauhaus",
+    expandedClusterIds: CLUSTERS.munich,
+    visitedClusterIds: CLUSTERS.none,
+  });
 }
 
 /**
@@ -320,25 +366,31 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
         0,
         t,
       );
+      const orbit = smoothstep(clamp(t));
       return {
         ...view,
+        bearing: lerpBearing(view.bearing, GARDEN_ORBIT_END, orbit),
         focusStopId: "english-garden",
         localRouteId: "english-garden",
         localRouteT: smoothstep(clamp((t - 0.06) / 0.8)),
       };
     }
     case "hofbrauhaus": {
-      // First finish the actual walk from the lake into the old town. Then
-      // give the showpiece a long, independent orbit rather than tying the
-      // bearing to the short arrival transition.
+      // Walk into the old town, then keep orbiting after the zoom settles
+      // so the two Hofbräuhaus prints read as separate pins on the ground.
       const routeT = smoothstep(clamp(t / 0.22));
-      const u = smoothstep(clamp((t - 0.08) / 0.7));
+      const zoomT = smoothstep(clamp((t - 0.08) / 0.5));
+      const orbitT = smoothstep(clamp((t - 0.16) / 0.78));
       return pose({
         phase: "day",
-        center: lerpLngLat(CITY.munich.center, CITY.hofbrauhaus.center, u),
-        zoom: lerp(CITY.munich.zoom, CITY.hofbrauhaus.zoom, u),
-        pitch: lerp(CITY.munich.pitch, CITY.hofbrauhaus.pitch, u),
-        bearing: lerpBearing(CITY.munich.bearing, CITY.hofbrauhaus.bearing, u),
+        center: lerpLngLat(CITY.munich.center, CITY.hofbrauhaus.center, zoomT),
+        zoom: lerp(CITY.munich.zoom, CITY.hofbrauhaus.zoom, zoomT),
+        pitch: lerp(CITY.munich.pitch, CITY.hofbrauhaus.pitch, zoomT),
+        bearing: lerpBearing(
+          GARDEN_ORBIT_END,
+          lerp(CITY.hofbrauhaus.bearing, HOFBRAUHAUS_ORBIT_END, orbitT),
+          zoomT,
+        ),
         showFlight: false,
         flightT: 0,
         flightLeg: null,
@@ -349,7 +401,7 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
           routeT >= 0.999
             ? HOFBRAUHAUS
             : along(walkGardenHofbrauhaus, routeT),
-        focusStopId: u > 0.18 ? "hofbrauhaus" : null,
+        focusStopId: zoomT > 0.18 ? "hofbrauhaus" : null,
         localRouteId: "garden-hofbrauhaus",
         localRouteT: routeT,
         expandedClusterIds: CLUSTERS.munich,
@@ -357,12 +409,12 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
       });
     }
     case "leave-wombat": {
-      const u = clamp((t - 0.38) / 0.5);
+      const u = clamp((t - 0.18) / 0.62);
       return mix(
-        wombatClose(4, "Leave Wombat"),
+        wombatClose(4, "Leave Wombat", { bearing: WOMBAT_ORBIT_END }),
         munichStay(4, "Walk to München Hbf", {
           here: WOMBAT,
-          focusStopId: null,
+          focusStopId: u < 0.35 ? "wombat" : null,
         }),
         u,
       );

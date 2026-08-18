@@ -163,6 +163,8 @@ export const FIRENZE: LngLat = [11.758318, 46.587434];
 export const SECEDA: LngLat = [11.7257836, 46.6005922];
 /** Eastern end of the walkable Seceda crest, beyond the summit viewpoint. */
 export const SECEDA_RIDGE_END: LngLat = [11.736028, 46.601322];
+/** Grassy shoulder just south of the summit — the approach photo. */
+export const SECEDA_APPROACH: LngLat = [11.726563, 46.594682];
 /** QC Terme Dolomiti, Pozza di Fassa — the spa, and the still-open Val di Fassa night. */
 export const QC_TERME: LngLat = [11.6889, 46.4283];
 /** Venezia Santa Lucia — the trail's real endpoint, not the lagoon centroid. */
@@ -170,8 +172,14 @@ export const VENICE: LngLat = [12.3208, 45.4413];
 export const EISBACHWELLE: LngLat = [11.5877, 48.1435];
 /** Wombat's City Hostel Munich Hauptbahnhof, Senefelderstraße 1. */
 export const WOMBAT: LngLat = [11.5603286, 48.1389289];
+/** Indoor courtyard, a few metres north of the Senefelderstrasse door. */
+const WOMBAT_COURTYARD: LngLat = [11.56062, 48.13918];
+/** Dorm wing, just west of the entrance. */
+const WOMBAT_DORM: LngLat = [11.55995, 48.13872];
 export const MONTAGU: LngLat = [11.394, 47.267];
 export const HOFBRAUHAUS: LngLat = [11.5799788, 48.1376334];
+/** Schwemme interior, a few metres east of the Platzl facade. */
+const HOFBRAUHAUS_INTERIOR: LngLat = [11.58042, 48.13752];
 export const MONOPTEROS: LngLat = [11.5909208, 48.1498803];
 export const CHINESE_TOWER: LngLat = [11.5920973, 48.1525525];
 export const KLEINHESSELOHER_SEE: LngLat = [11.5961185, 48.1594065];
@@ -494,14 +502,36 @@ export const photoPins: PhotoPin[] = [
     id: "wombat",
     lngLat: WOMBAT,
     photo: photos.wombatExterior,
-    secondaryPhoto: photos.wombatCourtyard,
-    additionalPhotos: [photos.wombatDorm],
     caption: "Wombat's City Hostel",
     days: [2, 3, 4],
     clusterId: "munich",
     minZoom: 13,
-    variant: "stack",
-    offset: [0, -18],
+    offset: [6, -16],
+    tilt: -5,
+  },
+  {
+    id: "wombat-courtyard",
+    lngLat: WOMBAT_COURTYARD,
+    photo: photos.wombatCourtyard,
+    caption: "The courtyard",
+    days: [2, 3, 4],
+    clusterId: "munich",
+    focusId: "wombat",
+    minZoom: 13,
+    offset: [-86, 18],
+    tilt: -11,
+  },
+  {
+    id: "wombat-dorm",
+    lngLat: WOMBAT_DORM,
+    photo: photos.wombatDorm,
+    caption: "Dorm room",
+    days: [2, 3, 4],
+    clusterId: "munich",
+    focusId: "wombat",
+    minZoom: 13,
+    offset: [88, 26],
+    tilt: 8,
   },
   {
     id: "monopteros",
@@ -512,6 +542,7 @@ export const photoPins: PhotoPin[] = [
     clusterId: "munich",
     focusId: "english-garden",
     offset: [-54, -8],
+    tilt: -5,
   },
   {
     id: "chinese-tower",
@@ -522,6 +553,7 @@ export const photoPins: PhotoPin[] = [
     clusterId: "munich",
     focusId: "english-garden",
     offset: [52, 4],
+    tilt: 4,
   },
   {
     id: "kleinhesseloher-see",
@@ -532,16 +564,29 @@ export const photoPins: PhotoPin[] = [
     clusterId: "munich",
     focusId: "english-garden",
     offset: [0, -8],
+    tilt: -2,
   },
   {
     id: "hofbrauhaus",
     lngLat: HOFBRAUHAUS,
     photo: photos.hofbrauhaus,
-    secondaryPhoto: photos.hofbrauhausInterior,
     caption: "Hofbräuhaus am Platzl",
     days: [3],
     clusterId: "munich",
     focusId: "hofbrauhaus",
+    offset: [-70, -10],
+    tilt: -6,
+  },
+  {
+    id: "hofbrauhaus-interior",
+    lngLat: HOFBRAUHAUS_INTERIOR,
+    photo: photos.hofbrauhausInterior,
+    caption: "Inside the HB",
+    days: [3],
+    clusterId: "munich",
+    focusId: "hofbrauhaus",
+    offset: [74, 12],
+    tilt: 7,
   },
   {
     id: "innsbruck",
@@ -579,13 +624,33 @@ export const photoPins: PhotoPin[] = [
     id: "seceda",
     lngLat: SECEDA,
     photo: photos.seceda,
-    secondaryPhoto: photos.secedaPanorama,
-    additionalPhotos: [photos.secedaApproach],
     caption: "The Odle peaks from Seceda",
     days: [7],
     clusterId: "dolomites",
-    variant: "stack",
-    offset: [-46, -18],
+    offset: [-28, -12],
+    tilt: -4,
+  },
+  {
+    id: "seceda-panorama",
+    lngLat: SECEDA_RIDGE_END,
+    photo: photos.secedaPanorama,
+    caption: "Seceda plateau",
+    days: [7],
+    clusterId: "dolomites",
+    focusId: "seceda",
+    offset: [8, -10],
+    tilt: 6,
+  },
+  {
+    id: "seceda-approach",
+    lngLat: SECEDA_APPROACH,
+    photo: photos.secedaApproach,
+    caption: "The approach",
+    days: [7],
+    clusterId: "dolomites",
+    focusId: "seceda",
+    offset: [12, 6],
+    tilt: -8,
   },
   {
     id: "qc-terme",

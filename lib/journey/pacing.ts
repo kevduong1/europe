@@ -19,10 +19,10 @@ export const BEAT_SPACE: Record<string, number> = {
   "flight-out": 200,
   "arrive-muc": 122,
   "airport-train": 165,
-  // Arrival walk, close camera move, three-photo hold, and the gallery need
-  // enough scroll room to read as a sequence rather than one snap.
+  // Arrival walk, then a zoom-and-orbit onto the hostel prints. Holds close
+  // so the lodging row can keep rotating instead of yanking back to the city.
   "check-in-wombat": 210,
-  // Day 3's auto "the night" row replays the hostel close-up and photo hold.
+  // Auto "the night" row: stay on the hostel and keep the orbit going.
   "wombat-hostel": 170,
   "open-munich": 80,
   // Camera set-pieces (rides a walking line / zooms while rotating bearing)
@@ -82,7 +82,7 @@ export const HANDOFF = 0.72;
 export const BEAT_HANDOFF: Record<string, number> = {
   // Start naming Day 2 while the aircraft is on final approach.
   "flight-out": 0.7,
-  // Preserve the full Hofbräuhaus orbit and its two-photo hold.
+  // Preserve the full Hofbräuhaus orbit and its two ground pins.
   hofbrauhaus: 0.9,
 };
 
