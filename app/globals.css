@@ -210,20 +210,30 @@ a {
   text-align: right;
 }
 
+/*
+ * The rail is sized in JS to the exact edge-to-edge span between this day's
+ * top and the next day's top (--day-rail-h), not just this section's own
+ * box — that's what keeps days tiling with no gap and the dot exact. It
+ * exits with the day, so a finished day's line doesn't just sit there.
+ */
 .day-rail {
   pointer-events: none;
   position: absolute;
   top: 0;
-  bottom: 0;
   left: max(24px, calc(50% - 320px + 24px));
   z-index: 0;
   width: 24px;
+  height: var(--day-rail-h, 100%);
+  opacity: calc(1 - var(--day-exit, 0));
+  transform: translate3d(0, calc(var(--day-exit, 0) * -18px), 0);
+  will-change: opacity, transform;
 }
 
+/* No top/bottom inset — the track must span the section edge to edge or the dot drifts off the anchor line. */
 .day-rail-track {
   position: absolute;
-  top: 12px;
-  bottom: 12px;
+  top: 0;
+  bottom: 0;
   left: 11px;
   width: 2px;
   overflow: hidden;
@@ -240,12 +250,33 @@ a {
   will-change: transform;
 }
 
+/*
+ * The main orange dot. Offset = progress × track height, computed in JS
+ * (--day-progress is 0..1, --day-rail-h is the track's own px height), so
+ * translate3d(0, progress * railH, 0) lands the dot exactly on the anchor
+ * line the rest of the day-chrome math reads from — it appears to hold
+ * still there while the day scrolls past underneath it.
+ */
+.day-rail-dot {
+  position: absolute;
+  top: 0;
+  left: 5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--trail);
+  box-shadow:
+    0 0 0 5px color-mix(in srgb, var(--trail) 22%, transparent),
+    0 0 16px 3px color-mix(in srgb, var(--trail) 30%, transparent);
+  opacity: var(--day-live, 0);
+  transform: translate3d(0, calc(var(--day-progress, 0) * var(--day-rail-h, 0px)), 0)
+    translateY(-50%) scale(calc(0.7 + 0.3 * var(--day-live, 0)));
+  will-change: transform, opacity;
+}
+
 .day-content {
   position: relative;
   z-index: 1;
-  opacity: calc(1 - var(--day-exit, 0));
-  transform: translateY(calc(var(--day-exit, 0) * -18px));
-  will-change: opacity, transform;
 }
 
 .day-dots {
@@ -338,16 +369,39 @@ a {
   padding-bottom: 0.7rem;
 }
 
+/* Pushed out and faded with the day it belongs to — see .day-head, .beat-head below. */
+.day-head {
+  opacity: calc(1 - var(--day-exit, 0));
+  transform: translate3d(0, calc(var(--day-exit, 0) * -18px), 0);
+  will-change: opacity, transform;
+}
+
 .beat-head {
   top: calc(var(--trip-header-height) + var(--day-head-h));
   z-index: 19;
   padding-top: 0.35rem;
   padding-bottom: 0.45rem;
+  /*
+   * The exit push/fade lives here, on the sticky element itself. The entry
+   * animation (below) targets .beat-head-reveal, an inner wrapper — a CSS
+   * animation wins over a declarative style on the same property, so if both
+   * lived on .beat-head the exit transform would be silently overridden.
+   */
+  opacity: calc(1 - var(--day-exit, 0));
+  transform: translate3d(0, calc(var(--day-exit, 0) * -18px), 0);
+  will-change: opacity, transform;
 }
 
 .beat-row {
   min-height: calc(var(--beat-span, 56) * var(--beat-scale, 1) * 1vh);
   min-height: calc(var(--beat-span, 56) * var(--beat-scale, 1) * 1svh);
+  /*
+   * Named timeline subject for the beat-head entry animation. Must be this
+   * tall, non-sticky row — NOT .beat-head itself, which is position: sticky.
+   * A view-progress timeline whose subject is sticky reads its own
+   * scroll-shifted box back as input, which stutters exactly while pinned.
+   */
+  view-timeline-name: --beat-entry;
 }
 
 .essentials-row {
@@ -356,10 +410,16 @@ a {
 }
 
 @supports (animation-timeline: view()) {
-  .beat-head {
+  .beat-head-reveal {
     animation: beat-head-in linear both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 28%;
+    animation-timeline: --beat-entry;
+    /*
+     * entry 0% fires when .beat-row's top reaches the viewport bottom; the
+     * entry phase length is min(row height, viewport height), so for most
+     * beats (well under 100vh) this range is roughly the row's own height.
+     * 15% keeps the fade+rise to ~10-15vh of scroll instead of the whole row.
+     */
+    animation-range: entry 0% entry 15%;
   }
 }
 
@@ -379,17 +439,25 @@ a {
     --beat-scale: 0.32;
   }
 
-  .beat-head {
+  .beat-head-reveal {
     animation: none;
   }
 
-  .day-rail-fill,
-  .day-content {
+  .day-head,
+  .beat-head,
+  .day-rail {
+    transform: none;
     will-change: auto;
   }
 
-  .day-content {
+  .day-rail-fill,
+  .day-rail-dot {
     transform: none;
+    will-change: auto;
+  }
+
+  .day-rail-dot {
+    opacity: 0;
   }
 
   .trip-header-brand,
@@ -472,9 +540,28 @@ a {
 .map-cluster,
 .map-unresolved,
 .map-here,
-.map-plane {
+.map-plane,
+.map-photo-pin {
   pointer-events: none;
   transition: opacity 0.28s ease;
+}
+
+/*
+ * `!important` is load-bearing here: MapLibre's own Marker class re-writes
+ * `this._element.style.opacity` from its internal occlusion tracking on
+ * every camera move (see the comment on `applyMarkers` in journey-map.tsx),
+ * which would clobber a plain inline-opacity toggle a frame later. A class
+ * rule flagged `!important` is the one thing that wins over that unflagged
+ * inline write, so all marker show/hide goes through this class instead of
+ * `el.style.opacity`.
+ */
+.map-pin.is-hidden,
+.map-cluster.is-hidden,
+.map-unresolved.is-hidden,
+.map-here.is-hidden,
+.map-plane.is-hidden,
+.map-photo-pin.is-hidden {
+  opacity: 0 !important;
 }
 
 .map-pin {
@@ -594,6 +681,98 @@ a {
 .map-plane {
   color: var(--trail);
   filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--paper) 80%, transparent));
+}
+
+/*
+ * A photo pinned to a spot on the map: a square thumbnail in a paper frame,
+ * a mono caption pill, and a thin trail-coloured stem running down to a dot
+ * at the exact coordinate — the same dot-on-a-point language as .map-pin,
+ * just with a picture floated above it instead of a text label beside it.
+ * Sized in fixed CSS px (not by the image's intrinsic size) so opacity
+ * fade-in/out never triggers layout — only compositing.
+ */
+.map-photo-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.map-photo-pin-frame {
+  display: block;
+  overflow: hidden;
+  width: 56px;
+  height: 56px;
+  padding: 3px;
+  border-radius: 5px;
+  background: var(--paper);
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--trail) 55%, var(--ink) 10%),
+    0 3px 10px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+
+.map-photo-pin-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  object-fit: cover;
+}
+
+/* Graceful placeholder for a pin whose photo hasn't been sourced yet — reads as "pending", not broken. */
+.map-photo-pin-empty {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border: 1.5px dashed color-mix(in srgb, var(--dolomite) 55%, transparent);
+  border-radius: 2px;
+  color: color-mix(in srgb, var(--dolomite) 80%, var(--paper));
+}
+
+.map-photo-pin-caption {
+  max-width: 92px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  padding: 1px 6px 2px;
+  border-radius: 2px;
+}
+
+.map-photo-pin-stem {
+  width: 2px;
+  height: 8px;
+  background: var(--trail);
+}
+
+.map-photo-pin-dot {
+  width: 6px;
+  height: 6px;
+  margin-top: -1px;
+  border-radius: 50%;
+  background: var(--trail);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--paper) 82%, transparent);
+}
+
+/* Narrow phones: up to five of these can be in play around Val Gardena — shrink the
+   frame and drop the caption rather than let square photos with text crowd the frame. */
+@media (max-width: 520px) {
+  .map-photo-pin-frame {
+    width: 38px;
+    height: 38px;
+    padding: 2px;
+  }
+
+  .map-photo-pin-caption {
+    display: none;
+  }
 }
 
 .sr-only {

@@ -159,28 +159,18 @@ export function sliceLine(line: LngLat[], t0: number, t1: number): LngLat[] {
   return points;
 }
 
-export function nearestT(line: LngLat[], point: LngLat): number {
-  if (line.length < 2) return 0;
-  const { cumulative, total } = metricsFor(line);
-  if (total === 0) return 0;
-  let bestD = Infinity;
-  let bestT = 0;
-  for (let i = 1; i < line.length; i += 1) {
-    const a = line[i - 1];
-    const b = line[i];
-    const seg = cumulative[i] - cumulative[i - 1];
-    const samples = 3;
-    for (let s = 0; s <= samples; s += 1) {
-      const u = s / samples;
-      const candidate = lerpLngLat(a, b, u);
-      const d = haversineKm(candidate, point);
-      if (d < bestD) {
-        bestD = d;
-        bestT = (cumulative[i - 1] + seg * u) / total;
-      }
-    }
+/**
+ * Concatenates polylines end-to-end, dropping each line's first vertex after
+ * the first so shared joints aren't duplicated. Centralizes the `.slice(1)`
+ * pattern used everywhere route legs are stitched into one continuous trail.
+ */
+export function joinLines(lines: LngLat[][]): LngLat[] {
+  const out: LngLat[] = [];
+  for (const line of lines) {
+    if (line.length === 0) continue;
+    out.push(...(out.length === 0 ? line : line.slice(1)));
   }
-  return bestT;
+  return out;
 }
 
 export function formatLngLat([lng, lat]: LngLat) {

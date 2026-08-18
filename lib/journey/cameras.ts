@@ -1,32 +1,30 @@
-import {
-  BOLZANO,
-  FIRENZE,
-  INNSBRUCK_HBF,
-  MONTAGU,
-  MUC,
-  MUNICH_HBF,
-  orangeTrail,
-  ORTISEI,
-  PUEZ,
-  RESCIESA,
-  VENICE,
-  WOMBAT,
-} from "@/data/route";
-import { clamp, lerp, lerpLngLat, nearestT, smoothstep, type LngLat } from "@/lib/geo";
+import { legT, MUC, WOMBAT } from "@/data/route";
+import { clamp, lerp, lerpLngLat, smoothstep, type LngLat } from "@/lib/geo";
 import { CLUSTERS, clusterState } from "./clusters";
 import type { JourneyView } from "./types";
 
-/** Where each named place falls along the continuous Europe trail, 0..1. */
+/**
+ * Where each named place falls along the continuous Europe trail, 0..1.
+ * Derived from exact leg boundaries (`legT`), not a nearest-point search —
+ * Ortisei and Bolzano are each crossed twice (in and back out), so a fuzzy
+ * search can't tell which pass it found.
+ */
 export const T = {
-  hbf: nearestT(orangeTrail, MUNICH_HBF),
-  innsbruck: nearestT(orangeTrail, INNSBRUCK_HBF),
-  montagu: nearestT(orangeTrail, MONTAGU),
-  bolzano: nearestT(orangeTrail, BOLZANO),
-  ortisei: nearestT(orangeTrail, ORTISEI),
-  resciesa: nearestT(orangeTrail, RESCIESA),
-  firenze: nearestT(orangeTrail, FIRENZE),
-  puez: nearestT(orangeTrail, PUEZ),
-  venice: nearestT(orangeTrail, VENICE),
+  hbf: legT.munichInnsbruck.start,
+  innsbruck: legT.munichInnsbruck.end,
+  // Montagu Hostel is a stone's throw from the Hbf — same point on the trail.
+  montagu: legT.munichInnsbruck.end,
+  bolzano: legT.innsbruckBolzano.end,
+  ortisei: legT.bolzanoOrtisei.end,
+  resciesa: legT.ortiseiResciesa.end,
+  firenze: legT.resciesaFirenze.end,
+  seceda: legT.firenzeSeceda.end,
+  // Second pass through Ortisei, descending from the Seceda cable car.
+  ortiseiBack: legT.secedaOrtisei.end,
+  qcTerme: legT.ortiseiValDiFassa.end,
+  // Second pass through Bolzano, on the way out to Venice.
+  bolzanoOut: legT.fassaBolzano.end,
+  venice: 1,
 };
 
 type CityCam = {
@@ -84,6 +82,66 @@ export const CITY = {
     zoom: 10.35,
     pitch: 8,
     bearing: 12,
+  },
+  /** Tight, pitched shot atop Seceda — the Odle ridge is the point of the stop. */
+  seceda: {
+    center: [11.6893, 46.6106] as LngLat,
+    zoom: 14.1,
+    pitch: 52,
+    bearing: 18,
+  },
+  /**
+   * The gondola drop, not a traverse — steeper pitch than `dolomites`,
+   * bearing turned to face down-valley toward Ortisei (~186°, the line's own
+   * direction) so the ~1000 m loss reads as falling away in front of you.
+   */
+  secedaDrop: {
+    center: [11.68, 46.593] as LngLat,
+    zoom: 13,
+    pitch: 60,
+    bearing: 186,
+  },
+  /** Wide corridor for Ortisei → Val di Fassa over Passo Sella via Canazei. */
+  toValDiFassa: {
+    center: [11.72, 46.5] as LngLat,
+    zoom: 10.3,
+    pitch: 0,
+    bearing: -6,
+  },
+  /** Tight shot on QC Terme Dolomiti — the spa afternoon. */
+  qcTerme: {
+    center: [11.6889, 46.4283] as LngLat,
+    zoom: 14.5,
+    pitch: 10,
+    bearing: 0,
+  },
+  /** Wide corridor for Val di Fassa → Bolzano over Passo Costalunga. */
+  fassaBolzano: {
+    center: [11.5, 46.45] as LngLat,
+    zoom: 9.9,
+    pitch: 0,
+    bearing: -10,
+  },
+  /** Wide southbound frame for the Bolzano → Venice rail, Verona to the lagoon. */
+  toVenice: {
+    center: [11.55, 45.95] as LngLat,
+    zoom: 7.2,
+    pitch: 0,
+    bearing: 4,
+  },
+  /** Zoomed-in walk up the Englischer Garten. */
+  englishGarden: {
+    center: [11.591, 48.153] as LngLat,
+    zoom: 14.4,
+    pitch: 10,
+    bearing: 0,
+  },
+  /** The showpiece: tight and rotating onto the Hofbräuhaus. */
+  hofbrauhaus: {
+    center: [11.5799, 48.1376] as LngLat,
+    zoom: 15.2,
+    pitch: 22,
+    bearing: 40,
   },
 };
 
@@ -207,30 +265,37 @@ export function usaDepartView(): JourneyView {
   });
 }
 
+/** Named phase boundaries for `flightOutView` — pull-out span and descent span are derived, not repeated. */
+const PULL_OUT_START = 0.1;
+const PULL_OUT_END = 0.26;
+const PULL_OUT_SPAN = PULL_OUT_END - PULL_OUT_START;
+const DESCENT_START = 0.76;
+const DESCENT_SPAN = 1 - DESCENT_START;
+
 /** Hold over the plains, pull out over the ocean, then drop onto Munich. */
 export function flightOutView(t: number): JourneyView {
   const u = clamp(t);
   let zoom: number;
   let center: LngLat;
-  if (u < 0.1) {
+  if (u < PULL_OUT_START) {
     zoom = USA_ZOOM;
     center = USA_CENTER;
-  } else if (u < 0.26) {
-    const k = smoothstep((u - 0.1) / 0.16);
+  } else if (u < PULL_OUT_END) {
+    const k = smoothstep((u - PULL_OUT_START) / PULL_OUT_SPAN);
     zoom = lerp(USA_ZOOM, OCEAN_ZOOM, k);
     center = lerpLngLat(USA_CENTER, ATLANTIC_CENTER, k);
-  } else if (u < 0.76) {
+  } else if (u < DESCENT_START) {
     zoom = OCEAN_ZOOM;
     center = ATLANTIC_CENTER;
   } else {
-    const k = smoothstep((u - 0.76) / 0.24);
+    const k = smoothstep((u - DESCENT_START) / DESCENT_SPAN);
     zoom = lerp(OCEAN_ZOOM, CITY.munichAirport.zoom, k);
     center = lerpLngLat(ATLANTIC_CENTER, CITY.munichAirport.center, k);
   }
   const flightT =
-    u < 0.76
+    u < DESCENT_START
       ? Math.max(MIN_FLIGHT_T, u)
-      : lerp(0.76, 0.97, smoothstep((u - 0.76) / 0.24));
+      : lerp(DESCENT_START, 0.97, smoothstep((u - DESCENT_START) / DESCENT_SPAN));
   return pose({
     phase: "flight",
     center,

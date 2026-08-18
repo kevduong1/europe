@@ -18,10 +18,11 @@ import {
   flightOut,
   orangeTrail,
   overnightStops,
+  photoPins,
   stopClusters,
   unresolvedPoint,
 } from "@/data/route";
-import type { OvernightStop, StopCluster } from "@/data/types";
+import type { OvernightStop, PhotoPin, StopCluster } from "@/data/types";
 import { loadPaperStyle } from "@/lib/basemap-style";
 import {
   along,
@@ -50,6 +51,49 @@ const MAX_FRAME_ZOOM = 14.6;
 
 /** Below these deltas a camera move is sub-pixel, so the jump is skipped. */
 const CAMERA_EPSILON = { lngLat: 1e-6, zoom: 1e-4, angle: 1e-3 };
+
+/**
+ * Every `CITY.*` zoom was composed by eye against a desktop-width window.
+ * Zoom fixes meters-per-pixel, not ground extent, so the ground actually
+ * shown shrinks with the viewport — on a phone the same zoom frames a third
+ * of the intended area. Rather than re-tune every constant, `applyCamera`
+ * derives one offset from container width vs. this reference and applies it
+ * to every frame, city holds and travel corridors alike.
+ */
+const FRAME_WIDTH = 1280;
+
+/**
+ * Full correction (`log2(width / FRAME_WIDTH)`) exactly restores the desktop
+ * composition, but pin labels and line widths don't scale with zoom, so full
+ * correction on the narrowest phones crowds them. Clamped short of that:
+ * −1.9 covers phones a little past the 390px reference (log2(390/1280) ≈
+ * −1.71) with room to spare, +0.35 keeps ultra-wide desktops from pushing
+ * already-tight frames past MAX_FRAME_ZOOM.
+ */
+const ZOOM_OFFSET_MIN = -1.9;
+const ZOOM_OFFSET_MAX = 0.35;
+
+function zoomOffsetFor(width: number) {
+  const raw = Math.log2(width / FRAME_WIDTH);
+  return Math.min(ZOOM_OFFSET_MAX, Math.max(ZOOM_OFFSET_MIN, raw));
+}
+
+/**
+ * A pitched frame (`CITY.dolomites`, `CITY.seceda`, ...) spends its top third
+ * on sky on a tall narrow phone, pushing the actual subject low in the shot.
+ * Damped linearly between these two widths rather than cut off entirely —
+ * some tilt still reads as "mountains", just not the full desktop lean.
+ */
+const PITCH_NARROW_WIDTH = 390;
+const PITCH_FULL_WIDTH = 900;
+const PITCH_MIN_SCALE = 0.55;
+
+function pitchScaleFor(width: number) {
+  if (width >= PITCH_FULL_WIDTH) return 1;
+  if (width <= PITCH_NARROW_WIDTH) return PITCH_MIN_SCALE;
+  const t = (width - PITCH_NARROW_WIDTH) / (PITCH_FULL_WIDTH - PITCH_NARROW_WIDTH);
+  return PITCH_MIN_SCALE + (1 - PITCH_MIN_SCALE) * t;
+}
 
 type Camera = {
   lng: number;
@@ -103,6 +147,37 @@ function clusterElement(cluster: StopCluster) {
   const badge =
     count > 1 ? `<span class="map-cluster-count">${count}</span>` : "";
   el.innerHTML = `${badge}<span class="map-cluster-label">${cluster.label}</span>`;
+  return el;
+}
+
+/** Outline-camera glyph for a photo pin that has no image yet (see `photoPinElement`). */
+const PHOTO_PLACEHOLDER_ICON =
+  '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
+  '<path fill="none" stroke="currentColor" stroke-width="1.6" ' +
+  'd="M4 8.5h3l1.4-2h7.2l1.4 2H20a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1Z"/>' +
+  '<circle cx="12" cy="13" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+  "</svg>";
+
+/**
+ * The overnight-stop id a photo pin should be considered "in play" with, for
+ * markers whose own id isn't already a stop id (see `photoPinFocusTarget`).
+ */
+const PHOTO_PIN_FOCUS_OVERRIDES: Record<string, string> = {
+  "qc-terme": "val-di-fassa-tbd",
+  venice: "venice-tbd",
+  innsbruck: "montagu",
+};
+
+function photoPinElement(pin: PhotoPin) {
+  const el = document.createElement("div");
+  el.className = "map-photo-pin";
+  el.dataset.pin = pin.id;
+  el.dataset.days = pin.days.join(",");
+  if (pin.clusterId) el.dataset.cluster = pin.clusterId;
+  const frameInner = pin.photo
+    ? `<img class="map-photo-pin-img" src="${pin.photo.pinSrc}" alt="${pin.photo.alt.replace(/"/g, "&quot;")}" width="64" height="64" loading="lazy" decoding="async" />`
+    : `<span class="map-photo-pin-empty" aria-hidden="true">${PHOTO_PLACEHOLDER_ICON}</span>`;
+  el.innerHTML = `<span class="map-photo-pin-frame">${frameInner}</span><span class="map-photo-pin-caption">${pin.caption}</span><span class="map-photo-pin-stem"></span><span class="map-photo-pin-dot"></span>`;
   return el;
 }
 
@@ -236,12 +311,27 @@ const MARKER_OPTS = {
   rotationAlignment: "viewport" as const,
 };
 
+const STOP_IDS = new Set(overnightStops.map((stop) => stop.id));
+
+/**
+ * The overnight-stop id whose `focusStopId` moment this photo belongs to, if
+ * any. Most pin ids already match a stop id 1:1 (ortisei, resciesa, firenze,
+ * seceda, eisbachwelle); `PHOTO_PIN_FOCUS_OVERRIDES` covers the ones that
+ * don't. A pin with no resolvable stop (hofbrauhaus — not an overnight stop)
+ * returns null, and falls back to a coarser day-based gate in `applyMarkers`.
+ */
+function photoPinFocusTarget(pin: PhotoPin): string | null {
+  const candidate = PHOTO_PIN_FOCUS_OVERRIDES[pin.id] ?? pin.id;
+  return STOP_IDS.has(candidate) ? candidate : null;
+}
+
 export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
   function JourneyMap({ onReady }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MapLibreMap | null>(null);
     const markersRef = useRef<Marker[]>([]);
     const clusterMarkersRef = useRef<Marker[]>([]);
+    const photoMarkersRef = useRef<Marker[]>([]);
     const hereRef = useRef<Marker | null>(null);
     const planeRef = useRef<Marker | null>(null);
     const readyRef = useRef(false);
@@ -250,6 +340,8 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
     const lastFlightKey = useRef("");
     const lastMarkerKey = useRef("");
     const lastCamera = useRef<Camera | null>(null);
+    /** Last view handed to `applyView`, replayed on resize so the width-derived offset recomputes. */
+    const lastViewRef = useRef<JourneyView | null>(null);
     const onReadyRef = useRef(onReady);
     const applyViewRef = useRef<(view: JourneyView) => void>(() => {});
     onReadyRef.current = onReady;
@@ -313,6 +405,15 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
       setLineOpacity("route-flight", show ? 0.95 : 0);
     }
 
+    /**
+     * Marker visibility is toggled via the `is-hidden` class (globals.css,
+     * `opacity: 0 !important`), never by setting `el.style.opacity` directly.
+     * MapLibre's own `Marker` re-asserts `this._element.style.opacity` from
+     * its internal occlusion state on every "move"/"moveend" event — i.e.
+     * after every `map.jumpTo()` below — which would silently clobber a
+     * plain inline-opacity toggle back to "1" a frame later. `!important`
+     * on a class rule beats that unflagged inline write.
+     */
     function applyMarkers(view: JourneyView) {
       const map = mapRef.current;
       const markerKey = `${view.phase}|${view.dayId}|${view.expandedClusterIds.join(",")}|${view.visitedClusterIds.join(",")}|${view.flightLeg}|${view.focusStopId}|${view.flightT < 0.28}|${view.flightT > 0.72}`;
@@ -332,7 +433,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           const visible =
             view.phase === "overview" ||
             (view.phase === "day" && !expanded && !visited);
-          marker.getElement().style.opacity = visible ? "1" : "0";
+          marker.getElement().classList.toggle("is-hidden", !visible);
         }
 
         for (const marker of markersRef.current) {
@@ -359,7 +460,9 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
               (view.phase === "flight" && view.flightLeg === "out") ||
               (view.phase === "day" && expanded);
           } else if (unresolved) {
-            visible = view.phase === "day" && view.dayId === 8;
+            // The Val di Fassa night, not the whole route — everything else
+            // by Day 8 is a known line.
+            visible = view.phase === "day" && view.dayId === 7;
           } else if (view.phase === "day" && expanded) {
             visible = true;
           } else if (view.phase === "day" && visited) {
@@ -369,8 +472,24 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
 
           el.classList.toggle("map-pin-visited", visitedLook);
           el.classList.toggle("map-pin-active", view.focusStopId === stopId);
-          el.style.opacity = visible ? "1" : "0";
+          el.classList.toggle("is-hidden", !visible);
         }
+
+        photoMarkersRef.current.forEach((marker, index) => {
+          const pin = photoPins[index];
+          const el = marker.getElement();
+          const expanded = pin.clusterId
+            ? view.expandedClusterIds.includes(pin.clusterId)
+            : true;
+          const focusTarget = photoPinFocusTarget(pin);
+          const visible =
+            view.phase === "day" &&
+            expanded &&
+            (focusTarget
+              ? view.focusStopId === focusTarget
+              : pin.days.includes(view.dayId ?? -1));
+          el.classList.toggle("is-hidden", !visible);
+        });
       }
 
       const herePos =
@@ -380,13 +499,15 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           : null);
       const onPlane = Boolean(view.showFlight);
       if (hereRef.current) {
-        hereRef.current.getElement().style.opacity = herePos && !onPlane ? "1" : "0";
+        hereRef.current
+          .getElement()
+          .classList.toggle("is-hidden", !(herePos && !onPlane));
         if (herePos && !onPlane) {
           hereRef.current.setLngLat(herePos);
         }
       }
       if (planeRef.current) {
-        planeRef.current.getElement().style.opacity = onPlane ? "1" : "0";
+        planeRef.current.getElement().classList.toggle("is-hidden", !onPlane);
         if (onPlane) {
           const line = view.flightLeg === "home" ? flightHome : flightOut;
           const t = Math.max(0.004, view.flightT);
@@ -401,7 +522,12 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
     function applyCamera(view: JourneyView) {
       const map = mapRef.current;
       if (!map) return;
-      const zoom = Math.min(view.zoom, MAX_FRAME_ZOOM + 1.2);
+      // Width-derived correction has to land before the MAX_FRAME_ZOOM clamp,
+      // not after, or a narrow viewport's wider (lower) zoom gets clamped
+      // back down to the same tight frame it was meant to escape.
+      const width = map.getContainer().clientWidth || FRAME_WIDTH;
+      const zoom = Math.min(view.zoom + zoomOffsetFor(width), MAX_FRAME_ZOOM + 1.2);
+      const pitch = view.pitch * pitchScaleFor(width);
       const last = lastCamera.current;
       if (
         last &&
@@ -409,7 +535,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         Math.abs(last.lat - view.center[1]) < CAMERA_EPSILON.lngLat &&
         Math.abs(last.zoom - zoom) < CAMERA_EPSILON.zoom &&
         Math.abs(last.bearing - view.bearing) < CAMERA_EPSILON.angle &&
-        Math.abs(last.pitch - view.pitch) < CAMERA_EPSILON.angle
+        Math.abs(last.pitch - pitch) < CAMERA_EPSILON.angle
       ) {
         return;
       }
@@ -418,17 +544,18 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         lat: view.center[1],
         zoom,
         bearing: view.bearing,
-        pitch: view.pitch,
+        pitch,
       };
       map.jumpTo({
         center: view.center,
         zoom,
         bearing: view.bearing,
-        pitch: view.pitch,
+        pitch,
       });
     }
 
     function applyView(view: JourneyView) {
+      lastViewRef.current = view;
       const map = mapRef.current;
       if (!map || !readyRef.current) {
         pendingRef.current = view;
@@ -487,6 +614,9 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         observer = new ResizeObserver(() => {
           if (!mapRef.current) return;
           map?.resize();
+          // Width changed, so the zoom/pitch offset did too — replay the last
+          // view rather than wait for the next scroll frame.
+          if (lastViewRef.current) applyViewRef.current(lastViewRef.current);
         });
         observer.observe(mount);
 
@@ -526,10 +656,22 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
               markersRef.current.push(marker);
             }
 
+            for (const pin of photoPins) {
+              const marker = new Marker({
+                element: photoPinElement(pin),
+                anchor: "bottom",
+                ...MARKER_OPTS,
+              })
+                .setLngLat(pin.lngLat)
+                .addTo(map);
+              marker.getElement().classList.add("is-hidden");
+              photoMarkersRef.current.push(marker);
+            }
+
             const q = document.createElement("div");
             q.className = "map-unresolved";
             q.textContent = "?";
-            q.dataset.days = "8";
+            q.dataset.days = "7";
             markersRef.current.push(
               new Marker({ element: q, anchor: "center", ...MARKER_OPTS })
                 .setLngLat(unresolvedPoint)
@@ -537,8 +679,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
             );
 
             const hereEl = document.createElement("div");
-            hereEl.className = "map-here";
-            hereEl.style.opacity = "0";
+            hereEl.className = "map-here is-hidden";
             hereRef.current = new Marker({
               element: hereEl,
               anchor: "center",
@@ -548,7 +689,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
               .addTo(map);
 
             const planeEl = planeElement();
-            planeEl.style.opacity = "0";
+            planeEl.classList.add("is-hidden");
             planeRef.current = new Marker({
               element: planeEl,
               anchor: "center",
@@ -577,6 +718,8 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         markersRef.current = [];
         clusterMarkersRef.current.forEach((marker) => marker.remove());
         clusterMarkersRef.current = [];
+        photoMarkersRef.current.forEach((marker) => marker.remove());
+        photoMarkersRef.current = [];
         hereRef.current?.remove();
         hereRef.current = null;
         planeRef.current?.remove();
@@ -585,6 +728,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         mapRef.current = null;
         readyRef.current = false;
         lastCamera.current = null;
+        lastViewRef.current = null;
         lastTrailT.current = -1;
         lastFlightKey.current = "";
         lastMarkerKey.current = "";

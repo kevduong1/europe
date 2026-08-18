@@ -1,27 +1,35 @@
 import {
   BOLZANO,
   busBolzanoOrtisei,
+  busFassaBolzano,
+  busOrtiseiValDiFassa,
   EISBACHWELLE,
   FIRENZE,
+  gondolaSecedaOrtisei,
+  HOFBRAUHAUS,
   INNSBRUCK_HBF,
+  KLEINHESSELOHER_SEE,
   MONTAGU,
   MUNICH_HBF,
   ORTISEI,
-  PUEZ,
+  QC_TERME,
+  railBolzanoVenice,
   railInnsbruckBolzano,
   railMucHbf,
   railMunichInnsbruck,
   RESCIESA,
-  trailFirenzePuez,
+  SECEDA,
+  trailFirenzeSeceda,
   trailOrtiseiResciesa,
   trailResciesaFirenze,
   VCE,
   VENICE,
+  walkEnglischerGarten,
   walkWombatHbf,
   WOMBAT,
 } from "@/data/route";
 import { getDay } from "@/data/trip";
-import { along, clamp, lerp, smoothstep } from "@/lib/geo";
+import { along, clamp, lerp, lerpBearing, lerpLngLat, smoothstep } from "@/lib/geo";
 import {
   CITY,
   cityHold,
@@ -90,13 +98,12 @@ export function viewForDay(dayId: number): JourneyView {
         visitedClusterIds: CLUSTERS.pastInnsbruck,
       });
     case 8:
-      return cityHold(CITY.dolomites, {
+      return cityHold(CITY.qcTerme, {
         dayId: 8,
         label,
-        trailT: T.puez,
-        here: PUEZ,
-        focusStopId: "puez",
-        focus: PUEZ,
+        trailT: T.qcTerme,
+        here: QC_TERME,
+        focusStopId: "val-di-fassa-tbd",
         amount: 0.2,
         expandedClusterIds: CLUSTERS.dolomites,
         visitedClusterIds: CLUSTERS.pastInnsbruck,
@@ -157,14 +164,30 @@ function firenzeHold(): JourneyView {
   });
 }
 
-function puezHold(): JourneyView {
-  return cityHold(CITY.dolomites, {
+/** The summit is the same shot whether you're climbing to it or standing on it. */
+function secedaHold(): JourneyView {
+  return cityHold(CITY.seceda, {
     dayId: 7,
-    label: "Rifugio Puez",
-    trailT: T.puez,
-    here: PUEZ,
-    focusStopId: "puez",
-    focus: PUEZ,
+    label: "Seceda — the Odle ridge",
+    trailT: T.seceda,
+    here: SECEDA,
+    focusStopId: "seceda",
+    focus: SECEDA,
+    amount: 0.3,
+    expandedClusterIds: CLUSTERS.dolomites,
+    visitedClusterIds: CLUSTERS.pastInnsbruck,
+  });
+}
+
+/** QC Terme is the same shot for the spa afternoon and the night that follows it. */
+function qcTermeHold(): JourneyView {
+  return cityHold(CITY.qcTerme, {
+    dayId: 7,
+    label: "QC Terme Dolomiti",
+    trailT: T.qcTerme,
+    here: QC_TERME,
+    focusStopId: "val-di-fassa-tbd",
+    focus: QC_TERME,
     amount: 0.3,
     expandedClusterIds: CLUSTERS.dolomites,
     visitedClusterIds: CLUSTERS.pastInnsbruck,
@@ -226,6 +249,61 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
         focus: EISBACHWELLE,
         amount: 0.4,
       });
+    case "english-garden":
+      return rideLine(
+        munichStay(3, "Eisbachwelle", {
+          here: EISBACHWELLE,
+          focusStopId: "eisbachwelle",
+          focus: EISBACHWELLE,
+          amount: 0.4,
+        }),
+        pose({
+          phase: "day",
+          center: CITY.englishGarden.center,
+          zoom: CITY.englishGarden.zoom,
+          pitch: CITY.englishGarden.pitch,
+          bearing: CITY.englishGarden.bearing,
+          showFlight: false,
+          flightT: 0,
+          flightLeg: null,
+          trailT: 0,
+          dayId: 3,
+          label: "Walking the Englischer Garten",
+          here: EISBACHWELLE,
+          expandedClusterIds: CLUSTERS.munich,
+          visitedClusterIds: CLUSTERS.none,
+        }),
+        munichStay(3, "Kleinhesseloher See", {
+          here: KLEINHESSELOHER_SEE,
+          focus: KLEINHESSELOHER_SEE,
+          amount: 0.3,
+        }),
+        walkEnglischerGarten,
+        0,
+        0,
+        t,
+      );
+    case "hofbrauhaus": {
+      // Showpiece: sweep bearing and pitch in alongside the zoom, so the city
+      // turns under the camera as it tightens onto the beer hall.
+      const u = smoothstep(clamp(t));
+      return pose({
+        phase: "day",
+        center: lerpLngLat(CITY.munich.center, CITY.hofbrauhaus.center, u),
+        zoom: lerp(CITY.munich.zoom, CITY.hofbrauhaus.zoom, u),
+        pitch: lerp(CITY.munich.pitch, CITY.hofbrauhaus.pitch, u),
+        bearing: lerpBearing(CITY.munich.bearing, CITY.hofbrauhaus.bearing, u),
+        showFlight: false,
+        flightT: 0,
+        flightLeg: null,
+        trailT: 0,
+        dayId: 3,
+        label: "Hofbräuhaus am Platzl",
+        here: HOFBRAUHAUS,
+        expandedClusterIds: CLUSTERS.munich,
+        visitedClusterIds: CLUSTERS.none,
+      });
+    }
     case "leave-wombat":
       return munichStay(4, "Leave Wombat", {
         here: WOMBAT,
@@ -425,46 +503,187 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
       );
     case "rifugio-firenze":
       return firenzeHold();
-    case "hike-firenze-puez":
+    case "hike-firenze-seceda":
+      return rideLine(
+        firenzeHold(),
+        pose({
+          phase: "day",
+          center: CITY.dolomites.center,
+          zoom: CITY.dolomites.zoom,
+          pitch: CITY.dolomites.pitch,
+          bearing: CITY.dolomites.bearing,
+          showFlight: false,
+          flightT: 0,
+          flightLeg: null,
+          trailT: T.firenze,
+          dayId: 7,
+          label: "Firenze → Seceda",
+          here: FIRENZE,
+          expandedClusterIds: CLUSTERS.dolomites,
+          visitedClusterIds: CLUSTERS.pastInnsbruck,
+        }),
+        secedaHold(),
+        trailFirenzeSeceda,
+        T.firenze,
+        T.seceda,
+        t,
+      );
+    case "seceda-summit":
+      return secedaHold();
+    case "down-to-ortisei":
+      return rideLine(
+        secedaHold(),
+        pose({
+          phase: "day",
+          center: CITY.secedaDrop.center,
+          zoom: CITY.secedaDrop.zoom,
+          pitch: CITY.secedaDrop.pitch,
+          bearing: CITY.secedaDrop.bearing,
+          showFlight: false,
+          flightT: 0,
+          flightLeg: null,
+          trailT: T.seceda,
+          dayId: 7,
+          label: "Seceda → Ortisei · gondola",
+          here: SECEDA,
+          expandedClusterIds: CLUSTERS.dolomites,
+          visitedClusterIds: CLUSTERS.pastInnsbruck,
+        }),
+        cityHold(CITY.dolomites, {
+          dayId: 7,
+          label: "Ortisei",
+          trailT: T.ortiseiBack,
+          here: ORTISEI,
+          focusStopId: "ortisei",
+          focus: ORTISEI,
+          amount: 0.18,
+          expandedClusterIds: CLUSTERS.dolomites,
+          visitedClusterIds: CLUSTERS.pastInnsbruck,
+        }),
+        gondolaSecedaOrtisei,
+        T.seceda,
+        T.ortiseiBack,
+        t,
+      );
+    case "to-val-di-fassa":
       return rideLine(
         cityHold(CITY.dolomites, {
           dayId: 7,
-          label: "Firenze → Puez",
-          trailT: T.firenze,
-          here: FIRENZE,
-          focusStopId: "firenze",
+          label: "Ortisei → Val di Fassa",
+          trailT: T.ortiseiBack,
+          here: ORTISEI,
+          focusStopId: "ortisei",
           expandedClusterIds: CLUSTERS.dolomites,
           visitedClusterIds: CLUSTERS.pastInnsbruck,
         }),
-        cityHold(CITY.dolomites, {
+        pose({
+          phase: "day",
+          center: CITY.toValDiFassa.center,
+          zoom: CITY.toValDiFassa.zoom,
+          pitch: CITY.toValDiFassa.pitch,
+          bearing: CITY.toValDiFassa.bearing,
+          showFlight: false,
+          flightT: 0,
+          flightLeg: null,
+          trailT: T.ortiseiBack,
           dayId: 7,
-          label: "Firenze → Puez",
-          trailT: T.puez,
-          here: PUEZ,
-          focus: PUEZ,
-          amount: 0.24,
+          label: "Ortisei → Val di Fassa",
+          here: ORTISEI,
           expandedClusterIds: CLUSTERS.dolomites,
           visitedClusterIds: CLUSTERS.pastInnsbruck,
         }),
-        puezHold(),
-        trailFirenzePuez,
-        T.firenze,
-        T.puez,
+        qcTermeHold(),
+        busOrtiseiValDiFassa,
+        T.ortiseiBack,
+        T.qcTerme,
         t,
       );
-    case "rifugio-puez":
-      return puezHold();
-    case "exit-tbd":
-    case "exit-night":
-      return cityHold(CITY.dolomites, {
+    case "qc-terme-dolomiti":
+    case "val-di-fassa-night":
+      return qcTermeHold();
+    case "bus-fassa-bolzano":
+      return rideLine(
+        qcTermeHold(),
+        pose({
+          phase: "day",
+          center: CITY.fassaBolzano.center,
+          zoom: CITY.fassaBolzano.zoom,
+          pitch: CITY.fassaBolzano.pitch,
+          bearing: CITY.fassaBolzano.bearing,
+          showFlight: false,
+          flightT: 0,
+          flightLeg: null,
+          trailT: T.qcTerme,
+          dayId: 8,
+          label: "Val di Fassa → Bolzano",
+          here: QC_TERME,
+          expandedClusterIds: CLUSTERS.dolomites,
+          visitedClusterIds: CLUSTERS.pastInnsbruck,
+        }),
+        cityHold(CITY.fassaBolzano, {
+          dayId: 8,
+          label: "Bolzano",
+          trailT: T.bolzanoOut,
+          here: BOLZANO,
+          focusStopId: "bolzano",
+          expandedClusterIds: CLUSTERS.dolomites,
+          visitedClusterIds: CLUSTERS.pastInnsbruck,
+        }),
+        busFassaBolzano,
+        T.qcTerme,
+        T.bolzanoOut,
+        t,
+      );
+    case "train-bolzano-venice":
+      return rideLine(
+        cityHold(CITY.fassaBolzano, {
+          dayId: 8,
+          label: "Bolzano → Venezia Santa Lucia",
+          trailT: T.bolzanoOut,
+          here: BOLZANO,
+          focusStopId: "bolzano",
+          expandedClusterIds: CLUSTERS.dolomites,
+          visitedClusterIds: CLUSTERS.pastInnsbruck,
+        }),
+        pose({
+          phase: "day",
+          center: CITY.toVenice.center,
+          zoom: CITY.toVenice.zoom,
+          pitch: CITY.toVenice.pitch,
+          bearing: CITY.toVenice.bearing,
+          showFlight: false,
+          flightT: 0,
+          flightLeg: null,
+          trailT: T.bolzanoOut,
+          dayId: 8,
+          label: "Bolzano → Venezia Santa Lucia",
+          here: BOLZANO,
+          expandedClusterIds: CLUSTERS.none,
+          visitedClusterIds: CLUSTERS.pastDolomites,
+        }),
+        cityHold(CITY.venice, {
+          dayId: 8,
+          label: "Venezia Santa Lucia",
+          trailT: T.venice,
+          here: VENICE,
+          focusStopId: "venice-tbd",
+          expandedClusterIds: CLUSTERS.venice,
+          visitedClusterIds: CLUSTERS.pastDolomites,
+        }),
+        railBolzanoVenice,
+        T.bolzanoOut,
+        T.venice,
+        t,
+      );
+    case "venice-first-night":
+      return cityHold(CITY.venice, {
         dayId: 8,
-        label: "Exit still open",
-        trailT: T.puez,
-        here: PUEZ,
-        focusStopId: "puez",
-        amount: 0.12,
-        expandedClusterIds: CLUSTERS.dolomites,
-        visitedClusterIds: CLUSTERS.pastInnsbruck,
+        label: "First night in Venice",
+        trailT: T.venice,
+        here: VENICE,
+        focusStopId: "venice-tbd",
+        expandedClusterIds: CLUSTERS.venice,
+        visitedClusterIds: CLUSTERS.pastDolomites,
       });
     case "open-venice":
     case "venice-lodging":
