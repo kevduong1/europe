@@ -613,6 +613,17 @@ a {
   transition: opacity 0.28s ease;
 }
 
+.map-photo-pin-gallery {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.map-photo-pin-frame + .map-photo-pin-frame {
+  margin-left: -8px;
+  transform: translateY(3px) rotate(2.5deg);
+}
+
 /*
  * `!important` is load-bearing here: MapLibre's own Marker class re-writes
  * `this._element.style.opacity` from its internal occlusion tracking on

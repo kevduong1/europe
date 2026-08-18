@@ -246,9 +246,13 @@ export function TripShell() {
     // --- paint ---
     if (dayFrame) {
       paintDays(dayFrame);
-      if (activeDayRef.current !== dayFrame.activeDay) {
-        activeDayRef.current = dayFrame.activeDay;
-        setActiveDayId(dayFrame.activeDay);
+      // The fixed day heading follows the cinematic view, so Day 2 reaches
+      // the top while the plane is landing instead of after the section's
+      // title dot has caught up with the chrome anchor.
+      const nextActiveDay = view.dayId ?? dayFrame.activeDay;
+      if (activeDayRef.current !== nextActiveDay) {
+        activeDayRef.current = nextActiveDay;
+        setActiveDayId(nextActiveDay);
       }
       if (itineraryModeRef.current !== dayFrame.itineraryMode) {
         itineraryModeRef.current = dayFrame.itineraryMode;

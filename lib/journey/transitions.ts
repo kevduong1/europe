@@ -39,6 +39,8 @@ export function mix(a: JourneyView, b: JourneyView, t: number): JourneyView {
           ? a.here
           : b.here,
     focusStopId: pick.focusStopId,
+    localRouteId: pick.localRouteId,
+    localRouteT: lerp(a.localRouteT, b.localRouteT, u),
   };
 }
 

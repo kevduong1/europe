@@ -100,7 +100,7 @@ export const days: Day[] = [
       {
         kind: "open",
         id: "open-munich",
-        text: "Nothing planned yet — the day is open.",
+        text: "Keep the morning loose; the walk below is a suggested line, not a fixed schedule.",
       },
       {
         kind: "event",
@@ -115,14 +115,14 @@ export const days: Day[] = [
         kind: "event",
         id: "english-garden",
         title: "Walk up the Englischer Garten",
-        note: "Eisbachwelle up to the Kleinhesseloher See, past the Monopteros and the Chinese Tower.",
+        note: "2.2 km on park paths: Eisbachwelle → Monopteros skyline view → Chinese Tower beer garden → Kleinhesseloher See.",
         detailSlug: "english-garden",
       },
       {
         kind: "event",
         id: "hofbrauhaus",
         title: "Hofbräuhaus am Platzl",
-        note: "The famous beer hall, back in the old town.",
+        note: "Founded in 1589 and open to the public since 1828. Try the ground-floor Schwemme: communal tables, free seating, and live tavern music.",
         detailSlug: "hofbrauhaus",
       },
     ],
@@ -207,7 +207,7 @@ export const days: Day[] = [
         id: "bus-bolzano-ortisei",
         mode: "bus",
         label: "Bolzano → Ortisei",
-        meta: "Bus",
+        meta: "35.9 km on the SS12 and SS242",
         detailSlug: "bus-bolzano-ortisei",
       },
       {
@@ -296,7 +296,7 @@ export const days: Day[] = [
         id: "to-val-di-fassa",
         mode: "bus",
         label: "Ortisei → Val di Fassa",
-        meta: "Over Passo Sella via Canazei",
+        meta: "40.8 km over Passo Sella via Canazei",
         detailSlug: "to-val-di-fassa",
       },
       {
@@ -333,7 +333,7 @@ export const days: Day[] = [
         id: "bus-fassa-bolzano",
         mode: "bus",
         label: "Val di Fassa → Bolzano",
-        meta: "Over Passo Costalunga",
+        meta: "40.9 km over Passo Costalunga",
         detailSlug: "bus-fassa-bolzano",
       },
       {
@@ -555,14 +555,16 @@ export const details: DetailRecord[] = [
     dayId: 3,
     title: "Englischer Garten",
     kind: "note",
-    body: "From Eisbachwelle up to the Kleinhesseloher See, past the Monopteros and the Chinesischer Turm.",
+    body: "A Valhalla-routed 2.2 km walk from Eisbachwelle to Kleinhesseloher See, with stops at the Monopteros and Chinesischer Turm. Allow about 30 minutes of moving time, plus however long the views, beer garden, and lake keep you.",
+    extra: "The Monopteros is the skyline stop; the Chinese Tower is the beer-garden stop; the Seehaus sits at the lake finish.",
   },
   {
     slug: "hofbrauhaus",
     dayId: 3,
     title: "Hofbräuhaus am Platzl",
     kind: "note",
-    body: "The famous beer hall in the old town. No booking needed for a walk-in.",
+    body: "The royal brewery was founded by Duke Wilhelm V in 1589, opened as a public tavern in 1828, and rebuilt into today's beer hall in 1896–97. The ground-floor Schwemme and Wirtsgarten use free seating; reservations are for the upstairs Bräustüberl and start with groups of four.",
+    extra: "Platzl 9 · currently open daily 11:00–00:00 · kitchen to 22:00 · last drinks 23:30.",
   },
   {
     slug: "train-munich-innsbruck",
@@ -591,14 +593,14 @@ export const details: DetailRecord[] = [
     dayId: 5,
     title: "Bolzano to Ortisei",
     kind: "bus",
-    body: "Bus from Bolzano into Val Gardena. The last motorized leg before the huts.",
+    body: "A 35.9 km Valhalla street route from Bolzano station into Val Gardena, following the SS12 to Ponte Gardena and the SS242 into Ortisei. The last motorized leg before the huts.",
   },
   {
     slug: "rifugio-resciesa",
     dayId: 5,
     title: "Rifugio Resciesa",
     kind: "stay",
-    body: "First hut night, above Ortisei. This is where the trail line begins.",
+    body: "First hut night, above Ortisei. The mapped approach follows the Resciesa funicular and trail 35 to the hut.",
   },
   {
     slug: "rifugio-firenze",
@@ -626,7 +628,7 @@ export const details: DetailRecord[] = [
     dayId: 7,
     title: "Ortisei to Val di Fassa",
     kind: "bus",
-    body: "Over Passo Sella and down through Canazei into Val di Fassa, ending at QC Terme Dolomiti in Pozza di Fassa.",
+    body: "A 40.8 km street route over Passo Sella and down through Canazei into Val di Fassa, ending at QC Terme Dolomiti in Pozza di Fassa.",
   },
   {
     slug: "qc-terme-dolomiti",
@@ -648,7 +650,7 @@ export const details: DetailRecord[] = [
     dayId: 8,
     title: "Val di Fassa to Bolzano",
     kind: "bus",
-    body: "Over Passo Costalunga (Karerpass) and down through Nova Levante into Bolzano — the way out of the mountains.",
+    body: "A 40.9 km street route over Passo Costalunga (Karerpass) and down through Nova Levante into Bolzano — the way out of the mountains.",
   },
   {
     slug: "venice-first-night",

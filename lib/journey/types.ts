@@ -1,3 +1,4 @@
+import type { LocalRouteId } from "@/data/types";
 import type { LngLat } from "@/lib/geo";
 
 export type JourneyPhase = "overview" | "flight" | "day";
@@ -24,4 +25,7 @@ export type JourneyView = {
   visitedClusterIds: readonly string[];
   here: LngLat | null;
   focusStopId: string | null;
+  /** A short, scene-specific Valhalla route, separate from the trip-wide trail. */
+  localRouteId: LocalRouteId | null;
+  localRouteT: number;
 };

@@ -16,6 +16,7 @@ import {
 import {
   flightHome,
   flightOut,
+  localRoutes,
   orangeTrail,
   overnightStops,
   photoPins,
@@ -180,10 +181,19 @@ function photoPinElement(pin: PhotoPin) {
   el.dataset.pin = pin.id;
   el.dataset.days = pin.days.join(",");
   if (pin.clusterId) el.dataset.cluster = pin.clusterId;
-  const frameInner = pin.photo
-    ? `<img class="map-photo-pin-img" src="${pin.photo.pinSrc}" alt="${pin.photo.alt.replace(/"/g, "&quot;")}" width="64" height="64" loading="lazy" decoding="async" />`
-    : `<span class="map-photo-pin-empty" aria-hidden="true">${PHOTO_PLACEHOLDER_ICON}</span>`;
-  el.innerHTML = `<span class="map-photo-pin-frame">${frameInner}</span><span class="map-photo-pin-caption">${pin.caption}</span><span class="map-photo-pin-stem"></span><span class="map-photo-pin-dot"></span>`;
+  const photos = [pin.photo, pin.secondaryPhoto].filter(
+    (photo): photo is NonNullable<typeof photo> => Boolean(photo),
+  );
+  const frames =
+    photos.length > 0
+      ? photos
+          .map(
+            (photo) =>
+              `<span class="map-photo-pin-frame"><img class="map-photo-pin-img" src="${photo.pinSrc}" alt="${photo.alt.replace(/"/g, "&quot;")}" width="64" height="64" loading="lazy" decoding="async" /></span>`,
+          )
+          .join("")
+      : `<span class="map-photo-pin-frame"><span class="map-photo-pin-empty" aria-hidden="true">${PHOTO_PLACEHOLDER_ICON}</span></span>`;
+  el.innerHTML = `<span class="map-photo-pin-gallery">${frames}</span><span class="map-photo-pin-caption">${pin.caption}</span><span class="map-photo-pin-stem"></span><span class="map-photo-pin-dot"></span>`;
   return el;
 }
 
@@ -223,6 +233,17 @@ function addRouteLayers(map: MapLibreMap) {
   map.addSource("flights", {
     type: "geojson",
     data: lineFeature("flight-active", sliceLine(flightOut, 0, 0.002)),
+  });
+  map.addSource("local-route-ghost", {
+    type: "geojson",
+    data: lineFeature("local-route-ghost", localRoutes["english-garden"]),
+  });
+  map.addSource("local-route-active", {
+    type: "geojson",
+    data: lineFeature(
+      "local-route-active",
+      sliceLine(localRoutes["english-garden"], 0, 0.002),
+    ),
   });
   const lineWidth: ["interpolate", ["linear"], ["zoom"], ...number[]] = [
     "interpolate",
@@ -310,6 +331,40 @@ function addRouteLayers(map: MapLibreMap) {
       "line-opacity": 0,
     },
   });
+  map.addLayer({
+    id: "local-route-ghost",
+    type: "line",
+    source: "local-route-ghost",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": TRAIL,
+      "line-width": 3,
+      "line-dasharray": [1.2, 1.4],
+      "line-opacity": 0,
+    },
+  });
+  map.addLayer({
+    id: "local-route-casing",
+    type: "line",
+    source: "local-route-active",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": "#faf9f6",
+      "line-width": 8,
+      "line-opacity": 0,
+    },
+  });
+  map.addLayer({
+    id: "local-route-active",
+    type: "line",
+    source: "local-route-active",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": TRAIL,
+      "line-width": 4.5,
+      "line-opacity": 0,
+    },
+  });
 }
 
 const MARKER_OPTS = {
@@ -327,6 +382,7 @@ const STOP_IDS = new Set(overnightStops.map((stop) => stop.id));
  * returns null, and falls back to a coarser day-based gate in `applyMarkers`.
  */
 function photoPinFocusTarget(pin: PhotoPin): string | null {
+  if (pin.focusId) return pin.focusId;
   const candidate = PHOTO_PIN_FOCUS_OVERRIDES[pin.id] ?? pin.id;
   return STOP_IDS.has(candidate) ? candidate : null;
 }
@@ -344,6 +400,8 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
     const pendingRef = useRef<JourneyView | null>(null);
     const lastTrailT = useRef(-1);
     const lastFlightKey = useRef("");
+    const lastLocalRouteKey = useRef("");
+    const lastLocalRouteId = useRef("");
     const lastMarkerKey = useRef("");
     const terrainEnabledRef = useRef(false);
     const lastCamera = useRef<Camera | null>(null);
@@ -410,6 +468,37 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         },
       });
       setLineOpacity("route-flight", show ? 0.95 : 0);
+    }
+
+    function applyLocalRoute(view: JourneyView) {
+      const map = mapRef.current;
+      if (!map) return;
+      const id = view.localRouteId;
+      const route = id ? localRoutes[id] : null;
+      const t = Math.min(1, Math.max(0, view.localRouteT));
+      const show = Boolean(route && view.phase === "day");
+      const key = `${id ?? "none"}:${t.toFixed(3)}:${show}`;
+      if (key === lastLocalRouteKey.current) return;
+      lastLocalRouteKey.current = key;
+
+      setLineOpacity("local-route-ghost", show ? 0.3 : 0);
+      setLineOpacity("local-route-casing", show ? 0.92 : 0);
+      setLineOpacity("local-route-active", show ? 1 : 0);
+      if (!route) return;
+
+      if (id && lastLocalRouteId.current !== id) {
+        lastLocalRouteId.current = id;
+        const ghost = map.getSource("local-route-ghost") as
+          | GeoJSONSource
+          | undefined;
+        ghost?.setData(lineFeature("local-route-ghost", route));
+      }
+      const active = map.getSource("local-route-active") as
+        | GeoJSONSource
+        | undefined;
+      active?.setData(
+        lineFeature("local-route-active", sliceLine(route, 0, Math.max(0.002, t))),
+      );
     }
 
     /**
@@ -612,6 +701,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
       applyCamera(view);
       applyTrail(view);
       applyFlight(view);
+      applyLocalRoute(view);
       applyMarkers(view);
     }
     applyViewRef.current = applyView;
@@ -713,8 +803,11 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
                 element: photoPinElement(pin),
                 anchor: "bottom",
                 // Bottom anchoring places the dot's lower edge on the point;
-                // move it down by half its 6px height to center it precisely.
-                offset: [0, 3],
+                // move it down by half its 6px height to center it precisely,
+                // while retaining per-landmark separation for nearby photos.
+                offset: pin.offset
+                  ? [pin.offset[0], pin.offset[1] + 3]
+                  : [0, 3],
                 ...MARKER_OPTS,
               })
                 .setLngLat(pin.lngLat)
@@ -786,6 +879,8 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         lastViewRef.current = null;
         lastTrailT.current = -1;
         lastFlightKey.current = "";
+        lastLocalRouteKey.current = "";
+        lastLocalRouteId.current = "";
         lastMarkerKey.current = "";
         terrainEnabledRef.current = false;
       };

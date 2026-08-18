@@ -1,6 +1,17 @@
 import { densify, greatCircle, joinLines, lineLengthKm, type LngLat } from "@/lib/geo";
 import { photos } from "./photos";
-import type { OvernightStop, PhotoPin, StopCluster } from "./types";
+import {
+  routedEnglishGarden,
+  routedGardenHofbrauhaus,
+  routedHbfWombat,
+  routedMucHbf,
+} from "./routed-paths";
+import {
+  routedBolzanoOrtisei,
+  routedFassaBolzano,
+  routedOrtiseiValDiFassa,
+} from "./routed-dolomites";
+import type { LocalRouteId, OvernightStop, PhotoPin, StopCluster } from "./types";
 
 export const MCI: LngLat = [-94.7139, 39.2976];
 export const MUC: LngLat = [11.7861, 48.3538];
@@ -41,16 +52,8 @@ export const railInnsbruckBolzano: LngLat[] = densify(
   2.5,
 );
 
-export const busBolzanoOrtisei: LngLat[] = densify(
-  [
-    [11.357, 46.498],
-    [11.42, 46.52],
-    [11.531, 46.557],
-    [11.6, 46.565],
-    [11.6717, 46.5761],
-  ],
-  1.2,
-);
+/** Valhalla street route from Bolzano station into Ortisei. */
+export const busBolzanoOrtisei = routedBolzanoOrtisei;
 
 /**
  * Ortisei to Rifugio Resciesa: the Raschötz funicular followed by trail 35
@@ -163,21 +166,19 @@ export const QC_TERME: LngLat = [11.6889, 46.4283];
 /** Venezia Santa Lucia — the trail's real endpoint, not the lagoon centroid. */
 export const VENICE: LngLat = [12.3208, 45.4413];
 export const EISBACHWELLE: LngLat = [11.5877, 48.1435];
-export const WOMBAT: LngLat = [11.555, 48.1405];
+/** Wombat's City Hostel Munich Hauptbahnhof, Senefelderstraße 1. */
+export const WOMBAT: LngLat = [11.5603286, 48.1389289];
 export const MONTAGU: LngLat = [11.394, 47.267];
-export const HOFBRAUHAUS: LngLat = [11.5799, 48.1376];
-export const KLEINHESSELOHER_SEE: LngLat = [11.5942, 48.16];
+export const HOFBRAUHAUS: LngLat = [11.5799788, 48.1376334];
+export const MONOPTEROS: LngLat = [11.5909208, 48.1498803];
+export const CHINESE_TOWER: LngLat = [11.5920973, 48.1525525];
+export const KLEINHESSELOHER_SEE: LngLat = [11.5961185, 48.1594065];
 
-/** Short stroll up the Englischer Garten — Eisbachwelle to the lake, past the Monopteros and the Chinese Tower. */
-export const walkEnglischerGarten: LngLat[] = densify(
-  [
-    EISBACHWELLE,
-    [11.5915, 48.1519], // Monopteros
-    [11.5924, 48.1527], // Chinesischer Turm
-    KLEINHESSELOHER_SEE,
-  ],
-  0.06,
-);
+/** Valhalla pedestrian route through the Englischer Garten landmarks. */
+export const walkEnglischerGarten = routedEnglishGarden;
+
+/** Valhalla pedestrian route from the lake back into the old town. */
+export const walkGardenHofbrauhaus = routedGardenHofbrauhaus;
 
 /**
  * Firenze up Val Cisles to the Seceda summit ridge. Simplified OpenStreetMap
@@ -241,29 +242,10 @@ export const gondolaSecedaOrtisei: LngLat[] = densify(
 );
 
 /** Ortisei over Passo Sella via Canazei to Val di Fassa, ending at QC Terme Dolomiti. */
-export const busOrtiseiValDiFassa: LngLat[] = densify(
-  [
-    ORTISEI,
-    [11.7166, 46.5643], // Santa Cristina Valgardena
-    [11.7597, 46.5548], // Selva di Val Gardena
-    [11.7597, 46.5122], // Passo Sella
-    [11.7699, 46.4769], // Canazei
-    [11.6919, 46.4297], // Pozza di Fassa / Sèn Jan
-    QC_TERME,
-  ],
-  1,
-);
+export const busOrtiseiValDiFassa = routedOrtiseiValDiFassa;
 
 /** Val di Fassa over Passo Costalunga to Bolzano — the way out. */
-export const busFassaBolzano: LngLat[] = densify(
-  [
-    QC_TERME,
-    [11.5906, 46.4083], // Passo Costalunga / Karerpass
-    [11.5117, 46.4283], // Nova Levante
-    BOLZANO,
-  ],
-  1.2,
-);
+export const busFassaBolzano = routedFassaBolzano;
 
 /** Bolzano → Venice by rail, the real routing via Verona. Long leg, coarser step. */
 export const railBolzanoVenice: LngLat[] = densify(
@@ -281,15 +263,19 @@ export const railBolzanoVenice: LngLat[] = densify(
   4,
 );
 
-export const railMucHbf: LngLat[] = densify(
-  [MUC, [11.72, 48.29], [11.66, 48.22], [11.6, 48.17], MUNICH_HBF],
-  1.4,
-);
+/** Valhalla street route used to stage the airport transfer into the city. */
+export const railMucHbf = routedMucHbf;
 
-export const walkWombatHbf: LngLat[] = densify(
-  [WOMBAT, [11.5568, 48.14035], MUNICH_HBF],
-  0.04,
-);
+/** Valhalla returns Hbf → Wombat; the beat consumes this line hostel → station. */
+export const walkWombatHbf = [...routedHbfWombat].reverse();
+
+export const localRoutes: Record<LocalRouteId, LngLat[]> = {
+  "airport-transfer": railMucHbf,
+  "hbf-wombat": routedHbfWombat,
+  "wombat-hbf": walkWombatHbf,
+  "english-garden": walkEnglischerGarten,
+  "garden-hofbrauhaus": walkGardenHofbrauhaus,
+};
 
 export const flightOut = greatCircle(MCI, MUC, 96);
 export const flightHome = greatCircle(VCE, MCI, 96);
@@ -511,12 +497,44 @@ export const photoPins: PhotoPin[] = [
     clusterId: "munich",
   },
   {
+    id: "monopteros",
+    lngLat: MONOPTEROS,
+    photo: photos.monopteros,
+    caption: "Monopteros",
+    days: [3],
+    clusterId: "munich",
+    focusId: "english-garden",
+    offset: [-54, -8],
+  },
+  {
+    id: "chinese-tower",
+    lngLat: CHINESE_TOWER,
+    photo: photos.chineseTower,
+    caption: "Chinese Tower",
+    days: [3],
+    clusterId: "munich",
+    focusId: "english-garden",
+    offset: [52, 4],
+  },
+  {
+    id: "kleinhesseloher-see",
+    lngLat: KLEINHESSELOHER_SEE,
+    photo: photos.kleinhesseloherSee,
+    caption: "Kleinhesseloher See",
+    days: [3],
+    clusterId: "munich",
+    focusId: "english-garden",
+    offset: [0, -8],
+  },
+  {
     id: "hofbrauhaus",
     lngLat: HOFBRAUHAUS,
     photo: photos.hofbrauhaus,
+    secondaryPhoto: photos.hofbrauhausInterior,
     caption: "Hofbräuhaus am Platzl",
     days: [3],
     clusterId: "munich",
+    focusId: "hofbrauhaus",
   },
   {
     id: "innsbruck",

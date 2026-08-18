@@ -1,7 +1,7 @@
 import { clamp } from "@/lib/geo";
 import { viewForBeat, viewForDay } from "./beats";
 import { OVERVIEW } from "./cameras";
-import { ANCHOR, FREEZE, HANDOFF } from "./pacing";
+import { ANCHOR, BEAT_HANDOFF, FREEZE, HANDOFF } from "./pacing";
 import { holdThen, mix } from "./transitions";
 import type { JourneyView } from "./types";
 
@@ -55,13 +55,14 @@ function readDayBeats(
   const following = beats[index + 1];
   const t = sectionProgress(beat, following ?? next, anchor);
   const view = viewForBeat(dayId, beat.dataset.beat ?? "", t);
-  if (!following && next && t > HANDOFF) {
+  const handoff = BEAT_HANDOFF[beat.dataset.beat ?? ""] ?? HANDOFF;
+  if (!following && next && t > handoff) {
     const nextDayId = Number(next.dataset.day);
     const nextBeat = next.querySelector<HTMLElement>("[data-beat]");
     const incoming = nextBeat
       ? viewForBeat(nextDayId, nextBeat.dataset.beat ?? "", 0)
       : viewForDay(nextDayId);
-    return mix(view, incoming, (t - HANDOFF) / (1 - HANDOFF));
+    return mix(view, incoming, (t - handoff) / (1 - handoff));
   }
   return view;
 }

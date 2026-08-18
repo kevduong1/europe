@@ -17,8 +17,8 @@ export const BEAT_SPACE: Record<string, number> = {
   // Same MCI<->Munich crossing as flight-home, just outbound — kept equal so
   // neither leg reads as more or less important than the other.
   "flight-out": 200,
-  "arrive-muc": 88,
-  "airport-train": 150,
+  "arrive-muc": 122,
+  "airport-train": 165,
   "check-in-wombat": 72,
   // Auto "the night" row for wombat-hostel (days 2 & 3): compact card, a
   // little more than the bare default so it doesn't feel clipped.
@@ -27,8 +27,8 @@ export const BEAT_SPACE: Record<string, number> = {
   eisbachwelle: 92,
   // Camera set-pieces (rides a walking line / zooms while rotating bearing)
   // — need more room than a plain event so the move reads, not snaps.
-  "english-garden": 100,
-  "hofbrauhaus": 110,
+  "english-garden": 150,
+  "hofbrauhaus": 190,
   "leave-wombat": 78,
   "walk-hbf": 88,
   "train-munich-innsbruck": 240,
@@ -73,10 +73,18 @@ export const BEAT_SPACE: Record<string, number> = {
 export const FREEZE = 0.52;
 
 /** Where on screen "now" is read from for the map camera — a bit above centre. */
-export const ANCHOR = 0.4;
+export const ANCHOR = 0.3;
 
 /** How late in a day's last beat the next day's camera starts bleeding in. */
 export const HANDOFF = 0.72;
+
+/** Last-beat overrides for scenes that need an earlier or later day handoff. */
+export const BEAT_HANDOFF: Record<string, number> = {
+  // Start naming Day 2 while the aircraft is on final approach.
+  "flight-out": 0.7,
+  // Preserve the full Hofbräuhaus orbit and its two-photo hold.
+  hofbrauhaus: 0.9,
+};
 
 /**
  * Day-chrome anchor line, as a share of viewport height above the header

@@ -2,6 +2,13 @@ import type { Photo } from "./photos";
 
 export type LngLat = [number, number];
 
+export type LocalRouteId =
+  | "airport-transfer"
+  | "hbf-wombat"
+  | "wombat-hbf"
+  | "english-garden"
+  | "garden-hofbrauhaus";
+
 export type TransportMode =
   | "rail"
   | "bus"
@@ -133,7 +140,12 @@ export type PhotoPin = {
   id: string;
   lngLat: LngLat;
   photo: Photo | null;
+  secondaryPhoto?: Photo;
   caption: string;
   days: number[];
   clusterId?: string;
+  /** Camera focus id that reveals this pin when it is not an overnight stop. */
+  focusId?: string;
+  /** Viewport-pixel nudge used to keep nearby photo cards from overlapping. */
+  offset?: [number, number];
 };
