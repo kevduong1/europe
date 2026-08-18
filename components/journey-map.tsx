@@ -177,27 +177,15 @@ const PHOTO_PIN_FOCUS_OVERRIDES: Record<string, string> = {
 
 function photoPinElement(pin: PhotoPin) {
   const el = document.createElement("div");
-  el.className = `map-photo-pin${pin.variant === "stack" ? " map-photo-pin-stack" : ""}`;
+  el.className = "map-photo-pin";
   el.dataset.pin = pin.id;
   el.dataset.days = pin.days.join(",");
   if (pin.clusterId) el.dataset.cluster = pin.clusterId;
-  const photos = [
-    pin.photo,
-    pin.secondaryPhoto,
-    ...(pin.additionalPhotos ?? []),
-  ].filter(
-    (photo): photo is NonNullable<typeof photo> => Boolean(photo),
-  );
-  const frames =
-    photos.length > 0
-      ? photos
-          .map(
-            (photo) =>
-              `<span class="map-photo-pin-frame"><img class="map-photo-pin-img" src="${pin.variant === "stack" ? photo.src : photo.pinSrc}" alt="${photo.alt.replace(/"/g, "&quot;")}" width="${pin.variant === "stack" ? 528 : 128}" height="${pin.variant === "stack" ? 352 : 128}" loading="lazy" decoding="async" /></span>`,
-          )
-          .join("")
-      : `<span class="map-photo-pin-frame"><span class="map-photo-pin-empty" aria-hidden="true">${PHOTO_PLACEHOLDER_ICON}</span></span>`;
-  el.innerHTML = `<span class="map-photo-pin-gallery">${frames}</span><span class="map-photo-pin-caption">${pin.caption}</span><span class="map-photo-pin-stem"></span><span class="map-photo-pin-dot"></span>`;
+  if (pin.tilt) el.style.setProperty("--photo-tilt", `${pin.tilt}deg`);
+  const frame = pin.photo
+    ? `<span class="map-photo-pin-frame"><img class="map-photo-pin-img" src="${pin.photo.pinSrc}" alt="${pin.photo.alt.replace(/"/g, "&quot;")}" width="128" height="128" loading="lazy" decoding="async" /></span>`
+    : `<span class="map-photo-pin-frame"><span class="map-photo-pin-empty" aria-hidden="true">${PHOTO_PLACEHOLDER_ICON}</span></span>`;
+  el.innerHTML = `${frame}<span class="map-photo-pin-caption">${pin.caption}</span><span class="map-photo-pin-stem"></span><span class="map-photo-pin-dot"></span>`;
   return el;
 }
 
@@ -382,8 +370,9 @@ const STOP_IDS = new Set(overnightStops.map((stop) => stop.id));
  * The overnight-stop id whose `focusStopId` moment this photo belongs to, if
  * any. Most pin ids already match a stop id 1:1 (wombat, ortisei, resciesa,
  * firenze, seceda); `PHOTO_PIN_FOCUS_OVERRIDES` covers the ones that
- * don't. A pin with no resolvable stop (hofbrauhaus — not an overnight stop)
- * returns null, and falls back to a coarser day-based gate in `applyMarkers`.
+ * don't. Pins that share a stop (wombat-courtyard, hofbrauhaus-interior)
+ * set `focusId` to that stop. A pin with no resolvable stop returns null
+ * and falls back to a coarser day-based gate in `applyMarkers`.
  */
 function photoPinFocusTarget(pin: PhotoPin): string | null {
   if (pin.focusId) return pin.focusId;
@@ -814,11 +803,8 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
                 // move it down by half its rendered height to center it precisely,
                 // while retaining per-landmark separation for nearby photos.
                 offset: pin.offset
-                  ? [
-                      pin.offset[0],
-                      pin.offset[1] + (pin.variant === "stack" ? 5 : 4),
-                    ]
-                  : [0, pin.variant === "stack" ? 5 : 4],
+                  ? [pin.offset[0], pin.offset[1] + 4]
+                  : [0, 4],
                 ...MARKER_OPTS,
               })
                 .setLngLat(pin.lngLat)

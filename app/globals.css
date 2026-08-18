@@ -543,17 +543,6 @@ a {
   transition: opacity 0.28s ease;
 }
 
-.map-photo-pin-gallery {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.map-photo-pin-frame + .map-photo-pin-frame {
-  margin-left: -12px;
-  transform: translateY(3px) rotate(2.5deg);
-}
-
 /*
  * `!important` is load-bearing here: MapLibre's own Marker class re-writes
  * `this._element.style.opacity` from its internal occlusion tracking on
@@ -713,6 +702,7 @@ a {
   padding: 4px;
   border-radius: 6px;
   background: var(--paper);
+  transform: rotate(var(--photo-tilt, 0deg));
   box-shadow:
     0 0 0 1.5px color-mix(in srgb, var(--trail) 55%, var(--ink) 10%),
     0 3px 10px color-mix(in srgb, var(--ink) 30%, transparent);
@@ -768,71 +758,6 @@ a {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--paper) 82%, transparent);
 }
 
-/* Featured Munich and Seceda moments get three overlapping landscape prints. */
-.map-photo-pin-stack {
-  gap: 4px;
-  transition: opacity 0.38s ease;
-}
-
-.map-photo-pin-stack .map-photo-pin-gallery {
-  position: relative;
-  display: block;
-  width: 400px;
-  height: 244px;
-}
-
-.map-photo-pin-stack .map-photo-pin-frame {
-  position: absolute;
-  left: 68px;
-  top: 22px;
-  width: 264px;
-  height: 176px;
-  margin-left: 0;
-  padding: 6px;
-  border-radius: 8px;
-  box-shadow:
-    0 0 0 1.5px color-mix(in srgb, var(--trail) 48%, var(--ink) 10%),
-    0 9px 24px color-mix(in srgb, var(--ink) 34%, transparent);
-}
-
-.map-photo-pin-stack .map-photo-pin-frame:nth-child(1) {
-  z-index: 3;
-  transform: rotate(-3deg);
-}
-
-.map-photo-pin-stack .map-photo-pin-frame:nth-child(2) {
-  left: 4px;
-  top: 48px;
-  z-index: 2;
-  transform: rotate(-9deg);
-}
-
-.map-photo-pin-stack .map-photo-pin-frame:nth-child(3) {
-  right: 4px;
-  left: auto;
-  top: 56px;
-  z-index: 1;
-  transform: rotate(8deg);
-}
-
-.map-photo-pin-stack .map-photo-pin-caption {
-  max-width: 330px;
-  padding: 2px 9px 3px;
-  font-size: 11px;
-  letter-spacing: 0.07em;
-}
-
-.map-photo-pin-stack .map-photo-pin-stem {
-  height: 12px;
-}
-
-.map-photo-pin-stack .map-photo-pin-dot {
-  width: 10px;
-  height: 10px;
-  margin-top: -2px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--paper) 82%, transparent);
-}
-
 /* Narrow phones keep the map legible while preserving the larger-photo treatment. */
 @media (max-width: 520px) {
   .map-photo-pin-frame {
@@ -843,33 +768,6 @@ a {
 
   .map-photo-pin-caption {
     display: none;
-  }
-
-  .map-photo-pin-stack .map-photo-pin-gallery {
-    width: 310px;
-    height: 188px;
-  }
-
-  .map-photo-pin-stack .map-photo-pin-frame {
-    left: 55px;
-    top: 18px;
-    width: 200px;
-    height: 134px;
-    padding: 4px;
-  }
-
-  .map-photo-pin-stack .map-photo-pin-frame:nth-child(2) {
-    left: 3px;
-    top: 37px;
-  }
-
-  .map-photo-pin-stack .map-photo-pin-frame:nth-child(3) {
-    right: 3px;
-    top: 42px;
-  }
-
-  .map-photo-pin-stack .map-photo-pin-caption {
-    display: block;
   }
 }
 

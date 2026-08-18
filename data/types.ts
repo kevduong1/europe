@@ -140,8 +140,6 @@ export type PhotoPin = {
   id: string;
   lngLat: LngLat;
   photo: Photo | null;
-  secondaryPhoto?: Photo;
-  additionalPhotos?: readonly Photo[];
   caption: string;
   days: number[];
   clusterId?: string;
@@ -149,8 +147,8 @@ export type PhotoPin = {
   focusId?: string;
   /** Optional authored-camera zoom gate for featured close-up pins. */
   minZoom?: number;
-  /** Featured pins use a larger, overlapping photo-stack treatment. */
-  variant?: "stack";
   /** Viewport-pixel nudge used to keep nearby photo cards from overlapping. */
   offset?: [number, number];
+  /** Polaroid tilt in degrees, so neighbouring prints don't sit in a grid. */
+  tilt?: number;
 };
