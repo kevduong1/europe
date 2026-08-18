@@ -42,10 +42,10 @@ export const CITY = {
     bearing: 0,
   },
   munichAirport: {
-    center: [11.66, 48.24] as LngLat,
-    zoom: 10.52,
-    pitch: 0,
-    bearing: 0,
+    center: [11.7861, 48.3538] as LngLat,
+    zoom: 11.72,
+    pitch: 38,
+    bearing: 128,
   },
   innsbruck: {
     center: [11.404, 47.268] as LngLat,
@@ -139,9 +139,9 @@ export const CITY = {
   /** The showpiece: tight and rotating onto the Hofbräuhaus. */
   hofbrauhaus: {
     center: [11.5799, 48.1376] as LngLat,
-    zoom: 15.2,
-    pitch: 22,
-    bearing: 40,
+    zoom: 15.35,
+    pitch: 28,
+    bearing: 68,
   },
 };
 
@@ -177,6 +177,8 @@ export function pose(
     visitedClusterIds: visitedClusterIds ?? clusters.visitedClusterIds,
     here: here ?? null,
     focusStopId: focusStopId ?? null,
+    localRouteId: partial.localRouteId ?? null,
+    localRouteT: clamp(partial.localRouteT ?? 0),
   };
 }
 
@@ -269,8 +271,11 @@ export function usaDepartView(): JourneyView {
 const PULL_OUT_START = 0.1;
 const PULL_OUT_END = 0.26;
 const PULL_OUT_SPAN = PULL_OUT_END - PULL_OUT_START;
-const DESCENT_START = 0.76;
-const DESCENT_SPAN = 1 - DESCENT_START;
+const DESCENT_START = 0.64;
+const DESCENT_END = 0.86;
+const DESCENT_SPAN = DESCENT_END - DESCENT_START;
+/** Final few kilometres: close enough to remain inside the runway camera. */
+const MUC_APPROACH_START = 0.9994;
 
 /** Hold over the plains, pull out over the ocean, then drop onto Munich. */
 export function flightOutView(t: number): JourneyView {
@@ -288,14 +293,18 @@ export function flightOutView(t: number): JourneyView {
     zoom = OCEAN_ZOOM;
     center = ATLANTIC_CENTER;
   } else {
-    const k = smoothstep((u - DESCENT_START) / DESCENT_SPAN);
+    const k = smoothstep(clamp((u - DESCENT_START) / DESCENT_SPAN));
     zoom = lerp(OCEAN_ZOOM, CITY.munichAirport.zoom, k);
     center = lerpLngLat(ATLANTIC_CENTER, CITY.munichAirport.center, k);
   }
   const flightT =
     u < DESCENT_START
       ? Math.max(MIN_FLIGHT_T, u)
-      : lerp(DESCENT_START, 0.97, smoothstep((u - DESCENT_START) / DESCENT_SPAN));
+      : lerp(
+          DESCENT_START,
+          MUC_APPROACH_START,
+          smoothstep(clamp((u - DESCENT_START) / DESCENT_SPAN)),
+        );
   return pose({
     phase: "flight",
     center,
@@ -340,19 +349,19 @@ export function flightHomeView(t: number): JourneyView {
   });
 }
 
-/** Touchdown: the plane lands halfway through, then the day takes over. */
+/** Touchdown: read the full approach, then hold briefly before going to ground. */
 export function mucArrival(t: number): JourneyView {
   const u = clamp(t);
-  const onGround = u >= 0.48;
-  const touchdown = smoothstep(Math.min(1, u / 0.48));
+  const onGround = u >= 0.74;
+  const touchdown = smoothstep(Math.min(1, u / 0.66));
   return pose({
     phase: onGround ? "day" : "flight",
     center: CITY.munichAirport.center,
-    zoom: CITY.munichAirport.zoom + u * 0.38,
-    pitch: 0,
-    bearing: 0,
+    zoom: CITY.munichAirport.zoom + u * 0.34,
+    pitch: CITY.munichAirport.pitch,
+    bearing: CITY.munichAirport.bearing,
     showFlight: !onGround,
-    flightT: lerp(0.97, 1, touchdown),
+    flightT: lerp(MUC_APPROACH_START, 1, touchdown),
     flightLeg: "out",
     trailT: 0,
     dayId: 2,

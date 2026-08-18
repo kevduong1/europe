@@ -25,6 +25,7 @@ import {
   VCE,
   VENICE,
   walkEnglischerGarten,
+  walkGardenHofbrauhaus,
   walkWombatHbf,
   WOMBAT,
 } from "@/data/route";
@@ -222,17 +223,23 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
         showFlight: false,
         flightLeg: null,
         label: "Airport train → Hbf",
+        localRouteId: "airport-transfer",
+        localRouteT: u,
       };
     }
     case "check-in-wombat": {
       const u = smoothstep(clamp(t));
       const here = along(walkWombatHbf, 1 - u);
-      return munichStay(2, "The Wombat Hostel", {
-        here,
-        focusStopId: "wombat",
-        focus: here,
-        amount: lerp(0.16, 0.34, u),
-      });
+      return {
+        ...munichStay(2, "The Wombat Hostel", {
+          here,
+          focusStopId: "wombat",
+          focus: here,
+          amount: lerp(0.16, 0.34, u),
+        }),
+        localRouteId: "hbf-wombat",
+        localRouteT: u,
+      };
     }
     case "wombat-hostel":
       return munichStay(dayId, "The Wombat Hostel", {
@@ -249,8 +256,8 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
         focus: EISBACHWELLE,
         amount: 0.4,
       });
-    case "english-garden":
-      return rideLine(
+    case "english-garden": {
+      const view = rideLine(
         munichStay(3, "Eisbachwelle", {
           here: EISBACHWELLE,
           focusStopId: "eisbachwelle",
@@ -270,6 +277,7 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
           dayId: 3,
           label: "Walking the Englischer Garten",
           here: EISBACHWELLE,
+          focusStopId: "english-garden",
           expandedClusterIds: CLUSTERS.munich,
           visitedClusterIds: CLUSTERS.none,
         }),
@@ -283,10 +291,19 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
         0,
         t,
       );
+      return {
+        ...view,
+        focusStopId: "english-garden",
+        localRouteId: "english-garden",
+        localRouteT: smoothstep(clamp((t - 0.06) / 0.8)),
+      };
+    }
     case "hofbrauhaus": {
-      // Showpiece: sweep bearing and pitch in alongside the zoom, so the city
-      // turns under the camera as it tightens onto the beer hall.
-      const u = smoothstep(clamp(t));
+      // First finish the actual walk from the lake into the old town. Then
+      // give the showpiece a long, independent orbit rather than tying the
+      // bearing to the short arrival transition.
+      const routeT = smoothstep(clamp(t / 0.22));
+      const u = smoothstep(clamp((t - 0.08) / 0.7));
       return pose({
         phase: "day",
         center: lerpLngLat(CITY.munich.center, CITY.hofbrauhaus.center, u),
@@ -299,7 +316,13 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
         trailT: 0,
         dayId: 3,
         label: "Hofbräuhaus am Platzl",
-        here: HOFBRAUHAUS,
+        here:
+          routeT >= 0.999
+            ? HOFBRAUHAUS
+            : along(walkGardenHofbrauhaus, routeT),
+        focusStopId: u > 0.18 ? "hofbrauhaus" : null,
+        localRouteId: "garden-hofbrauhaus",
+        localRouteT: routeT,
         expandedClusterIds: CLUSTERS.munich,
         visitedClusterIds: CLUSTERS.none,
       });
@@ -313,12 +336,16 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
     case "walk-hbf": {
       const u = clamp((t - 0.12) / 0.7);
       const here = along(walkWombatHbf, u);
-      return munichStay(4, "Walk to Hbf", {
-        here,
-        focusStopId: "wombat",
-        focus: here,
-        amount: 0.38,
-      });
+      return {
+        ...munichStay(4, "Walk to Hbf", {
+          here,
+          focusStopId: "wombat",
+          focus: here,
+          amount: 0.38,
+        }),
+        localRouteId: "wombat-hbf",
+        localRouteT: u,
+      };
     }
     case "train-munich-innsbruck":
       return rideLine(

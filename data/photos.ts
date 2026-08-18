@@ -55,4 +55,28 @@ export const photos = {
     alt: "The corner facade of the Hofbräuhaus am Platzl in Munich's old town.",
     credit: "Wikimedia Commons",
   },
+  hofbrauhausInterior: {
+    src: "/photos/hofbrauhaus-interior.jpg",
+    pinSrc: "/photos/pins/hofbrauhaus-interior.jpg",
+    alt: "Wooden communal tables, painted arches, and an HB service counter inside the Hofbräuhaus.",
+    credit: "Pierre André · Wikimedia Commons",
+  },
+  monopteros: {
+    src: "/photos/monopteros.jpg",
+    pinSrc: "/photos/pins/monopteros.jpg",
+    alt: "The circular Monopteros temple on its green hill in the Englischer Garten.",
+    credit: "Julian Herzog · Wikimedia Commons",
+  },
+  chineseTower: {
+    src: "/photos/chinese-tower.jpg",
+    pinSrc: "/photos/pins/chinese-tower.jpg",
+    alt: "The wooden Chinesischer Turm rising above beer-garden tables in the Englischer Garten.",
+    credit: "Daderot · Wikimedia Commons",
+  },
+  kleinhesseloherSee: {
+    src: "/photos/kleinhesseloher-see.jpg",
+    pinSrc: "/photos/pins/kleinhesseloher-see.jpg",
+    alt: "Kleinhesseloher See with trees, rowboats, and the Seehaus across the water.",
+    credit: "Derbrauni · Wikimedia Commons",
+  },
 } as const satisfies Record<string, Photo>;
