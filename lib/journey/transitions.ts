@@ -65,6 +65,14 @@ const DEPART = 0.1;
 const ARRIVE = 0.82;
 
 /**
+ * The moving Dolomites shot should read as following a hiker, not watching a
+ * route from across the valley. At this scale the desktop frame covers only a
+ * few kilometres; the viewport correction in `JourneyMap` preserves roughly
+ * the same ground area on a phone.
+ */
+const HIKE_FOLLOW_ZOOM = 15.15;
+
+/**
  * Rides a real polyline: pull back from `from`, track the line while the trail
  * draws behind you, then settle into `arrive`.
  */
@@ -98,9 +106,9 @@ export function rideLine(
 }
 
 /**
- * A close travel shot for walking legs. It keeps the authored zoom, pitch,
- * and bearing, but moves the camera target with the hiker so the dot remains
- * the subject instead of crossing a fixed regional frame.
+ * A close travel shot for walking legs. It keeps the authored pitch and
+ * bearing, tightens broad travel cameras to a hiker-scale frame, and moves the
+ * camera target with the hiker so the dot remains the subject.
  */
 export function hikeLine(
   from: JourneyView,
@@ -112,11 +120,15 @@ export function hikeLine(
   t: number,
 ): JourneyView {
   const origin = along(line, 0);
+  const follow = {
+    ...travel,
+    zoom: Math.max(travel.zoom, HIKE_FOLLOW_ZOOM),
+  };
   if (t < DEPART) {
     return mix(
       from,
       {
-        ...travel,
+        ...follow,
         center: origin,
         here: origin,
         trailT: trailFrom,
@@ -128,7 +140,7 @@ export function hikeLine(
     const u = smoothstep((t - DEPART) / (ARRIVE - DEPART));
     const here = along(line, u);
     return {
-      ...travel,
+      ...follow,
       center: here,
       here,
       trailT: lerp(trailFrom, trailTo, u),
@@ -137,7 +149,7 @@ export function hikeLine(
   const destination = along(line, 1);
   return mix(
     {
-      ...travel,
+      ...follow,
       center: destination,
       here: destination,
       trailT: trailTo,
