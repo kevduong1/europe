@@ -23,7 +23,11 @@ import {
   unresolvedPoint,
 } from "@/data/route";
 import type { OvernightStop, PhotoPin, StopCluster } from "@/data/types";
-import { loadPaperStyle } from "@/lib/basemap-style";
+import {
+  loadPaperStyle,
+  TERRAIN_HILLSHADE_LAYER_ID,
+  TERRAIN_SOURCE_ID,
+} from "@/lib/basemap-style";
 import {
   along,
   bearingBetween,
@@ -48,6 +52,7 @@ type Props = {
 };
 
 const MAX_FRAME_ZOOM = 14.6;
+const TERRAIN_EXAGGERATION = 1.12;
 
 /** Below these deltas a camera move is sub-pixel, so the jump is skipped. */
 const CAMERA_EPSILON = { lngLat: 1e-6, zoom: 1e-4, angle: 1e-3 };
@@ -339,6 +344,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
     const lastTrailT = useRef(-1);
     const lastFlightKey = useRef("");
     const lastMarkerKey = useRef("");
+    const terrainEnabledRef = useRef(false);
     const lastCamera = useRef<Camera | null>(null);
     /** Last view handed to `applyView`, replayed on resize so the width-derived offset recomputes. */
     const lastViewRef = useRef<JourneyView | null>(null);
@@ -554,6 +560,31 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
       });
     }
 
+    /**
+     * The DEM is deliberately scoped to the mountain chapter. Besides saving
+     * GPU/tile work elsewhere, this lets the flat paper map remain the visual
+     * language for cities and long travel legs.
+     */
+    function applyTerrain(view: JourneyView) {
+      const map = mapRef.current;
+      if (!map) return;
+      const enabled =
+        view.expandedClusterIds.includes("dolomites") && view.zoom >= 8.5;
+      if (terrainEnabledRef.current === enabled) return;
+
+      terrainEnabledRef.current = enabled;
+      map.setLayoutProperty(
+        TERRAIN_HILLSHADE_LAYER_ID,
+        "visibility",
+        enabled ? "visible" : "none",
+      );
+      map.setTerrain(
+        enabled
+          ? { source: TERRAIN_SOURCE_ID, exaggeration: TERRAIN_EXAGGERATION }
+          : null,
+      );
+    }
+
     function applyView(view: JourneyView) {
       lastViewRef.current = view;
       const map = mapRef.current;
@@ -562,6 +593,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         return;
       }
 
+      applyTerrain(view);
       applyCamera(view);
       applyTrail(view);
       applyFlight(view);
@@ -732,6 +764,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         lastTrailT.current = -1;
         lastFlightKey.current = "";
         lastMarkerKey.current = "";
+        terrainEnabledRef.current = false;
       };
     }, []);
 
