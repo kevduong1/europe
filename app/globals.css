@@ -211,15 +211,15 @@ a {
 }
 
 /*
- * The rail is sized in JS to the exact edge-to-edge span between this day's
- * top and the next day's top (--day-rail-h), not just this section's own
- * box — that's what keeps days tiling with no gap and the dot exact. It
- * exits with the day, so a finished day's line doesn't just sit there.
+ * The rail starts at the authored position of the dot beside the day title
+ * and is sized in JS to meet the next day's title dot. Its orange fill and
+ * the active day are derived from those same two points, so the rail has one
+ * scroll signal.
  */
 .day-rail {
   pointer-events: none;
   position: absolute;
-  top: 0;
+  top: var(--day-rail-start, 0px);
   left: max(24px, calc(50% - 320px + 24px));
   z-index: 0;
   width: 24px;
@@ -229,7 +229,6 @@ a {
   will-change: opacity, transform;
 }
 
-/* No top/bottom inset — the track must span the section edge to edge or the dot drifts off the anchor line. */
 .day-rail-track {
   position: absolute;
   top: 0;
@@ -251,27 +250,20 @@ a {
 }
 
 /*
- * The main orange dot. Offset = progress × track height, computed in JS
- * (--day-progress is 0..1, --day-rail-h is the track's own px height), so
- * translate3d(0, progress * railH, 0) lands the dot exactly on the anchor
- * line the rest of the day-chrome math reads from — it appears to hold
- * still there while the day scrolls past underneath it.
+ * The day-title dot is part of the sticky heading, so it stays paired with
+ * the title while that title is pinned. The moving rail playhead was removed;
+ * the fill alone communicates progress without a second itinerary-like dot.
  */
-.day-rail-dot {
+.day-title-origin {
   position: absolute;
-  top: 0;
-  left: 5px;
-  width: 14px;
-  height: 14px;
+  top: 50%;
+  left: -34px;
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
   background: var(--trail);
-  box-shadow:
-    0 0 0 5px color-mix(in srgb, var(--trail) 22%, transparent),
-    0 0 16px 3px color-mix(in srgb, var(--trail) 30%, transparent);
-  opacity: var(--day-live, 0);
-  transform: translate3d(0, calc(var(--day-progress, 0) * var(--day-rail-h, 0px)), 0)
-    translateY(-50%) scale(calc(0.7 + 0.3 * var(--day-live, 0)));
-  will-change: transform, opacity;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--paper) 78%, transparent);
+  transform: translateY(-50%);
 }
 
 .day-content {
@@ -450,14 +442,13 @@ a {
     will-change: auto;
   }
 
-  .day-rail-fill,
-  .day-rail-dot {
+  .day-rail-fill {
     transform: none;
     will-change: auto;
   }
 
-  .day-rail-dot {
-    opacity: 0;
+  .day-rail-fill {
+    display: none;
   }
 
   .trip-header-brand,

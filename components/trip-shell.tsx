@@ -62,7 +62,6 @@ function smoothstep(edge0: number, edge1: number, x: number) {
 type DaySectionFrame = {
   section: HTMLElement;
   progress: string;
-  live: string;
   exit: string;
   railH: string;
 };
@@ -131,8 +130,8 @@ export function TripShell() {
       const sections = sectionsRef.current;
       if (sections.length === 0) return null;
 
-      // Same anchor line the rail/dot, the exit fade, and the active-day
-      // pointer all read from — one line, three consumers.
+      // Same anchor line the rail fill, exit fade, and active-day pointer all
+      // read from — one line, three consumers.
       const dayAnchor =
         headerHeight + Math.min(viewportHeight * DAY_ANCHOR_VH, DAY_ANCHOR_MAX_PX);
       const fadeStart =
@@ -141,36 +140,38 @@ export function TripShell() {
       const fadeEnd = dayAnchor;
 
       const rects = sections.map((section) => section.getBoundingClientRect());
+      const railStarts = sections.map((section, index) => {
+        const offset = Number(section.dataset.railStart);
+        return rects[index].top + (Number.isFinite(offset) ? offset : 0);
+      });
       let activeDay = Number(sections[0].dataset.day) || days[0].id;
 
       const frames = sections.map((section, index) => {
         const rect = rects[index];
-        const nextTop = rects[index + 1]?.top;
-        // Edge-to-edge span, tiling into the next day with no gap or inset —
-        // this is what the rail is drawn against, so the dot lands exactly
-        // on the anchor line instead of drifting.
-        const span = Math.max((nextTop ?? rect.bottom) - rect.top, 1);
-        const progress = clamp((dayAnchor - rect.top) / span);
-
-        // Ramp in as the anchor enters this day, back down as it nears the
-        // next one — only the day you're actually reading shows its dot.
-        const live =
-          smoothstep(0, 0.06, progress) * (1 - smoothstep(0.9, 1, progress));
+        const railStart = railStarts[index];
+        const nextRailStart = railStarts[index + 1];
+        // Each rail begins at its day-title dot and meets the next day's dot.
+        // The fill reads from that same geometry, so there is one scroll
+        // signal rather than a separate moving playhead competing with it.
+        const span = Math.max((nextRailStart ?? rect.bottom) - railStart, 1);
+        const progress = clamp((dayAnchor - railStart) / span);
 
         const exitRaw =
-          nextTop === undefined
+          nextRailStart === undefined
             ? 0
-            : clamp((fadeStart - nextTop) / Math.max(fadeStart - fadeEnd, 1));
+            : clamp(
+                (fadeStart - nextRailStart) /
+                  Math.max(fadeStart - fadeEnd, 1),
+              );
         const exit = smoothstep(0, 1, exitRaw);
 
-        if (rect.top <= dayAnchor) {
+        if (railStart <= dayAnchor) {
           activeDay = Number(section.dataset.day) || activeDay;
         }
 
         return {
           section,
           progress: progress.toFixed(4),
-          live: live.toFixed(4),
           exit: exit.toFixed(4),
           railH: `${Math.round(span)}px`,
         };
@@ -195,9 +196,6 @@ export function TripShell() {
       const style = next.section.style;
       if (!prev || prev.progress !== next.progress) {
         style.setProperty("--day-progress", next.progress);
-      }
-      if (!prev || prev.live !== next.live) {
-        style.setProperty("--day-live", next.live);
       }
       if (!prev || prev.exit !== next.exit) {
         style.setProperty("--day-exit", next.exit);

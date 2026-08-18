@@ -20,6 +20,7 @@ export const days: Day[] = [
       {
         kind: "event",
         id: "depart-mci",
+        emoji: "🛫",
         time: "1:45 PM",
         title: "Depart Kansas City (MCI)",
         detailSlug: "flight-mci-muc",

@@ -14,6 +14,7 @@ export type TransportMode =
 export type TimelineEvent = {
   kind: "event";
   id: string;
+  emoji?: string;
   time?: string;
   title: string;
   note?: string;

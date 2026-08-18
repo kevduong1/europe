@@ -37,6 +37,14 @@ function BeatMark({
     );
   }
 
+  if (item.kind === "event" && item.emoji) {
+    return (
+      <span className="absolute left-[2px] top-[1px] flex h-5 w-5 items-center justify-center text-[18px] leading-none">
+        {item.emoji}
+      </span>
+    );
+  }
+
   return (
     <span className="absolute left-[8px] top-[7px] h-[8px] w-[8px] rounded-full bg-[var(--trail)]" />
   );

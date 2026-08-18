@@ -6,15 +6,27 @@ import { Timeline } from "./timeline";
 
 export function DaySection({ day }: { day: Day }) {
   const sectionRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
+    const content = contentRef.current;
     const head = headRef.current;
-    if (!section || !head) return;
+    const title = titleRef.current;
+    if (!section || !content || !head || !title) return;
 
     const apply = () => {
       section.style.setProperty("--day-head-h", `${head.offsetHeight}px`);
+      const railStart =
+        content.offsetTop +
+        head.offsetTop +
+        title.offsetTop +
+        title.offsetHeight / 2;
+      const roundedRailStart = Math.round(railStart);
+      section.style.setProperty("--day-rail-start", `${roundedRailStart}px`);
+      section.dataset.railStart = `${roundedRailStart}`;
     };
 
     const observer = new ResizeObserver(apply);
@@ -34,19 +46,25 @@ export function DaySection({ day }: { day: Day }) {
         <div className="day-rail-track">
           <div className="day-rail-fill" />
         </div>
-        <div className="day-rail-dot" />
       </div>
 
       {day.id === 1 ? (
         <div className="h-8 shrink-0" aria-hidden="true" />
       ) : null}
 
-      <div className="day-content mx-auto w-full max-w-[640px] px-6 pb-6">
+      <div
+        ref={contentRef}
+        className="day-content mx-auto w-full max-w-[640px] px-6 pb-6"
+      >
         <div ref={headRef} className="day-head pl-10">
           <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail-ink)]">
             Day {day.id} · {day.weekday}, {day.monthDay}
           </p>
-          <h2 className="overlay-type font-display mt-2 text-[32px] leading-[1.08] [font-variation-settings:'WONK'_0.8,'opsz'_32]">
+          <h2
+            ref={titleRef}
+            className="overlay-type font-display relative mt-2 text-[32px] leading-[1.08] [font-variation-settings:'WONK'_0.8,'opsz'_32]"
+          >
+            <span className="day-title-origin" aria-hidden="true" />
             {day.title}
           </h2>
           <p className="overlay-type mt-3 max-w-[32em] text-[16px] leading-relaxed text-[var(--ink)]">
