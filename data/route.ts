@@ -161,6 +161,8 @@ export const RESCIESA: LngLat = [11.6621496, 46.6004336];
 export const FIRENZE: LngLat = [11.758318, 46.587434];
 /** Seceda summit ridge, ~2519 m. */
 export const SECEDA: LngLat = [11.7257836, 46.6005922];
+/** Eastern end of the walkable Seceda crest, beyond the summit viewpoint. */
+export const SECEDA_RIDGE_END: LngLat = [11.736028, 46.601322];
 /** QC Terme Dolomiti, Pozza di Fassa — the spa, and the still-open Val di Fassa night. */
 export const QC_TERME: LngLat = [11.6889, 46.4283];
 /** Venezia Santa Lucia — the trail's real endpoint, not the lagoon centroid. */
@@ -215,6 +217,11 @@ export const trailFirenzeSeceda: LngLat[] = densify(
     [11.724147, 46.598893],
     [11.725784, 46.600592],
     SECEDA,
+    [11.727258, 46.600781],
+    [11.730947, 46.600631],
+    [11.734314, 46.601181],
+    [11.735381, 46.601289],
+    SECEDA_RIDGE_END,
   ],
   0.2,
 );
@@ -222,11 +229,16 @@ export const trailFirenzeSeceda: LngLat[] = densify(
 /**
  * Seceda down to Ortisei by gondola. The lift itself runs in two dead-straight
  * spans (summit station → Furnes mid-station → Ortisei) — no wiggle, unlike
- * the hiking legs. The short first hop covers the walk from the summit
- * viewpoint over to the lift's top station.
+ * the hiking legs. The opening points retrace the crest from its eastern
+ * viewpoint to the summit, then cover the short walk to the lift's top station.
  */
 export const gondolaSecedaOrtisei: LngLat[] = densify(
   [
+    SECEDA_RIDGE_END,
+    [11.735381, 46.601289],
+    [11.734314, 46.601181],
+    [11.730947, 46.600631],
+    [11.727258, 46.600781],
     SECEDA,
     [11.7243474, 46.597936], // Seceda summit station
     [11.7023249, 46.589805], // Furnes cable-car station

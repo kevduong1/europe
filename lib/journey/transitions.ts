@@ -70,7 +70,7 @@ const ARRIVE = 0.82;
  * few kilometres; the viewport correction in `JourneyMap` preserves roughly
  * the same ground area on a phone.
  */
-const HIKE_FOLLOW_ZOOM = 15.15;
+const HIKE_FOLLOW_ZOOM = 15.7;
 
 /**
  * Rides a real polyline: pull back from `from`, track the line while the trail
