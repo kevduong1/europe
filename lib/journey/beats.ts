@@ -47,6 +47,65 @@ import { CLUSTERS } from "./clusters";
 import { hikeLine, mix, rideLine } from "./transitions";
 import type { JourneyView } from "./types";
 
+function wombatClose(dayId: number, label: string): JourneyView {
+  return pose({
+    phase: "day",
+    center: WOMBAT,
+    zoom: 15.25,
+    pitch: 34,
+    bearing: 58,
+    showFlight: false,
+    flightT: 0,
+    flightLeg: null,
+    trailT: 0,
+    dayId,
+    label,
+    here: WOMBAT,
+    focusStopId: "wombat",
+    expandedClusterIds: CLUSTERS.munich,
+    visitedClusterIds: CLUSTERS.none,
+  });
+}
+
+/** Zoom and orbit in, hold on the hostel photos, then return to the city. */
+function wombatMoment(
+  dayId: number,
+  label: string,
+  t: number,
+  arriving = false,
+): JourneyView {
+  const u = clamp(t);
+  const approach = smoothstep(clamp(u / 0.2));
+  const here = arriving ? along(walkWombatHbf, 1 - approach) : WOMBAT;
+  const wide = munichStay(dayId, label, {
+    here,
+    focusStopId: null,
+    focus: here,
+    amount: arriving ? lerp(0.12, 0.2, approach) : 0,
+  });
+  const close = wombatClose(dayId, label);
+  let view: JourneyView;
+
+  if (u < 0.36) {
+    view = mix(wide, close, clamp((u - 0.08) / 0.28));
+  } else if (u < 0.7) {
+    view = close;
+  } else {
+    view = mix(
+      close,
+      munichStay(dayId, "Munich", {
+        here: WOMBAT,
+        focusStopId: null,
+      }),
+      (u - 0.7) / 0.3,
+    );
+  }
+
+  return arriving
+    ? { ...view, localRouteId: "hbf-wombat", localRouteT: approach }
+    : view;
+}
+
 /**
  * Where a day opens, used when a day section has no beats of its own and as the
  * fallback for an unrecognised beat id. Each case is the day's *starting*
@@ -220,34 +279,12 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
       };
     }
     case "check-in-wombat": {
-      const u = smoothstep(clamp(t));
-      const here = along(walkWombatHbf, 1 - u);
-      return {
-        ...munichStay(2, "The Wombat Hostel", {
-          here,
-          focusStopId: "wombat",
-          focus: here,
-          amount: lerp(0.16, 0.34, u),
-        }),
-        localRouteId: "hbf-wombat",
-        localRouteT: u,
-      };
+      return wombatMoment(2, "The Wombat Hostel", t, true);
     }
     case "wombat-hostel":
-      return munichStay(dayId, "The Wombat Hostel", {
-        here: WOMBAT,
-        focusStopId: "wombat",
-        amount: 0.28,
-      });
+      return wombatMoment(dayId, "The Wombat Hostel", t);
     case "open-munich":
       return munichStay(3, "Day 3 · Munich");
-    case "eisbachwelle":
-      return munichStay(3, "Eisbachwelle", {
-        here: EISBACHWELLE,
-        focusStopId: "eisbachwelle",
-        focus: EISBACHWELLE,
-        amount: 0.4,
-      });
     case "english-garden": {
       const view = rideLine(
         munichStay(3, "Eisbachwelle", {
@@ -319,12 +356,17 @@ export function viewForBeat(dayId: number, beatId: string, t: number): JourneyVi
         visitedClusterIds: CLUSTERS.none,
       });
     }
-    case "leave-wombat":
-      return munichStay(4, "Leave Wombat", {
-        here: WOMBAT,
-        focusStopId: "wombat",
-        amount: 0.32,
-      });
+    case "leave-wombat": {
+      const u = clamp((t - 0.38) / 0.5);
+      return mix(
+        wombatClose(4, "Leave Wombat"),
+        munichStay(4, "Walk to München Hbf", {
+          here: WOMBAT,
+          focusStopId: null,
+        }),
+        u,
+      );
+    }
     case "walk-hbf": {
       const u = clamp((t - 0.12) / 0.7);
       const here = along(walkWombatHbf, u);

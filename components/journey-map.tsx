@@ -177,11 +177,15 @@ const PHOTO_PIN_FOCUS_OVERRIDES: Record<string, string> = {
 
 function photoPinElement(pin: PhotoPin) {
   const el = document.createElement("div");
-  el.className = "map-photo-pin";
+  el.className = `map-photo-pin${pin.variant === "stack" ? " map-photo-pin-stack" : ""}`;
   el.dataset.pin = pin.id;
   el.dataset.days = pin.days.join(",");
   if (pin.clusterId) el.dataset.cluster = pin.clusterId;
-  const photos = [pin.photo, pin.secondaryPhoto].filter(
+  const photos = [
+    pin.photo,
+    pin.secondaryPhoto,
+    ...(pin.additionalPhotos ?? []),
+  ].filter(
     (photo): photo is NonNullable<typeof photo> => Boolean(photo),
   );
   const frames =
@@ -189,7 +193,7 @@ function photoPinElement(pin: PhotoPin) {
       ? photos
           .map(
             (photo) =>
-              `<span class="map-photo-pin-frame"><img class="map-photo-pin-img" src="${photo.pinSrc}" alt="${photo.alt.replace(/"/g, "&quot;")}" width="64" height="64" loading="lazy" decoding="async" /></span>`,
+              `<span class="map-photo-pin-frame"><img class="map-photo-pin-img" src="${pin.variant === "stack" ? photo.src : photo.pinSrc}" alt="${photo.alt.replace(/"/g, "&quot;")}" width="${pin.variant === "stack" ? 448 : 64}" height="${pin.variant === "stack" ? 300 : 64}" loading="lazy" decoding="async" /></span>`,
           )
           .join("")
       : `<span class="map-photo-pin-frame"><span class="map-photo-pin-empty" aria-hidden="true">${PHOTO_PLACEHOLDER_ICON}</span></span>`;
@@ -376,8 +380,8 @@ const STOP_IDS = new Set(overnightStops.map((stop) => stop.id));
 
 /**
  * The overnight-stop id whose `focusStopId` moment this photo belongs to, if
- * any. Most pin ids already match a stop id 1:1 (ortisei, resciesa, firenze,
- * seceda, eisbachwelle); `PHOTO_PIN_FOCUS_OVERRIDES` covers the ones that
+ * any. Most pin ids already match a stop id 1:1 (wombat, ortisei, resciesa,
+ * firenze, seceda); `PHOTO_PIN_FOCUS_OVERRIDES` covers the ones that
  * don't. A pin with no resolvable stop (hofbrauhaus — not an overnight stop)
  * returns null, and falls back to a coarser day-based gate in `applyMarkers`.
  */
@@ -512,7 +516,10 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
      */
     function applyMarkers(view: JourneyView) {
       const map = mapRef.current;
-      const markerKey = `${view.phase}|${view.dayId}|${view.expandedClusterIds.join(",")}|${view.visitedClusterIds.join(",")}|${view.flightLeg}|${view.focusStopId}|${view.flightT < 0.28}|${view.flightT > 0.72}`;
+      const photoZoomGates = photoPins
+        .map((pin) => Number(view.zoom >= (pin.minZoom ?? 0)))
+        .join("");
+      const markerKey = `${view.phase}|${view.dayId}|${view.expandedClusterIds.join(",")}|${view.visitedClusterIds.join(",")}|${view.flightLeg}|${view.focusStopId}|${photoZoomGates}|${view.flightT < 0.28}|${view.flightT > 0.72}`;
       if (markerKey !== lastMarkerKey.current) {
         lastMarkerKey.current = markerKey;
         map
@@ -581,6 +588,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           const visible =
             view.phase === "day" &&
             expanded &&
+            view.zoom >= (pin.minZoom ?? 0) &&
             (focusTarget
               ? view.focusStopId === focusTarget
               : pin.days.includes(view.dayId ?? -1));

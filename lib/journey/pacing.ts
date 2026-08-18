@@ -19,17 +19,17 @@ export const BEAT_SPACE: Record<string, number> = {
   "flight-out": 200,
   "arrive-muc": 122,
   "airport-train": 165,
-  "check-in-wombat": 72,
-  // Auto "the night" row for wombat-hostel (days 2 & 3): compact card, a
-  // little more than the bare default so it doesn't feel clipped.
-  "wombat-hostel": 64,
+  // Arrival walk, close camera move, three-photo hold, and the gallery need
+  // enough scroll room to read as a sequence rather than one snap.
+  "check-in-wombat": 210,
+  // Day 3's auto "the night" row replays the hostel close-up and photo hold.
+  "wombat-hostel": 170,
   "open-munich": 80,
-  eisbachwelle: 92,
   // Camera set-pieces (rides a walking line / zooms while rotating bearing)
   // — need more room than a plain event so the move reads, not snaps.
   "english-garden": 150,
   "hofbrauhaus": 190,
-  "leave-wombat": 78,
+  "leave-wombat": 116,
   "walk-hbf": 88,
   "train-munich-innsbruck": 240,
   "check-in-montagu": 84,

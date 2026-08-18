@@ -7,11 +7,23 @@ export type Photo = {
 };
 
 export const photos = {
-  munich: {
-    src: "/photos/munich.jpg",
-    pinSrc: "/photos/pins/munich.jpg",
-    alt: "Surfers on the Eisbachwelle in Munich, the standing wave in the Englischer Garten.",
-    credit: "Unsplash",
+  wombatExterior: {
+    src: "/photos/wombat-exterior.jpg",
+    pinSrc: "/photos/wombat-exterior.jpg",
+    alt: "The street entrance of Wombat's City Hostel Munich Hauptbahnhof on Senefelderstrasse.",
+    credit: "Wombat's City Hostels",
+  },
+  wombatCourtyard: {
+    src: "/photos/wombat-courtyard.jpg",
+    pinSrc: "/photos/wombat-courtyard.jpg",
+    alt: "The bright glass-roofed courtyard at Wombat's City Hostel Munich Hauptbahnhof, with indoor trees and lounge seating.",
+    credit: "Wombat's City Hostels",
+  },
+  wombatDorm: {
+    src: "/photos/wombat-dorm.jpg",
+    pinSrc: "/photos/wombat-dorm.jpg",
+    alt: "A green dorm room at Wombat's City Hostel Munich Hauptbahnhof with curtained bunk beds and lockers.",
+    credit: "Wombat's City Hostels",
   },
   dolomites: {
     src: "/photos/dolomites.jpg",
@@ -125,5 +137,38 @@ export const secedaGallery = [
     caption: "The approach above Val Gardena",
     credit: "Syrio · CC BY-SA 4.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Seceda_01.jpg",
+  },
+] as const satisfies readonly GalleryPhoto[];
+
+export const wombatGallery = [
+  {
+    src: photos.wombatExterior.src,
+    alt: photos.wombatExterior.alt,
+    width: 1803,
+    height: 1200,
+    caption: "The front door on Senefelderstrasse",
+    credit: photos.wombatExterior.credit,
+    sourceUrl:
+      "https://www.wombats-hostels.com/munich/hauptbahnhof/service/wombats-munich-hauptbahnhof-gallery/detail/architecture-munich-hauptbahnhof",
+  },
+  {
+    src: photos.wombatCourtyard.src,
+    alt: photos.wombatCourtyard.alt,
+    width: 1799,
+    height: 1200,
+    caption: "The glass-roofed courtyard",
+    credit: photos.wombatCourtyard.credit,
+    sourceUrl:
+      "https://www.wombats-hostels.com/munich/hauptbahnhof/service/wombats-munich-hauptbahnhof-gallery/detail/architecture-munich-hauptbahnhof",
+  },
+  {
+    src: photos.wombatDorm.src,
+    alt: photos.wombatDorm.alt,
+    width: 1800,
+    height: 1200,
+    caption: "Curtained bunks and in-room lockers",
+    credit: photos.wombatDorm.credit,
+    sourceUrl:
+      "https://www.wombats-hostels.com/munich/hauptbahnhof/service/wombats-munich-hauptbahnhof-gallery/detail/dorms-munich-hauptbahnhof",
   },
 ] as const satisfies readonly GalleryPhoto[];

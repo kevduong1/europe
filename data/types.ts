@@ -141,11 +141,16 @@ export type PhotoPin = {
   lngLat: LngLat;
   photo: Photo | null;
   secondaryPhoto?: Photo;
+  additionalPhotos?: readonly Photo[];
   caption: string;
   days: number[];
   clusterId?: string;
   /** Camera focus id that reveals this pin when it is not an overnight stop. */
   focusId?: string;
+  /** Optional authored-camera zoom gate for featured close-up pins. */
+  minZoom?: number;
+  /** Featured pins use a larger, overlapping photo-stack treatment. */
+  variant?: "stack";
   /** Viewport-pixel nudge used to keep nearby photo cards from overlapping. */
   offset?: [number, number];
 };

@@ -23,11 +23,23 @@
     "license": "CC BY-SA 3.0",
     "url": "https://commons.wikimedia.org/wiki/File:Odles_da_Sec%C3%ABda_Gherd%C3%ABina.jpg"
   },
-  "munich.jpg": {
-    "title": "File:Eisbachwelle am 8.2.2019.jpg",
-    "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Strubbl\" title=\"User:Strubbl\">Strubbl</a>",
-    "license": "CC0",
-    "url": "https://commons.wikimedia.org/wiki/File:Eisbachwelle_am_8.2.2019.jpg"
+  "wombat-exterior.jpg": {
+    "title": "Wombat's City Hostel Munich Hauptbahnhof — front view",
+    "artist": "Wombat's City Hostels",
+    "license": "Used for personal trip demo",
+    "url": "https://www.wombats-hostels.com/munich/hauptbahnhof/service/wombats-munich-hauptbahnhof-gallery/detail/architecture-munich-hauptbahnhof"
+  },
+  "wombat-courtyard.jpg": {
+    "title": "Wombat's City Hostel Munich Hauptbahnhof — courtyard",
+    "artist": "Wombat's City Hostels",
+    "license": "Used for personal trip demo",
+    "url": "https://www.wombats-hostels.com/munich/hauptbahnhof/service/wombats-munich-hauptbahnhof-gallery/detail/architecture-munich-hauptbahnhof"
+  },
+  "wombat-dorm.jpg": {
+    "title": "Wombat's City Hostel Munich Hauptbahnhof — dorm",
+    "artist": "Wombat's City Hostels",
+    "license": "Used for personal trip demo",
+    "url": "https://www.wombats-hostels.com/munich/hauptbahnhof/service/wombats-munich-hauptbahnhof-gallery/detail/dorms-munich-hauptbahnhof"
   },
   "resciesa.jpg": {
     "title": "File:Raschötzhütte, 2164 m.jpg",

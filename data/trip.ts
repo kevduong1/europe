@@ -104,15 +104,6 @@ export const days: Day[] = [
       },
       {
         kind: "event",
-        id: "eisbachwelle",
-        title: "Eisbachwelle",
-        optional: true,
-        optionalAnnotation: "if it's running",
-        note: "Check if the wave is active — a recent cleanup effort may have temporarily eliminated it.",
-        detailSlug: "eisbachwelle",
-      },
-      {
-        kind: "event",
         id: "english-garden",
         title: "Walk up the Englischer Garten",
         note: "2.2 km on park paths: Eisbachwelle → Monopteros skyline view → Chinese Tower beer garden → Kleinhesseloher See.",
@@ -420,9 +411,9 @@ export const destinations: Destination[] = [
     lodging: "The Wombat Hostel",
     transportIn: "Overnight flight from Kansas City, then the airport train to München Hbf.",
     transportOut: "Train to Innsbruck on the Eurail pass.",
-    photo: "/photos/munich.jpg",
+    photo: "/photos/wombat-exterior.jpg",
     photoAlt:
-      "Surfers on the Eisbachwelle in Munich, the standing wave in the Englischer Garten.",
+      "The street entrance of Wombat's City Hostel Munich Hauptbahnhof.",
     summary: "The first city. Two nights after a long flight, then the train south.",
     lngLat: [11.575, 48.137],
   },
@@ -540,15 +531,6 @@ export const details: DetailRecord[] = [
     kind: "stay",
     body: "Two nights in Munich, about €30/night pp, near the Hauptbahnhof.",
     todo: "Book 1–2 months out",
-  },
-  {
-    slug: "eisbachwelle",
-    dayId: 3,
-    title: "Eisbachwelle",
-    kind: "note",
-    body: "The river wave in the Englischer Garten. Optional, and only if it's running.",
-    extra:
-      "Check if the wave is active — a recent cleanup effort may have temporarily eliminated it.",
   },
   {
     slug: "english-garden",

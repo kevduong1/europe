@@ -344,16 +344,6 @@ export const overnightStops: OvernightStop[] = [
     clusterId: "munich",
   },
   {
-    id: "eisbachwelle",
-    lngLat: EISBACHWELLE,
-    label: "Eisbachwelle",
-    kind: "town",
-    destinationSlug: "munich",
-    detailSlug: "eisbachwelle",
-    days: [3],
-    clusterId: "munich",
-  },
-  {
     id: "montagu",
     lngLat: MONTAGU,
     label: "Montagu Hostel",
@@ -445,7 +435,7 @@ export const stopClusters: StopCluster[] = [
     id: "munich",
     label: "Munich",
     lngLat: [11.575, 48.137],
-    stopIds: ["muc", "wombat", "eisbachwelle"],
+    stopIds: ["muc", "wombat"],
     expandOnDays: [2, 3],
     anchor: "right",
   },
@@ -489,12 +479,17 @@ export const unresolvedPoint: LngLat = QC_TERME;
  */
 export const photoPins: PhotoPin[] = [
   {
-    id: "eisbachwelle",
-    lngLat: EISBACHWELLE,
-    photo: photos.munich,
-    caption: "Eisbachwelle, Munich",
-    days: [3],
+    id: "wombat",
+    lngLat: WOMBAT,
+    photo: photos.wombatExterior,
+    secondaryPhoto: photos.wombatCourtyard,
+    additionalPhotos: [photos.wombatDorm],
+    caption: "Wombat's City Hostel",
+    days: [2, 3, 4],
     clusterId: "munich",
+    minZoom: 13,
+    variant: "stack",
+    offset: [0, -18],
   },
   {
     id: "monopteros",

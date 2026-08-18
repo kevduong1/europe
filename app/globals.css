@@ -472,6 +472,64 @@ a {
   }
 }
 
+.place-gallery {
+  display: grid;
+  width: min(92vw, 720px);
+  grid-auto-columns: min(88vw, 620px);
+  grid-auto-flow: column;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 4px 5px 14px;
+  scroll-padding-inline: 5px;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: color-mix(in srgb, var(--trail) 60%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.place-gallery-card {
+  overflow: hidden;
+  border: 5px solid color-mix(in srgb, var(--paper) 96%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--ink) 25%, transparent);
+  scroll-snap-align: start;
+}
+
+.place-gallery-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+
+.place-gallery-caption {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+  color: var(--dolomite);
+}
+
+.place-gallery-caption span {
+  overflow: hidden;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.place-gallery-caption a {
+  flex: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .essentials-row {
   min-height: 48vh;
   min-height: 48svh;
@@ -642,6 +700,27 @@ a {
   opacity: 0 !important;
 }
 
+@media (max-width: 520px) {
+  .place-gallery {
+    width: min(92vw, 430px);
+    grid-auto-columns: min(86vw, 390px);
+  }
+
+  .place-gallery-card {
+    border-width: 4px;
+  }
+
+  .place-gallery-caption {
+    display: block;
+    padding: 7px 9px 8px;
+    font-size: 9px;
+  }
+
+  .place-gallery-caption a {
+    display: block;
+    margin-top: 2px;
+  }
+}
 .map-pin {
   display: flex;
   align-items: flex-start;
@@ -838,6 +917,72 @@ a {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--paper) 82%, transparent);
 }
 
+/* The Wombat close-up gets three substantial overlapping prints; the rest of
+   the map keeps the compact thumbnail treatment above. */
+.map-photo-pin-stack {
+  gap: 4px;
+  transition: opacity 0.38s ease;
+}
+
+.map-photo-pin-stack .map-photo-pin-gallery {
+  position: relative;
+  display: block;
+  width: 340px;
+  height: 205px;
+}
+
+.map-photo-pin-stack .map-photo-pin-frame {
+  position: absolute;
+  left: 58px;
+  top: 20px;
+  width: 224px;
+  height: 150px;
+  margin-left: 0;
+  padding: 5px;
+  border-radius: 7px;
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--trail) 48%, var(--ink) 10%),
+    0 9px 24px color-mix(in srgb, var(--ink) 34%, transparent);
+}
+
+.map-photo-pin-stack .map-photo-pin-frame:nth-child(1) {
+  z-index: 3;
+  transform: rotate(-3deg);
+}
+
+.map-photo-pin-stack .map-photo-pin-frame:nth-child(2) {
+  left: 4px;
+  top: 40px;
+  z-index: 2;
+  transform: rotate(-9deg);
+}
+
+.map-photo-pin-stack .map-photo-pin-frame:nth-child(3) {
+  right: 4px;
+  left: auto;
+  top: 46px;
+  z-index: 1;
+  transform: rotate(8deg);
+}
+
+.map-photo-pin-stack .map-photo-pin-caption {
+  max-width: 280px;
+  padding: 2px 8px 3px;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+}
+
+.map-photo-pin-stack .map-photo-pin-stem {
+  height: 10px;
+}
+
+.map-photo-pin-stack .map-photo-pin-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: -2px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--paper) 82%, transparent);
+}
+
 /* Narrow phones: up to five of these can be in play around Val Gardena — shrink the
    frame and drop the caption rather than let square photos with text crowd the frame. */
 @media (max-width: 520px) {
@@ -849,6 +994,33 @@ a {
 
   .map-photo-pin-caption {
     display: none;
+  }
+
+  .map-photo-pin-stack .map-photo-pin-gallery {
+    width: 260px;
+    height: 158px;
+  }
+
+  .map-photo-pin-stack .map-photo-pin-frame {
+    left: 46px;
+    top: 16px;
+    width: 168px;
+    height: 112px;
+    padding: 4px;
+  }
+
+  .map-photo-pin-stack .map-photo-pin-frame:nth-child(2) {
+    left: 3px;
+    top: 31px;
+  }
+
+  .map-photo-pin-stack .map-photo-pin-frame:nth-child(3) {
+    right: 3px;
+    top: 35px;
+  }
+
+  .map-photo-pin-stack .map-photo-pin-caption {
+    display: block;
   }
 }
 

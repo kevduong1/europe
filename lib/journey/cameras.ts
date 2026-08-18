@@ -394,14 +394,21 @@ export function mucArrival(t: number): JourneyView {
 export function munichStay(
   dayId: number,
   label: string,
-  extra?: { here?: LngLat; focusStopId?: string; amount?: number; focus?: LngLat },
+  extra?: {
+    here?: LngLat;
+    focusStopId?: string | null;
+    amount?: number;
+    focus?: LngLat;
+  },
 ): JourneyView {
+  const focusStopId =
+    extra && "focusStopId" in extra ? extra.focusStopId : "wombat";
   return cityHold(CITY.munich, {
     dayId,
     label,
     trailT: 0,
     here: extra?.here ?? WOMBAT,
-    focusStopId: extra?.focusStopId ?? "wombat",
+    focusStopId,
     focus: extra?.focus ?? extra?.here,
     amount: extra?.amount ?? 0,
     expandedClusterIds: CLUSTERS.munich,
