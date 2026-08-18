@@ -11,6 +11,7 @@
   --trail-ink: color-mix(in srgb, var(--trail) 76%, var(--ink));
   --trip-header-height: 5.5rem;
   --day-head-h: 4.75rem;
+  --day-dot-from-head: 0px;
   --beat-scale: 1;
 }
 
@@ -159,9 +160,9 @@ a {
 }
 
 .trip-header-day {
-  display: grid;
-  grid-template-columns: auto minmax(0, 0.8fr) minmax(12rem, 1.45fr);
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: clamp(0.65rem, 2.5vw, 1.5rem);
 }
 
@@ -171,18 +172,26 @@ a {
   pointer-events: none;
 }
 
-.trip-header-day-number {
-  color: var(--trail-ink);
-  font-size: clamp(26px, 4vw, 34px);
-  line-height: 0.95;
-  white-space: nowrap;
-  font-variation-settings: "WONK" 0.9, "opsz" 34;
+.trip-header-day-copy {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
-.trip-header-day-meta {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
+.trip-header-day-title {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--trail-ink);
+  font-size: clamp(20px, 3.6vw, 30px);
+  line-height: 1.05;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-variation-settings: "WONK" 0.9, "opsz" 30;
+}
+
+.trip-header-day-copy time {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--dolomite);
   font-family: var(--font-mono);
   font-size: 10px;
   line-height: 1.4;
@@ -190,19 +199,8 @@ a {
   text-transform: uppercase;
 }
 
-.trip-header-day-meta time {
-  color: var(--dolomite);
-}
-
-.trip-header-day-meta span {
-  overflow: hidden;
-  color: var(--ink);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .trip-header-day-summary {
-  justify-self: end;
+  flex: 0 1 16rem;
   max-width: 34rem;
   color: var(--ink);
   font-size: 12px;
@@ -211,9 +209,9 @@ a {
 }
 
 /*
- * The rail starts at the authored title dot and ends at the day's final beat.
- * While the title is sticky, JS clips the track to the dot's current position
- * so the section-relative rail never pokes out above it.
+ * The rail lives in the day's section box, from the title-origin to the last
+ * beat. The track is sticky at that origin so it never paints above the dot —
+ * compositor sticky, not a scroll-linked clip, so it can't jitter.
  */
 .day-rail {
   pointer-events: none;
@@ -224,20 +222,25 @@ a {
   width: 24px;
   height: var(--day-rail-h, 100%);
   opacity: calc(1 - var(--day-exit, 0));
-  transform: translate3d(0, calc(var(--day-exit, 0) * -18px), 0);
-  will-change: opacity, transform;
 }
 
 .day-rail-track {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 11px;
+  position: sticky;
+  top: calc(var(--trip-header-height) + var(--day-dot-from-head, 0px));
+  margin-left: 11px;
   width: 2px;
+  height: min(
+    100%,
+    calc(100vh - var(--trip-header-height) - var(--day-dot-from-head, 0px))
+  );
+  height: min(
+    100%,
+    calc(100svh - var(--trip-header-height) - var(--day-dot-from-head, 0px))
+  );
   overflow: hidden;
-  clip-path: inset(var(--day-rail-clip-top, 0px) 0 0);
   border-radius: 1px;
   background: color-mix(in srgb, var(--dolomite) 58%, var(--paper));
+  transform: translate3d(0, calc(var(--day-exit, 0) * -18px), 0);
 }
 
 .day-rail-fill {
@@ -437,7 +440,7 @@ a {
 
   .day-head,
   .beat-head,
-  .day-rail {
+  .day-rail-track {
     transform: none;
     will-change: auto;
   }
@@ -465,15 +468,14 @@ a {
   }
 
   .trip-header-day {
-    grid-template-columns: auto minmax(0, 1fr) minmax(8rem, 1.25fr);
     gap: 0.65rem;
   }
 
-  .trip-header-day-number {
-    font-size: 27px;
+  .trip-header-day-title {
+    font-size: 22px;
   }
 
-  .trip-header-day-meta {
+  .trip-header-day-copy time {
     font-size: 8px;
     letter-spacing: 0.06em;
   }

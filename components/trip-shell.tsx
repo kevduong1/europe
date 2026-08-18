@@ -64,7 +64,6 @@ type DaySectionFrame = {
   progress: string;
   exit: string;
   railH: string;
-  railClipTop: string;
 };
 
 type DaysFrame = {
@@ -150,29 +149,25 @@ export function TripShell() {
         return rects[index].top +
           (Number.isFinite(offset) ? offset : rects[index].height);
       });
-      const titleDotCenters = sections.map((section, index) => {
-        const dot = section.querySelector<HTMLElement>(".day-title-origin");
-        if (!dot) return railStarts[index];
-        const rect = dot.getBoundingClientRect();
-        return (rect.top + rect.bottom) / 2;
-      });
       let activeDay = Number(sections[0].dataset.day) || days[0].id;
 
       const frames = sections.map((section, index) => {
         const railStart = railStarts[index];
-        const railSpan = Math.max(railEnds[index] - railStart, 1);
+        const railEnd = railEnds[index];
+        const railSpan = Math.max(railEnd - railStart, 1);
         const nextRailStart = railStarts[index + 1];
-        // The visible rail belongs only to this day's authored markers. Day
-        // activation still hands off at the next title, but the track and its
-        // fill stop at the final beat instead of growing a decorative tail.
-        const progress = clamp((dayAnchor - railStart) / railSpan);
-        // The title is sticky while the rail is section-relative. Clip away
-        // the portion the sticky dot has passed so no line appears above it.
-        const railClipTop = clamp(
-          titleDotCenters[index] - railStart,
-          0,
-          railSpan,
+        // Fill is painted on a sticky track that starts at the title dot, so
+        // progress is how far the now-anchor has moved through that window —
+        // not through the day's full document span.
+        const dotFromHead = Number(section.dataset.dotFromHead);
+        const pin =
+          headerHeight + (Number.isFinite(dotFromHead) ? dotFromHead : 0);
+        const trackH = Math.min(railSpan, Math.max(viewportHeight - pin, 1));
+        const trackTop = Math.min(
+          Math.max(railStart, pin),
+          railEnd - trackH,
         );
+        const progress = clamp((dayAnchor - trackTop) / trackH);
 
         const exitRaw =
           nextRailStart === undefined
@@ -192,7 +187,6 @@ export function TripShell() {
           progress: progress.toFixed(4),
           exit: exit.toFixed(4),
           railH: `${Math.round(railSpan)}px`,
-          railClipTop: `${Math.round(railClipTop)}px`,
         };
       });
 
@@ -221,9 +215,6 @@ export function TripShell() {
       }
       if (!prev || prev.railH !== next.railH) {
         style.setProperty("--day-rail-h", next.railH);
-      }
-      if (!prev || prev.railClipTop !== next.railClipTop) {
-        style.setProperty("--day-rail-clip-top", next.railClipTop);
       }
       cache.set(next.section, next);
     }
@@ -407,14 +398,13 @@ export function TripShell() {
             aria-hidden={!itineraryMode}
             data-visible={itineraryMode}
           >
-            <p className="trip-header-day-number font-display overlay-type">
-              Day {activeDay.id}
-            </p>
-            <div className="trip-header-day-meta overlay-type">
+            <div className="trip-header-day-copy overlay-type">
+              <p className="trip-header-day-title font-display">
+                {activeDay.title}
+              </p>
               <time dateTime={activeDay.isoDate}>
                 {activeDay.weekday} · {activeDay.monthDay}
               </time>
-              <span>{activeDay.title}</span>
             </div>
             <p className="trip-header-day-summary overlay-type">
               {activeDay.summary}

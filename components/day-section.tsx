@@ -29,11 +29,11 @@ export function DaySection({ day }: { day: Day }) {
 
     const apply = () => {
       section.style.setProperty("--day-head-h", `${head.offsetHeight}px`);
+      const dotFromHead = title.offsetTop + title.offsetHeight / 2;
+      section.style.setProperty("--day-dot-from-head", `${dotFromHead}px`);
+      section.dataset.dotFromHead = `${dotFromHead}`;
       const railStart =
-        content.offsetTop +
-        head.offsetTop +
-        title.offsetTop +
-        title.offsetHeight / 2;
+        content.offsetTop + head.offsetTop + dotFromHead;
       const roundedRailStart = Math.round(railStart);
       section.style.setProperty("--day-rail-start", `${roundedRailStart}px`);
       section.dataset.railStart = `${roundedRailStart}`;
@@ -76,14 +76,14 @@ export function DaySection({ day }: { day: Day }) {
       >
         <div ref={headRef} className="day-head pl-10">
           <p className="overlay-type font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--trail-ink)]">
-            Day {day.id} · {day.weekday}, {day.monthDay}
+            {day.weekday}, {day.monthDay}
           </p>
           <h2
             ref={titleRef}
             className="overlay-type font-display relative mt-2 text-[32px] leading-[1.08] [font-variation-settings:'WONK'_0.8,'opsz'_32]"
           >
             <span className="day-title-origin" aria-hidden="true" />
-            {day.title}
+            Day {day.id}
           </h2>
           <p className="overlay-type mt-3 max-w-[32em] text-[16px] leading-relaxed text-[var(--ink)]">
             {day.summary}
