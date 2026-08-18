@@ -74,26 +74,22 @@ export function viewForDay(dayId: number): JourneyView {
         visitedClusterIds: CLUSTERS.munich,
       });
     case 6:
-      return cityHold(CITY.dolomites, {
+      return cityHold(CITY.resciesa, {
         dayId: 6,
         label,
         trailT: T.resciesa,
         here: RESCIESA,
         focusStopId: "resciesa",
-        focus: RESCIESA,
-        amount: 0.22,
         expandedClusterIds: CLUSTERS.dolomites,
         visitedClusterIds: CLUSTERS.pastInnsbruck,
       });
     case 7:
-      return cityHold(CITY.dolomites, {
+      return cityHold(CITY.firenze, {
         dayId: 7,
         label,
         trailT: T.firenze,
         here: FIRENZE,
         focusStopId: "firenze",
-        focus: FIRENZE,
-        amount: 0.28,
         expandedClusterIds: CLUSTERS.dolomites,
         visitedClusterIds: CLUSTERS.pastInnsbruck,
       });
@@ -137,28 +133,24 @@ export function viewForDay(dayId: number): JourneyView {
 
 /** The rifugio you sleep in is the same shot whether you arrive or wake there. */
 function resciesaHold(): JourneyView {
-  return cityHold(CITY.dolomites, {
+  return cityHold(CITY.resciesa, {
     dayId: 5,
     label: "Rifugio Resciesa",
     trailT: T.resciesa,
     here: RESCIESA,
     focusStopId: "resciesa",
-    focus: RESCIESA,
-    amount: 0.3,
     expandedClusterIds: CLUSTERS.dolomites,
     visitedClusterIds: CLUSTERS.pastInnsbruck,
   });
 }
 
 function firenzeHold(): JourneyView {
-  return cityHold(CITY.dolomites, {
+  return cityHold(CITY.firenze, {
     dayId: 6,
     label: "Rifugio Firenze",
     trailT: T.firenze,
     here: FIRENZE,
     focusStopId: "firenze",
-    focus: FIRENZE,
-    amount: 0.28,
     expandedClusterIds: CLUSTERS.dolomites,
     visitedClusterIds: CLUSTERS.pastInnsbruck,
   });

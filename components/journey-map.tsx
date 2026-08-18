@@ -106,6 +106,7 @@ type Camera = {
   zoom: number;
   bearing: number;
   pitch: number;
+  elevation: number;
 };
 
 function lineFeature(
@@ -534,6 +535,12 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
       const width = map.getContainer().clientWidth || FRAME_WIDTH;
       const zoom = Math.min(view.zoom + zoomOffsetFor(width), MAX_FRAME_ZOOM + 1.2);
       const pitch = view.pitch * pitchScaleFor(width);
+      // `jumpTo` otherwise keeps the look-at plane at sea level. At close
+      // Dolomites zooms that can put a 2,500 m terrain marker far above the
+      // screen even when its lng/lat equals the authored camera center.
+      const elevation = terrainEnabledRef.current
+        ? (map.queryTerrainElevation(view.center) ?? 0)
+        : 0;
       const last = lastCamera.current;
       if (
         last &&
@@ -541,7 +548,8 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         Math.abs(last.lat - view.center[1]) < CAMERA_EPSILON.lngLat &&
         Math.abs(last.zoom - zoom) < CAMERA_EPSILON.zoom &&
         Math.abs(last.bearing - view.bearing) < CAMERA_EPSILON.angle &&
-        Math.abs(last.pitch - pitch) < CAMERA_EPSILON.angle
+        Math.abs(last.pitch - pitch) < CAMERA_EPSILON.angle &&
+        Math.abs(last.elevation - elevation) < 0.5
       ) {
         return;
       }
@@ -551,12 +559,14 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
         zoom,
         bearing: view.bearing,
         pitch,
+        elevation,
       };
       map.jumpTo({
         center: view.center,
         zoom,
         bearing: view.bearing,
         pitch,
+        elevation,
       });
     }
 
@@ -583,6 +593,11 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           ? { source: TERRAIN_SOURCE_ID, exaggeration: TERRAIN_EXAGGERATION }
           : null,
       );
+      // Keep the camera's look-at point on the DEM surface. Without an
+      // explicit refresh after enabling terrain, a tight pitched shot can
+      // keep looking at sea level and project a summit marker far above the
+      // viewport even though its longitude/latitude is the camera center.
+      map.setCenterClampedToGround(true);
     }
 
     function applyView(view: JourneyView) {
@@ -636,6 +651,7 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
           maxZoom: 16,
           maxPitch: 70,
           pitch: 0,
+          centerClampedToGround: true,
         });
         map.addControl(
           new AttributionControl({ compact: true }),
@@ -680,7 +696,11 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
             for (const stop of overnightStops) {
               const marker = new Marker({
                 element: pinElement(stop),
-                anchor: "bottom-left",
+                // The visible coordinate glyph is the 10px dot near the
+                // element's top-left, not the bottom of its two-line label.
+                // Anchor and offset that dot's center to the map coordinate.
+                anchor: "top-left",
+                offset: [-5, -7],
                 ...MARKER_OPTS,
               })
                 .setLngLat(stop.lngLat)
@@ -692,6 +712,9 @@ export const JourneyMap = forwardRef<JourneyMapHandle, Props>(
               const marker = new Marker({
                 element: photoPinElement(pin),
                 anchor: "bottom",
+                // Bottom anchoring places the dot's lower edge on the point;
+                // move it down by half its 6px height to center it precisely.
+                offset: [0, 3],
                 ...MARKER_OPTS,
               })
                 .setLngLat(pin.lngLat)

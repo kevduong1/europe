@@ -17,7 +17,13 @@ export const photos = {
     src: "/photos/dolomites.jpg",
     pinSrc: "/photos/pins/dolomites.jpg",
     alt: "The Odle peaks from Seceda, limestone spires above the Val Gardena ridge.",
-    credit: "Unsplash",
+    credit: "Wolfgang Moroder · Wikimedia Commons",
+  },
+  seceda: {
+    src: "/photos/seceda-clouds.jpg",
+    pinSrc: "/photos/pins/seceda.jpg",
+    alt: "The green Seceda ridge leading toward the jagged Odle peaks under summer clouds.",
+    credit: "Luigi Rossini · Wikimedia Commons",
   },
   venice: {
     src: "/photos/venice.jpg",
@@ -56,3 +62,44 @@ export const photos = {
     credit: "Wikimedia Commons",
   },
 } as const satisfies Record<string, Photo>;
+
+export type GalleryPhoto = {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  caption: string;
+  credit: string;
+  sourceUrl: string;
+};
+
+export const secedaGallery = [
+  {
+    src: "/photos/seceda-clouds.jpg",
+    alt: "The green Seceda ridge leading toward the jagged Odle peaks under summer clouds.",
+    width: 1600,
+    height: 1067,
+    caption: "The Odle ridge from Seceda",
+    credit: "Luigi Rossini · CC BY-SA 4.0",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Seceda_e_nuvole.jpg",
+  },
+  {
+    src: "/photos/seceda-panorama.jpg",
+    alt: "A wide summer panorama across the green Seceda plateau and surrounding Dolomites.",
+    width: 1800,
+    height: 500,
+    caption: "Across the Seceda plateau",
+    credit: "Jaromír Kavan · CC0",
+    sourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Seceda_2.518_(Panorama)_(Unsplash).jpg",
+  },
+  {
+    src: "/photos/seceda-approach.jpg",
+    alt: "The wooded and grassy approach to Seceda above Val Gardena.",
+    width: 1600,
+    height: 1200,
+    caption: "The approach above Val Gardena",
+    credit: "Syrio · CC BY-SA 4.0",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Seceda_01.jpg",
+  },
+] as const satisfies readonly GalleryPhoto[];

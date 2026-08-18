@@ -1,15 +1,17 @@
-const CACHE = "europe-2026-v1";
+const CACHE = "europe-2026-v2";
 const PRECACHE = [
   "/",
   "/essentials",
   "/photos/dolomites.jpg",
+  "/photos/seceda-clouds.jpg",
+  "/photos/seceda-panorama.jpg",
+  "/photos/seceda-approach.jpg",
   "/photos/munich.jpg",
   "/photos/venice.jpg",
   "/photos/innsbruck.jpg",
   "/photos/ortisei.jpg",
   "/photos/resciesa.jpg",
   "/photos/firenze.jpg",
-  "/photos/puez.jpg",
   "/manifest.webmanifest",
 ];
 

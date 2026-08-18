@@ -60,10 +60,24 @@ export const CITY = {
     bearing: 0,
   },
   dolomites: {
-    center: [11.74, 46.592] as LngLat,
+    center: [11.71, 46.592] as LngLat,
     zoom: 12.02,
     pitch: 38,
     bearing: 16,
+  },
+  /** Close ridge view for the first hut night above Ortisei. */
+  resciesa: {
+    center: [11.6621496, 46.6004336] as LngLat,
+    zoom: 14,
+    pitch: 48,
+    bearing: 112,
+  },
+  /** Close view of the hut and the southern foot of the Odle group. */
+  firenze: {
+    center: [11.758318, 46.587434] as LngLat,
+    zoom: 14.1,
+    pitch: 50,
+    bearing: -18,
   },
   munichInnsbruck: {
     center: [11.82, 47.7] as LngLat,
@@ -85,21 +99,21 @@ export const CITY = {
   },
   /** Tight, pitched shot atop Seceda — the Odle ridge is the point of the stop. */
   seceda: {
-    center: [11.6893, 46.6106] as LngLat,
-    zoom: 14.1,
+    center: [11.7257836, 46.6005922] as LngLat,
+    zoom: 14.28,
     pitch: 52,
-    bearing: 18,
+    bearing: 104,
   },
   /**
    * The gondola drop, not a traverse — steeper pitch than `dolomites`,
-   * bearing turned to face down-valley toward Ortisei (~186°, the line's own
+   * bearing turned to face down-valley toward Ortisei (~237°, the line's own
    * direction) so the ~1000 m loss reads as falling away in front of you.
    */
   secedaDrop: {
-    center: [11.68, 46.593] as LngLat,
+    center: [11.7, 46.589] as LngLat,
     zoom: 13,
     pitch: 60,
-    bearing: 186,
+    bearing: 237,
   },
   /** Wide corridor for Ortisei → Val di Fassa over Passo Sella via Canazei. */
   toValDiFassa: {

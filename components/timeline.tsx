@@ -1,4 +1,6 @@
+import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
+import { secedaGallery } from "@/data/photos";
 import type { Day, TimelineItem } from "@/data/types";
 import { BEAT_SPACE, DEFAULT_BEAT_SPACE } from "@/lib/journey/pacing";
 import { cn } from "@/lib/utils";
@@ -13,7 +15,7 @@ function BeatMark({
 }) {
   if (item.kind === "transport") {
     return (
-      <span className="absolute left-0 top-[10px] flex w-6 flex-col items-center gap-[3px] text-[var(--ink)]">
+      <span className="day-rail-stop absolute left-0 top-[10px] flex w-6 flex-col items-center gap-[3px] text-[var(--ink)]">
         <RouteGlyph mode={item.mode} />
         <TransportModeBadge mode={item.mode} />
       </span>
@@ -22,7 +24,7 @@ function BeatMark({
 
   if (item.kind === "lodging") {
     return (
-      <span className="absolute left-[5px] top-[10px] text-[var(--meadow)]">
+      <span className="day-rail-stop absolute left-[5px] top-[10px] text-[var(--meadow)]">
         {day.lodging.kind === "hut" ? (
           <HutGlyph className="h-3.5 w-3.5" />
         ) : (
@@ -39,14 +41,14 @@ function BeatMark({
 
   if (item.kind === "event" && item.emoji) {
     return (
-      <span className="absolute left-[2px] top-[1px] flex h-5 w-5 items-center justify-center text-[18px] leading-none">
+      <span className="day-rail-stop absolute left-[2px] top-[1px] flex h-5 w-5 items-center justify-center text-[18px] leading-none">
         {item.emoji}
       </span>
     );
   }
 
   return (
-    <span className="absolute left-[8px] top-[7px] h-[8px] w-[8px] rounded-full bg-[var(--trail)]" />
+    <span className="day-rail-stop absolute left-[8px] top-[7px] h-[8px] w-[8px] rounded-full bg-[var(--trail)]" />
   );
 }
 
@@ -73,6 +75,32 @@ function BeatBody({ item }: { item: TimelineItem }) {
           <p className="overlay-type mt-1 text-[15px] leading-relaxed text-[var(--dolomite)]">
             {item.note}
           </p>
+        ) : null}
+        {item.id === "seceda-summit" ? (
+          <div
+            className="seceda-gallery mt-4"
+            aria-label="Photos from Seceda"
+          >
+            {secedaGallery.map((photo, index) => (
+              <figure key={photo.src} className="seceda-gallery-card">
+                <Image
+                  className="seceda-gallery-image"
+                  src={photo.src}
+                  alt={photo.alt}
+                  width={photo.width}
+                  height={photo.height}
+                  sizes="(max-width: 640px) 72vw, 360px"
+                  loading={index === 0 ? "eager" : "lazy"}
+                />
+                <figcaption className="seceda-gallery-caption">
+                  <span>{photo.caption}</span>
+                  <a href={photo.sourceUrl} target="_blank" rel="noreferrer">
+                    {photo.credit}
+                  </a>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         ) : null}
       </>
     );

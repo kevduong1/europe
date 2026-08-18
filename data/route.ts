@@ -52,30 +52,98 @@ export const busBolzanoOrtisei: LngLat[] = densify(
   1.2,
 );
 
-/** Cable / climb from Ortisei onto the Resciesa ridge. */
+/**
+ * Ortisei to Rifugio Resciesa: the Raschötz funicular followed by trail 35
+ * west from the mountain station to the hut. The transport line is kept here
+ * as one continuous leg because it is presented as a single itinerary beat.
+ */
 export const trailOrtiseiResciesa: LngLat[] = densify(
   [
     [11.6717, 46.5761],
-    [11.674, 46.582],
-    [11.677, 46.588],
-    [11.68, 46.593],
-    [11.6825, 46.5986],
+    [11.6750721, 46.5764208], // Resciesa funicular valley station
+    [11.6724666, 46.578776],
+    [11.6734076, 46.5813682],
+    [11.6746041, 46.5846646],
+    [11.6756556, 46.5875295],
+    [11.6768344, 46.5908062],
+    [11.6779694, 46.5939458],
+    [11.6793391, 46.5977782], // Resciesa funicular mountain station
+    [11.679857, 46.597965],
+    [11.677797, 46.596974],
+    [11.67311, 46.59618],
+    [11.669858, 46.597745],
+    [11.666793, 46.598491],
+    [11.66195, 46.600317],
+    [11.6621496, 46.6004336],
   ],
   0.35,
 );
 
 /**
- * Resciesa → Rifugio Firenze via Val Cisles. Plausible ridge-and-valley
- * geometry, not a GPX trace — the two huts are close enough as the crow
- * flies that this stays a short afternoon leg.
+ * Resciesa → Rifugio Firenze on mapped footpaths across Val Gardena. This
+ * is simplified OpenStreetMap foot-routing geometry, not a recorded GPX.
  */
 export const trailResciesaFirenze: LngLat[] = densify(
   [
-    [11.6825, 46.5986],
-    [11.688, 46.601],
-    [11.694, 46.6025],
-    [11.7, 46.6035],
-    [11.7086, 46.6042],
+    [11.6621496, 46.6004336],
+    [11.66195, 46.600317],
+    [11.679412, 46.593916],
+    [11.671638, 46.592196],
+    [11.674734, 46.589731],
+    [11.67581, 46.589452],
+    [11.673946, 46.588937],
+    [11.672662, 46.589513],
+    [11.672865, 46.588323],
+    [11.678111, 46.587088],
+    [11.679469, 46.588249],
+    [11.680387, 46.58819],
+    [11.682194, 46.585762],
+    [11.683069, 46.585659],
+    [11.682062, 46.585309],
+    [11.687354, 46.584502],
+    [11.685189, 46.583968],
+    [11.688172, 46.583198],
+    [11.693183, 46.583969],
+    [11.694172, 46.584292],
+    [11.694516, 46.585134],
+    [11.700086, 46.586794],
+    [11.701041, 46.587915],
+    [11.703147, 46.588341],
+    [11.705899, 46.589858],
+    [11.706489, 46.591247],
+    [11.709364, 46.592386],
+    [11.711074, 46.594262],
+    [11.712546, 46.594634],
+    [11.713136, 46.594551],
+    [11.71329, 46.593159],
+    [11.714757, 46.591571],
+    [11.716016, 46.593406],
+    [11.71652, 46.593407],
+    [11.718262, 46.590504],
+    [11.721835, 46.587842],
+    [11.723512, 46.590122],
+    [11.722428, 46.590831],
+    [11.726704, 46.592378],
+    [11.72734, 46.593272],
+    [11.728801, 46.593608],
+    [11.730474, 46.595005],
+    [11.734553, 46.595497],
+    [11.735555, 46.59518],
+    [11.735904, 46.594094],
+    [11.738366, 46.593217],
+    [11.738068, 46.592095],
+    [11.738454, 46.590482],
+    [11.742133, 46.590735],
+    [11.743155, 46.589724],
+    [11.744369, 46.589476],
+    [11.745257, 46.587183],
+    [11.74624, 46.586434],
+    [11.750243, 46.586243],
+    [11.753565, 46.586995],
+    [11.755055, 46.587973],
+    [11.757702, 46.587889],
+    [11.758148, 46.587361],
+    [11.758318, 46.587434],
   ],
   0.28,
 );
@@ -84,11 +152,12 @@ export const MUNICH_HBF: LngLat = [11.5583, 48.1402];
 export const INNSBRUCK_HBF: LngLat = [11.401, 47.2634];
 export const BOLZANO: LngLat = [11.357, 46.498];
 export const ORTISEI: LngLat = [11.6717, 46.5761];
-export const RESCIESA: LngLat = [11.6825, 46.5986];
+/** Rifugio Resciesa / Raschötzhütte, 2,170 m. */
+export const RESCIESA: LngLat = [11.6621496, 46.6004336];
 /** Rifugio Firenze / Regensburger Hütte, in Val Cisles. */
-export const FIRENZE: LngLat = [11.7086, 46.6042];
+export const FIRENZE: LngLat = [11.758318, 46.587434];
 /** Seceda summit ridge, ~2519 m. */
-export const SECEDA: LngLat = [11.6893, 46.6106];
+export const SECEDA: LngLat = [11.7257836, 46.6005922];
 /** QC Terme Dolomiti, Pozza di Fassa — the spa, and the still-open Val di Fassa night. */
 export const QC_TERME: LngLat = [11.6889, 46.4283];
 /** Venezia Santa Lucia — the trail's real endpoint, not the lagoon centroid. */
@@ -111,11 +180,41 @@ export const walkEnglischerGarten: LngLat[] = densify(
 );
 
 /**
- * Firenze up Val Cisles to the Seceda summit ridge. Plausible geometry, not
- * a GPX trace.
+ * Firenze up Val Cisles to the Seceda summit ridge. Simplified OpenStreetMap
+ * foot-routing geometry, not a recorded GPX trace.
  */
 export const trailFirenzeSeceda: LngLat[] = densify(
-  [FIRENZE, [11.702, 46.606], [11.696, 46.608], SECEDA],
+  [
+    FIRENZE,
+    [11.758148, 46.587361],
+    [11.757702, 46.587889],
+    [11.755055, 46.587973],
+    [11.753565, 46.586995],
+    [11.750243, 46.586243],
+    [11.74624, 46.586434],
+    [11.745257, 46.587183],
+    [11.744369, 46.589476],
+    [11.743155, 46.589724],
+    [11.742133, 46.590735],
+    [11.738454, 46.590482],
+    [11.738068, 46.592095],
+    [11.738366, 46.593217],
+    [11.735904, 46.594094],
+    [11.735555, 46.59518],
+    [11.734741, 46.595479],
+    [11.730474, 46.595005],
+    [11.728801, 46.593608],
+    [11.726642, 46.592963],
+    [11.726563, 46.594682],
+    [11.728632, 46.596355],
+    [11.72945, 46.597822],
+    [11.725907, 46.597365],
+    [11.724638, 46.596395],
+    [11.724778, 46.597928],
+    [11.724147, 46.598893],
+    [11.725784, 46.600592],
+    SECEDA,
+  ],
   0.2,
 );
 
@@ -128,8 +227,14 @@ export const trailFirenzeSeceda: LngLat[] = densify(
 export const gondolaSecedaOrtisei: LngLat[] = densify(
   [
     SECEDA,
-    [11.6858, 46.6083], // summit station
-    [11.679, 46.5905], // Furnes mid-station
+    [11.7243474, 46.597936], // Seceda summit station
+    [11.7023249, 46.589805], // Furnes cable-car station
+    [11.7021929, 46.5896654], // Furnes gondola station
+    [11.6960016, 46.5866463],
+    [11.6897575, 46.5836022],
+    [11.6834791, 46.5805268],
+    [11.6781491, 46.5779237],
+    [11.6750721, 46.5764208], // Ortisei valley station
     ORTISEI,
   ],
   0.2,
@@ -448,7 +553,7 @@ export const photoPins: PhotoPin[] = [
   {
     id: "seceda",
     lngLat: SECEDA,
-    photo: photos.dolomites,
+    photo: photos.seceda,
     caption: "The Odle peaks from Seceda",
     days: [7],
     clusterId: "dolomites",

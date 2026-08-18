@@ -64,6 +64,7 @@ type DaySectionFrame = {
   progress: string;
   exit: string;
   railH: string;
+  railClipTop: string;
 };
 
 type DaysFrame = {
@@ -124,7 +125,7 @@ export function TripShell() {
     ];
   }, []);
 
-  /** Pure reads: one rect per section, no writes. Feeds paintDays. */
+  /** Pure layout reads, no writes. Feeds paintDays. */
   const measureDays = useCallback(
     (headerHeight: number, viewportHeight: number): DaysFrame | null => {
       const sections = sectionsRef.current;
@@ -144,17 +145,34 @@ export function TripShell() {
         const offset = Number(section.dataset.railStart);
         return rects[index].top + (Number.isFinite(offset) ? offset : 0);
       });
+      const railEnds = sections.map((section, index) => {
+        const offset = Number(section.dataset.railEnd);
+        return rects[index].top +
+          (Number.isFinite(offset) ? offset : rects[index].height);
+      });
+      const titleDotCenters = sections.map((section, index) => {
+        const dot = section.querySelector<HTMLElement>(".day-title-origin");
+        if (!dot) return railStarts[index];
+        const rect = dot.getBoundingClientRect();
+        return (rect.top + rect.bottom) / 2;
+      });
       let activeDay = Number(sections[0].dataset.day) || days[0].id;
 
       const frames = sections.map((section, index) => {
-        const rect = rects[index];
         const railStart = railStarts[index];
+        const railSpan = Math.max(railEnds[index] - railStart, 1);
         const nextRailStart = railStarts[index + 1];
-        // Each rail begins at its day-title dot and meets the next day's dot.
-        // The fill reads from that same geometry, so there is one scroll
-        // signal rather than a separate moving playhead competing with it.
-        const span = Math.max((nextRailStart ?? rect.bottom) - railStart, 1);
-        const progress = clamp((dayAnchor - railStart) / span);
+        // The visible rail belongs only to this day's authored markers. Day
+        // activation still hands off at the next title, but the track and its
+        // fill stop at the final beat instead of growing a decorative tail.
+        const progress = clamp((dayAnchor - railStart) / railSpan);
+        // The title is sticky while the rail is section-relative. Clip away
+        // the portion the sticky dot has passed so no line appears above it.
+        const railClipTop = clamp(
+          titleDotCenters[index] - railStart,
+          0,
+          railSpan,
+        );
 
         const exitRaw =
           nextRailStart === undefined
@@ -173,7 +191,8 @@ export function TripShell() {
           section,
           progress: progress.toFixed(4),
           exit: exit.toFixed(4),
-          railH: `${Math.round(span)}px`,
+          railH: `${Math.round(railSpan)}px`,
+          railClipTop: `${Math.round(railClipTop)}px`,
         };
       });
 
@@ -202,6 +221,9 @@ export function TripShell() {
       }
       if (!prev || prev.railH !== next.railH) {
         style.setProperty("--day-rail-h", next.railH);
+      }
+      if (!prev || prev.railClipTop !== next.railClipTop) {
+        style.setProperty("--day-rail-clip-top", next.railClipTop);
       }
       cache.set(next.section, next);
     }

@@ -4,6 +4,16 @@ import { useLayoutEffect, useRef } from "react";
 import type { Day } from "@/data/types";
 import { Timeline } from "./timeline";
 
+function offsetTopWithin(element: HTMLElement, ancestor: HTMLElement) {
+  let top = 0;
+  let current: HTMLElement | null = element;
+  while (current && current !== ancestor) {
+    top += current.offsetTop;
+    current = current.offsetParent as HTMLElement | null;
+  }
+  return top;
+}
+
 export function DaySection({ day }: { day: Day }) {
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -27,10 +37,18 @@ export function DaySection({ day }: { day: Day }) {
       const roundedRailStart = Math.round(railStart);
       section.style.setProperty("--day-rail-start", `${roundedRailStart}px`);
       section.dataset.railStart = `${roundedRailStart}`;
+
+      const stops = section.querySelectorAll<HTMLElement>(".day-rail-stop");
+      const lastStop = stops.item(stops.length - 1);
+      const railEnd = lastStop
+        ? offsetTopWithin(lastStop, section) + lastStop.offsetHeight / 2
+        : railStart;
+      section.dataset.railEnd = `${Math.round(railEnd)}`;
     };
 
     const observer = new ResizeObserver(apply);
     observer.observe(head);
+    observer.observe(content);
     apply();
     return () => observer.disconnect();
   }, []);
