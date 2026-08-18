@@ -64,6 +64,7 @@ type DaySectionFrame = {
   progress: string;
   exit: string;
   railH: string;
+  railVisibleH: string;
 };
 
 type DaysFrame = {
@@ -162,12 +163,17 @@ export function TripShell() {
         const dotFromHead = Number(section.dataset.dotFromHead);
         const pin =
           headerHeight + (Number.isFinite(dotFromHead) ? dotFromHead : 0);
-        const trackH = Math.min(railSpan, Math.max(viewportHeight - pin, 1));
-        const trackTop = Math.min(
-          Math.max(railStart, pin),
-          railEnd - trackH,
+        const visualTop = Math.max(railStart, pin);
+        // Shrink from the bottom as the section leaves, instead of letting
+        // sticky unstick and carry the bar through the header.
+        const visibleH = Math.max(
+          0,
+          Math.min(viewportHeight - pin, railEnd - visualTop),
         );
-        const progress = clamp((dayAnchor - trackTop) / trackH);
+        const progress =
+          visibleH > 0
+            ? clamp((dayAnchor - visualTop) / Math.max(visibleH, 1))
+            : 0;
 
         const exitRaw =
           nextRailStart === undefined
@@ -187,6 +193,7 @@ export function TripShell() {
           progress: progress.toFixed(4),
           exit: exit.toFixed(4),
           railH: `${Math.round(railSpan)}px`,
+          railVisibleH: `${Math.round(visibleH)}px`,
         };
       });
 
@@ -215,6 +222,9 @@ export function TripShell() {
       }
       if (!prev || prev.railH !== next.railH) {
         style.setProperty("--day-rail-h", next.railH);
+      }
+      if (!prev || prev.railVisibleH !== next.railVisibleH) {
+        style.setProperty("--day-rail-visible-h", next.railVisibleH);
       }
       cache.set(next.section, next);
     }

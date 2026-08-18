@@ -209,9 +209,10 @@ a {
 }
 
 /*
- * The rail lives in the day's section box, from the title-origin to the last
- * beat. The track is sticky at that origin so it never paints above the dot —
- * compositor sticky, not a scroll-linked clip, so it can't jitter.
+ * The rail lives in the day's section box, from the title-origin to the
+ * section bottom. The track is sticky at that origin so it never paints
+ * above the dot; its height shrinks from the bottom as the section leaves
+ * so sticky never unsticks and carries the bar through the header.
  */
 .day-rail {
   pointer-events: none;
@@ -231,11 +232,14 @@ a {
   width: 2px;
   height: min(
     100%,
-    calc(100vh - var(--trip-header-height) - var(--day-dot-from-head, 0px))
-  );
-  height: min(
-    100%,
     calc(100svh - var(--trip-header-height) - var(--day-dot-from-head, 0px))
+  );
+  height: var(
+    --day-rail-visible-h,
+    min(
+      100%,
+      calc(100svh - var(--trip-header-height) - var(--day-dot-from-head, 0px))
+    )
   );
   overflow: hidden;
   border-radius: 1px;
