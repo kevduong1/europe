@@ -1,0 +1,91 @@
+.beat-head {
+  top: calc(var(--trip-header-height) + var(--day-head-h));
+  z-index: 19;
+  padding-top: 0.35rem;
+  padding-bottom: 0.45rem;
+  /*
+   * The exit push/fade lives here, on the sticky element itself. The entry
+   * animation (below) targets .beat-head-reveal, an inner wrapper — a CSS
+   * animation wins over a declarative style on the same property, so if both
+   * lived on .beat-head the exit transform would be silently overridden.
+   */
+  opacity: calc(1 - var(--day-exit, 0));
+  transform: translate3d(0, calc(var(--day-exit, 0) * -18px), 0);
+  will-change: opacity, transform;
+}
+
+.beat-row {
+  min-height: calc(var(--beat-span, 56) * var(--beat-scale, 1) * 1vh);
+  min-height: calc(var(--beat-span, 56) * var(--beat-scale, 1) * 1svh);
+  /*
+   * Named timeline subject for the beat-head entry animation. Must be this
+   * tall, non-sticky row — NOT .beat-head itself, which is position: sticky.
+   * A view-progress timeline whose subject is sticky reads its own
+   * scroll-shifted box back as input, which stutters exactly while pinned.
+   */
+  view-timeline-name: --beat-entry;
+}
+
+.essentials-row {
+  min-height: 48vh;
+  min-height: 48svh;
+}
+
+@supports (animation-timeline: view()) {
+  .beat-head-reveal {
+    animation: beat-head-in linear both;
+    animation-timeline: --beat-entry;
+    /*
+     * entry 0% fires when .beat-row's top reaches the viewport bottom; the
+     * entry phase length is min(row height, viewport height), so for most
+     * beats (well under 100vh) this range is roughly the row's own height.
+     * 15% keeps the fade+rise to ~10-15vh of scroll instead of the whole row.
+     */
+    animation-range: entry 0% entry 15%;
+  }
+}
+
+@keyframes beat-head-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --beat-scale: 0.32;
+  }
+
+  .beat-head-reveal {
+    animation: none;
+  }
+
+  .day-head,
+  .beat-head,
+  .day-rail-track {
+    transform: none;
+    will-change: auto;
+  }
+
+  .day-rail-fill {
+    transform: none;
+    will-change: auto;
+  }
+
+  .day-rail-fill {
+    display: none;
+  }
+
+  .trip-header-brand,
+  .trip-header-day,
+  .day-dots,
+  .day-dot {
+    transition: none;
+  }
+}
+

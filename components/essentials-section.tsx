@@ -1,5 +1,5 @@
-import { essentials } from "@/data/trip";
-import { OverlaySection } from "./overlay-section";
+import { essentials } from "@/trip";
+import { OverlaySection } from "./itinerary/overlay-section";
 
 export function EssentialsSection() {
   return (

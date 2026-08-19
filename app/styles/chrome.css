@@ -1,0 +1,94 @@
+.overlay-type {
+  text-shadow:
+    0 1px 0 color-mix(in srgb, var(--paper) 88%, transparent),
+    0 0 16px var(--paper),
+    0 0 28px var(--paper);
+}
+
+.trip-header {
+  pointer-events: none;
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 30;
+}
+
+.trip-header-inner {
+  display: grid;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  padding: max(10px, env(safe-area-inset-top)) 20px 12px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.trip-header-brand,
+.trip-header-day {
+  grid-area: 1 / 1;
+  min-width: 0;
+  transition:
+    opacity 180ms ease,
+    transform 220ms ease;
+}
+
+.trip-header-brand {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.trip-header-brand[data-visible="false"] {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
+.trip-header-day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(0.65rem, 2.5vw, 1.5rem);
+}
+
+.trip-header-day[data-visible="false"] {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+.trip-header-day-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.trip-header-day-title {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--trail-ink);
+  font-size: clamp(20px, 3.6vw, 30px);
+  line-height: 1.05;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-variation-settings: "WONK" 0.9, "opsz" 30;
+}
+
+.trip-header-day-copy time {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--dolomite);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.trip-header-day-summary {
+  flex: 0 1 16rem;
+  max-width: 34rem;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: right;
+}
+

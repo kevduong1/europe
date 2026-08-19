@@ -1,0 +1,266 @@
+.maplibregl-ctrl-bottom-right {
+  right: 8px;
+  bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 9px;
+  max-width: min(52vw, 280px);
+  background: color-mix(in srgb, var(--paper) 72%, transparent) !important;
+  color: var(--dolomite);
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--dolomite);
+}
+
+.maplibregl-canvas-container {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.maplibregl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.map-pin,
+.map-cluster,
+.map-unresolved,
+.map-here,
+.map-plane,
+.map-photo-pin {
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+
+/*
+ * `!important` is load-bearing here: MapLibre's own Marker class re-writes
+ * `this._element.style.opacity` from its internal occlusion tracking on
+ * every camera move (see the comment on `applyMarkers` in journey-map.tsx),
+ * which would clobber a plain inline-opacity toggle a frame later. A class
+ * rule flagged `!important` is the one thing that wins over that unflagged
+ * inline write, so all marker show/hide goes through this class instead of
+ * `el.style.opacity`.
+ */
+.map-pin.is-hidden,
+.map-cluster.is-hidden,
+.map-unresolved.is-hidden,
+.map-here.is-hidden,
+.map-plane.is-hidden,
+.map-photo-pin.is-hidden {
+  opacity: 0 !important;
+}
+
+.map-pin {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.map-pin-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: var(--trail);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--paper) 82%, transparent);
+  flex-shrink: 0;
+}
+
+.map-pin-hut .map-pin-dot {
+  border-radius: 2px;
+}
+
+.map-pin-tbd .map-pin-dot,
+.map-pin-airport .map-pin-dot {
+  background: var(--signal);
+}
+
+.map-pin-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.map-pin-label,
+.map-cluster-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  padding: 1px 6px 2px;
+  border-radius: 2px;
+}
+
+.map-pin-coords {
+  display: none;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  color: var(--dolomite);
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--paper) 86%, transparent);
+  padding: 0 6px 1px;
+  border-radius: 0 0 2px 2px;
+}
+
+.map-zoomed .map-pin-coords {
+  display: block;
+}
+
+.map-pin-visited .map-pin-copy {
+  display: none;
+}
+
+.map-pin-visited .map-pin-dot {
+  width: 7px;
+  height: 7px;
+  opacity: 0.85;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--paper) 70%, transparent);
+}
+
+.map-pin-active .map-pin-dot {
+  transform: scale(1.28);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--trail) 32%, transparent);
+}
+
+.map-cluster {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-cluster-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--trail);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--paper) 78%, transparent);
+}
+
+.map-unresolved {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--signal);
+  line-height: 1;
+  text-shadow: 0 0 10px var(--paper);
+}
+
+.map-here {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--trail);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--trail) 28%, transparent);
+}
+
+.map-plane {
+  color: var(--trail);
+  filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--paper) 80%, transparent));
+}
+
+/*
+ * A photo pinned to a spot on the map: a substantial square print in a paper frame,
+ * a mono caption pill, and a thin trail-coloured stem running down to a dot
+ * at the exact coordinate — the same dot-on-a-point language as .map-pin,
+ * just with a picture floated above it instead of a text label beside it.
+ * Sized in fixed CSS px (not by the image's intrinsic size) so opacity
+ * fade-in/out never triggers layout — only compositing.
+ */
+.map-photo-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.map-photo-pin-frame {
+  display: block;
+  overflow: hidden;
+  width: 82px;
+  height: 82px;
+  padding: 4px;
+  border-radius: 6px;
+  background: var(--paper);
+  transform: rotate(var(--photo-tilt, 0deg));
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--trail) 55%, var(--ink) 10%),
+    0 3px 10px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+
+.map-photo-pin-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  object-fit: cover;
+}
+
+/* Graceful placeholder for a pin whose photo hasn't been sourced yet — reads as "pending", not broken. */
+.map-photo-pin-empty {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border: 1.5px dashed color-mix(in srgb, var(--dolomite) 55%, transparent);
+  border-radius: 2px;
+  color: color-mix(in srgb, var(--dolomite) 80%, var(--paper));
+}
+
+.map-photo-pin-caption {
+  max-width: 132px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  padding: 1px 6px 2px;
+  border-radius: 2px;
+}
+
+.map-photo-pin-stem {
+  width: 2px;
+  height: 10px;
+  background: var(--trail);
+}
+
+.map-photo-pin-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: -1px;
+  border-radius: 50%;
+  background: var(--trail);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--paper) 82%, transparent);
+}
+
+/* Narrow phones keep the map legible while preserving the larger-photo treatment. */
+@media (max-width: 520px) {
+  .map-photo-pin-frame {
+    width: 56px;
+    height: 56px;
+    padding: 3px;
+  }
+
+  .map-photo-pin-caption {
+    display: none;
+  }
+}
+

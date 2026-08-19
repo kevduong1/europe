@@ -1,4 +1,4 @@
-import type { TransportMode } from "@/data/types";
+import type { TransportMode } from "@/lib/engine/types";
 
 type RouteStyle = {
   color: string;

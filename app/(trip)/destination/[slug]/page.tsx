@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { destinations, getDestination } from "@/data/trip";
+import { destinations, getDestination } from "@/trip";
 
 export function generateStaticParams() {
   return destinations.map((destination) => ({ slug: destination.slug }));

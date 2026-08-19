@@ -1,0 +1,72 @@
+:root {
+  --paper: #faf9f6;
+  --ink: #1f2421;
+  --dolomite: #5e636c;
+  --meadow: #4e6e58;
+  --lagoon: #3e5c76;
+  --signal: #b3592e;
+  --trail: #e45a24;
+  --trail-ink: color-mix(in srgb, var(--trail) 76%, var(--ink));
+  --trip-header-height: 5.5rem;
+  --day-head-h: 4.75rem;
+  --day-dot-from-head: 0px;
+  --beat-scale: 1;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-dolomite: var(--dolomite);
+  --color-meadow: var(--meadow);
+  --color-lagoon: var(--lagoon);
+  --color-signal: var(--signal);
+  --color-trail: var(--trail);
+  --color-trail-ink: var(--trail-ink);
+  --font-display: "Fraunces", "Fraunces Fallback", Georgia, serif;
+  --font-sans: "Source Sans 3", "Source Sans 3 Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, monospace;
+}
+
+html {
+  background: var(--paper);
+  height: 100%;
+  scroll-padding-top: var(--trip-header-height);
+}
+
+body {
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 100%;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  line-height: 1.1;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+:focus-visible {
+  outline: 2px solid var(--trail);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--trail) 22%, var(--paper));
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+}
+

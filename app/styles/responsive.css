@@ -1,0 +1,39 @@
+@media (max-width: 520px) {
+  .trip-header-inner {
+    padding-inline: 16px;
+  }
+
+  .trip-header-day {
+    gap: 0.65rem;
+  }
+
+  .trip-header-day-title {
+    font-size: 22px;
+  }
+
+  .trip-header-day-copy time {
+    font-size: 8px;
+    letter-spacing: 0.06em;
+  }
+
+  .trip-header-day-summary {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 10px;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .day-dots {
+    right: max(5px, env(safe-area-inset-right));
+    gap: 2px;
+    padding: 4px;
+  }
+
+  .day-dot {
+    width: 18px;
+    height: 18px;
+    font-size: 8px;
+  }
+}
+

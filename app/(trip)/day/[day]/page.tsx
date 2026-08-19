@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { days, getDay } from "@/data/trip";
+import { days, getDay } from "@/trip";
 
 export function generateStaticParams() {
   return days.map((day) => ({ day: String(day.id) }));

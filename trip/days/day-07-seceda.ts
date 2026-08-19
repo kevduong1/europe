@@ -1,0 +1,183 @@
+import { hikeLine, rideLine } from "@/lib/engine/camera";
+import type { DayModule } from "@/lib/engine/types";
+import {
+  busOrtiseiValDiFassa,
+  FIRENZE,
+  gondolaSecedaOrtisei,
+  ORTISEI,
+  SECEDA_RIDGE_END,
+  trailFirenzeSeceda,
+} from "../geometry/legs";
+import { CITY, cityHold, pose, T } from "../cameras";
+import { CLUSTERS } from "../clusters";
+import { firenzeHold, qcTermeHold, secedaHold } from "../scenes";
+
+export const day7: DayModule = {
+  day: {
+    id: 7,
+    isoDate: "2026-09-11",
+    weekday: "Friday",
+    monthDay: "Sept 11",
+    stripLabel: "Seceda",
+    title: "Firenze to Val di Fassa",
+    summary: "Summit morning on Seceda, then over to the spa at Val di Fassa",
+    timeline: [
+      {
+        kind: "transport",
+        id: "hike-firenze-seceda",
+        mode: "trail",
+        label: "Rifugio Firenze → Seceda",
+        meta: "Morning climb to ~2,519 m",
+        detailSlug: "seceda-summit",
+      },
+      {
+        kind: "event",
+        id: "seceda-summit",
+        title: "Seceda summit",
+        note: "The Odle ridge, straight ahead.",
+        detailSlug: "seceda-summit",
+      },
+      {
+        kind: "transport",
+        id: "down-to-ortisei",
+        mode: "gondola",
+        label: "Seceda → Ortisei",
+        meta: "Seceda cable car down into Ortisei",
+        detailSlug: "down-to-ortisei",
+      },
+      {
+        kind: "transport",
+        id: "to-val-di-fassa",
+        mode: "bus",
+        label: "Ortisei → Val di Fassa",
+        meta: "40.8 km over Passo Sella via Canazei",
+        detailSlug: "to-val-di-fassa",
+      },
+      {
+        kind: "event",
+        id: "qc-terme-dolomiti",
+        title: "QC Terme Dolomiti",
+        note: "Spa afternoon, Pozza di Fassa.",
+        detailSlug: "qc-terme-dolomiti",
+      },
+    ],
+    lodging: {
+      slug: "val-di-fassa-night",
+      name: "Lodging to be decided",
+      context: "Somewhere in Val di Fassa — the exact stay isn't booked yet.",
+      kind: "tbd",
+      todo: "Book a place to stay in Val di Fassa.",
+    },
+    practical: [
+      { text: "Cable car down from Seceda to Ortisei." },
+      { text: "Book Val di Fassa lodging.", todo: true },
+    ],
+  },
+  enterView: cityHold(CITY.firenze, {
+    dayId: 7,
+    label: "Day 7 · Seceda",
+    trailT: T.firenze,
+    here: FIRENZE,
+    focusStopId: "firenze",
+    expandedClusterIds: CLUSTERS.dolomites,
+    visitedClusterIds: CLUSTERS.pastInnsbruck,
+  }),
+  beats: {
+    "hike-firenze-seceda": {
+      space: 150,
+      view: (progress) =>
+        hikeLine(
+          firenzeHold(),
+          pose({
+            phase: "day",
+            ...CITY.dolomites,
+            showFlight: false,
+            flightT: 0,
+            flightLeg: null,
+            trailT: T.firenze,
+            dayId: 7,
+            label: "Firenze → Seceda",
+            here: FIRENZE,
+            expandedClusterIds: CLUSTERS.dolomites,
+            visitedClusterIds: CLUSTERS.pastInnsbruck,
+          }),
+          secedaHold(),
+          trailFirenzeSeceda,
+          T.firenze,
+          T.seceda,
+          progress,
+        ),
+    },
+    "seceda-summit": { space: 110, view: () => secedaHold() },
+    "down-to-ortisei": {
+      space: 90,
+      view: (progress) =>
+        rideLine(
+          secedaHold(),
+          pose({
+            phase: "day",
+            ...CITY.secedaDrop,
+            showFlight: false,
+            flightT: 0,
+            flightLeg: null,
+            trailT: T.seceda,
+            dayId: 7,
+            label: "Seceda → Ortisei · gondola",
+            here: SECEDA_RIDGE_END,
+            expandedClusterIds: CLUSTERS.dolomites,
+            visitedClusterIds: CLUSTERS.pastInnsbruck,
+          }),
+          cityHold(CITY.dolomites, {
+            dayId: 7,
+            label: "Ortisei",
+            trailT: T.ortiseiBack,
+            here: ORTISEI,
+            focusStopId: "ortisei",
+            focus: ORTISEI,
+            amount: 0.18,
+            expandedClusterIds: CLUSTERS.dolomites,
+            visitedClusterIds: CLUSTERS.pastInnsbruck,
+          }),
+          gondolaSecedaOrtisei,
+          T.seceda,
+          T.ortiseiBack,
+          progress,
+        ),
+    },
+    "to-val-di-fassa": {
+      space: 90,
+      view: (progress) =>
+        rideLine(
+          cityHold(CITY.dolomites, {
+            dayId: 7,
+            label: "Ortisei → Val di Fassa",
+            trailT: T.ortiseiBack,
+            here: ORTISEI,
+            focusStopId: "ortisei",
+            expandedClusterIds: CLUSTERS.dolomites,
+            visitedClusterIds: CLUSTERS.pastInnsbruck,
+          }),
+          pose({
+            phase: "day",
+            ...CITY.toValDiFassa,
+            showFlight: false,
+            flightT: 0,
+            flightLeg: null,
+            trailT: T.ortiseiBack,
+            dayId: 7,
+            label: "Ortisei → Val di Fassa",
+            here: ORTISEI,
+            expandedClusterIds: CLUSTERS.dolomites,
+            visitedClusterIds: CLUSTERS.pastInnsbruck,
+          }),
+          qcTermeHold(),
+          busOrtiseiValDiFassa,
+          T.ortiseiBack,
+          T.qcTerme,
+          progress,
+        ),
+    },
+    "qc-terme-dolomiti": { space: 80, view: () => qcTermeHold() },
+    "val-di-fassa-night": { space: 60, view: () => qcTermeHold() },
+  },
+};

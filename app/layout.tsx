@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, IBM_Plex_Mono, Source_Sans_3 } from "next/font/google";
-import { photos } from "@/data/photos";
+import { photos } from "@/trip/photos";
 import "./globals.css";
 
 const fraunces = Fraunces({

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { days, getDay, getDetailForDay } from "@/data/trip";
+import { days, getDay, getDetailForDay } from "@/trip";
 
 export function generateStaticParams() {
   return days.flatMap((day) => {

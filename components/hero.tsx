@@ -1,4 +1,4 @@
-import { days, trip } from "@/data/trip";
+import { days, trip } from "@/trip";
 import { RouteGlyph } from "./icons";
 
 export function Hero() {
